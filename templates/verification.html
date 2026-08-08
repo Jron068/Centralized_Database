@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Verification</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/verification.css') }}">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="">
+            <div>
+                <h3>PANSOL RESORTS</h3>
+                <p>Reservation System</p>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress">
+
+            <div class="step active">
+                <div class="circle">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <span>Account Verification</span>
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step">
+                <div class="circle">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span>Verification</span>
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step">
+                <div class="circle">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <span>Completed</span>
+            </div>
+
+        </div>
+
+        <div class="content">
+
+            <div class="icon">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+
+            <h2>Verify your Phone Number</h2>
+
+            <p>
+                Please verify your phone number to continue.
+            </p>
+
+            <div class="notice">
+                <i class="fa-solid fa-circle-info"></i>
+                A verification code will be sent to your registered mobile number.
+            </div>
+
+            <form action="{{ url_for('send_otp') }}" method="POST">
+
+                <input type="hidden" name="phone" value="{{ phone }}">
+
+                <label>Choose Verification Method</label>
+
+                <div class="method active">
+
+                    <div class="left">
+                        <i class="fa-solid fa-message"></i>
+
+                        <div>
+                            <h4>SMS Verification</h4>
+                            <small>Receive OTP via text message</small>
+                        </div>
+
+                    </div>
+
+                    <input type="radio"
+                           name="method"
+                           value="sms"
+                           checked>
+
+                </div>
+
+                <div class="method">
+
+                    <div class="left">
+                        <i class="fa-solid fa-phone"></i>
+
+                        <div>
+                            <h4>Call Verification</h4>
+                            <small>Receive OTP via phone call</small>
+                        </div>
+
+                    </div>
+
+                    <input type="radio"
+                           name="method"
+                           value="call">
+
+                </div>
+
+                <button type="submit">
+                    Continue
+                </button>
+
+            </form>
+
+            <div class="footer">
+                We never share your phone number.
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+
+    <div class="right-panel">
+        <img src="{{ url_for('static', filename='images/side_panel.png') }}" alt="">
+    </div>
+
+</div>
+
+</body>
+</html>
