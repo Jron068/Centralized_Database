@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pansol Resorts Login</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LEFT SIDE -->
+    <div class="left">
+
+        <div class="overlay"></div>
+
+        <div class="content">
+
+            <div class="logo">
+
+                <div>
+                    <h2>PANSOL RESORTS</h2>
+                    <p>Centralized Reservation Hub</p>
+                </div>
+
+            </div>
+
+            <div class="welcome">
+
+                <h1>Welcome Back!</h1>
+
+                <p>
+                    Sign in to continue your journey
+                    <br>
+                    to your perfect escape
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+
+    <div class="right">
+
+        <div class="login-box">
+
+            <h1>Log In</h1>
+
+            <p class="subtitle">
+                Welcome back! Please sign in to your account.
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+
+            <form action="/login" method="POST">
+
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="Enter your email" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter your password" required>
+
+
+                <div class="forgot">
+                    <a href="#">Forgot Password?</a>
+                </div>
+
+                <h3>Login as</h3>
+
+                <div class="roles">
+
+                    <!-- Customer -->
+                    <label class="role">
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="customer"
+                            checked>
+
+                        <div>
+                            <strong>Customer</strong>
+                            <span>Back and Enjoy Resorts</span>
+                        </div>
+
+                    </label>
+
+                    <!-- Caretaker -->
+                    <label class="role">
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="caretaker">
+
+                        <div>
+                            <strong>Caretaker</strong>
+                            <span>Let be the one to handle</span>
+                        </div>
+
+                    </label>
+
+                    <!-- Owner / Admin -->
+                    <label class="role">
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="owner">
+
+                        <div>
+                            <strong>Owner / Admin</strong>
+                            <span>Manage resorts and caretakers</span>
+                        </div>
+
+                    </label>
+
+                </div>
+
+
+    
+                <button class="login-btn">
+                    Log In
+                </button>
+
+                <p class="divider">
+                    or continue with
+                </p>
+
+                <div class="social">
+
+                    <button type="button">
+
+                        <i class="fab fa-google"></i>
+
+                        Google
+
+                    </button>
+
+                    <button type="button">
+
+                        <i class="fab fa-facebook-f"></i>
+
+                        Facebook
+
+                    </button>
+
+                </div>
+
+                <div class="register">
+
+                    Don't have an account?
+
+                    <a href="{{url_for('registration')}}">Register Now</a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

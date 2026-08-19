@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pansol Resorts{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌴</div>
+    <div class="logo-text">
+      <h1>PANSOL RESORTS</h1>
+      <span>Centralized Reservation Hub</span>
+    </div>
+  </div>
+  <nav>
+    <a href="{{ url_for('index') }}" class="{{ 'active' if active_page == 'home' }}">Home</a>
+    <a href="{{ url_for('about') }}" class="{{ 'active' if active_page == 'about' }}">About</a>
+    <a href="{{ url_for('landing_resortpage') }}" class="{{ 'active' if active_page == 'resorts' }}">Resorts</a>
+    <a href="{{ url_for('howitworks') }}" class="{{ 'active' if active_page == 'howitworks' }}">How it Works</a>
+    <a href="{{ url_for('contact') }}" class="{{ 'active' if active_page == 'contact' }}">Contact</a>
+  </nav>
+  <div class="auth-buttons">
+    <button class="btn-outline"><a href="{{ url_for('login') }}">Log In</a></button>
+    <button class="btn-outline"><a href="{{ url_for('registration') }}">Register</a></button>
+  </div>
+</header>
+
+{% block content %}{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

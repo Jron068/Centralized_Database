@@ -6,7 +6,7 @@ from config import get_connection
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("auth/login.html")
 
     email = request.form.get("email")
     password = request.form.get("password")

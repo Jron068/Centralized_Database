@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>OTP Verification</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/verification.css') }}">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left-panel">
+
+        <div class="logo">
+
+            <img src="{{ url_for('static', filename='images/logo.png') }}">
+
+            <div>
+                <h3>PANSOL RESORTS</h3>
+                <p>Reservation System</p>
+            </div>
+
+        </div>
+
+        <div class="progress">
+
+            <div class="step done">
+
+                <div class="circle">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+
+                <span>Account Verification</span>
+
+            </div>
+
+            <div class="line active"></div>
+
+            <div class="step active">
+
+                <div class="circle">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+
+                <span>Verification</span>
+
+            </div>
+
+            <div class="line"></div>
+
+            <div class="step">
+
+                <div class="circle">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <span>Completed</span>
+
+            </div>
+
+        </div>
+
+        <div class="content">
+
+            <div class="icon">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+
+            <h2>Enter Verification Code</h2>
+
+            <p>
+                Code sent to
+                <strong>{{ phone }}</strong>
+            </p>
+
+            <form action="{{ url_for('verify_otp') }}" method="POST">
+
+                <input type="hidden" name="phone" value="{{ phone }}">
+
+                <div class="otp-box">
+
+                    <input type="text" maxlength="1" name="otp1">
+                    <input type="text" maxlength="1" name="otp2">
+                    <input type="text" maxlength="1" name="otp3">
+                    <input type="text" maxlength="1" name="otp4">
+                    <input type="text" maxlength="1" name="otp5">
+                    <input type="text" maxlength="1" name="otp6">
+
+                </div>
+
+                <p class="resend">
+                    Didn't receive the code?
+                    <a href="#">Resend</a>
+                </p>
+
+                <button type="submit">
+                    Verify Code
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="right-panel">
+
+        <img src="{{ url_for('static', filename='images/side_panel.png') }}" alt="">
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

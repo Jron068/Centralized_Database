@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pansol Resorts — Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">P</span>
+      PANSOL RESORTS
+    </div>
+    <nav class="nav">
+      <a class="active" href="#">Dashboard</a>
+      <a href="#">Reservation</a>
+      <a href="#">Calendar</a>
+      <a href="#">Properties</a>
+      <a href="#">Payments</a>
+      <a href="#">Guests</a>
+      <a href="#">Reviews</a>
+      <a href="#">Reports</a>
+      <a href="#">Settings</a>
+    </nav>
+    <a class="logout" href="{{ url_for('login') }}">&#8592; Log Out</a>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <nav>
+        <span class="active">Dashboard</span>
+        <span>Booking</span>
+        <span>Properties</span>
+        <span>Reports</span>
+        <span>Messages</span>
+      </nav>
+      <div class="profile">
+        <div class="avatar"></div>
+        {{ username }}
+      </div>
+    </div>
+
+    <div class="content">
+      <h1>Dashboard Overview</h1>
+      <div class="subtitle">Welcome back! Here's what happening with your resorts today</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="flash-message {{ category }}">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
+
+      <!-- MY RESORTS -->
+      <div class="card">
+        <div class="card-title">My Resorts</div>
+        <table>
+          <tr><th>Resort</th><th>Status</th></tr>
+          {% for resort in resorts %}
+          <tr>
+            <td>{{ resort.resort_name }}</td>
+            <td>{{ resort.status }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="2">You have no resorts on file.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <!-- PENDING CARETAKER APPLICATIONS -->
+      <div class="card">
+        <div class="card-title">Pending Caretaker Applications</div>
+        <table>
+          <tr>
+            <th>Applicant</th>
+            <th>Resort</th>
+            <th>Applied On</th>
+            <th>Action</th>
+          </tr>
+          {% for c in pending_caretakers %}
+          <tr>
+            <td>{{ c.fullname }}</td>
+            <td>{{ c.resort_name }}</td>
+            <td>{{ c.created_at }}</td>
+            <td>
+              <a href="{{ url_for('approve_caretaker', account_id=c.account_id) }}"
+                 style="color: green; margin-right: 10px;">Approve</a>
+              <a href="{{ url_for('reject_caretaker', account_id=c.account_id) }}"
+                 style="color: red;">Reject</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4">No pending applications.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

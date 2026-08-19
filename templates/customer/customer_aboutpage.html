@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts | About Us</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo" style="width: 220px; height: auto;">          
+    </div>
+
+    <nav class="nav">
+
+      <a href="/customer_landingpage" class="nav-item">
+        <i class="fa-solid fa-grip"></i> DASHBOARD
+      </a>
+
+      <p class="nav-label">My Bookings</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-calendar-check"></i> My Reservation
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
+      </a>
+
+      <p class="nav-label">My Account</p>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-gear"></i> Profile Setting
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-lock"></i> Change Password
+      </a>
+
+      <p class="nav-label">Support</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-circle-question"></i> Contact Support
+      </a>
+
+    </nav>
+    <a class="logout" href="{{ url_for('login') }}" 
+    style="margin-left:0px;
+    display:flex;
+    align-items:center;
+    margin-top: 170%;
+    color:#fff;
+    text-decoration:none;
+    opacity:.9;
+      "> &#8592; Log Out</a>  
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP NAV -->
+    <header class="topbar">
+
+      <div class="logo"> 
+        <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo">      
+      </div>
+
+      <nav class="topbar-links">
+        <a href="/customer_landingpage">Home</a>
+        <a href="/customer_aboutpage" class="active">About</a>
+        <a href="/resorts">Resorts</a>
+        <a href="/customer_howitworks">How it Works</a>
+      </nav>
+
+      <div class="topbar-user">
+        <i class="fa-regular fa-bell"></i>
+        <div class="avatar"></div>
+        <span>{{ username }}</span>
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <h1>Welcome back, {{ username }}!</h1>
+      <p class="subtitle">Your trusted partner for unforgettable stay experiences in Pansol, Laguna</p>
+
+      <!-- MISSION / VISION -->
+      <section class="panels">
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-bullseye" style="color:#2b8a82;margin-right:8px;"></i>Our Mission</h3>
+          <p style="color:#5b6663;line-height:1.7;font-size:14px;">
+            To provide a centralized and reliable reservation platform that connects guests with the best resorts in Pansol, Laguna — making booking easy, convenient, and secure for everyone.
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-eye" style="color:#2b8a82;margin-right:8px;"></i>Our Vision</h3>
+          <p style="color:#5b6663;line-height:1.7;font-size:14px;">
+            To be the leading online reservation hub for resorts in Pansol, Laguna, known for excellent service, innovation, and customer satisfaction.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- WHY CHOOSE US -->
+      <h3 style="margin-top:32px;">Why Choose Pansol Resort Hub?</h3>
+
+      <section class="stats">
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon blue"><i class="fa-solid fa-table-cells-large"></i></span>
+            <span class="stat-label">Wide Selection</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Explore a variety of top-rated resorts in one place.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon green"><i class="fa-solid fa-shield-halved"></i></span>
+            <span class="stat-label">Secure Booking</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Your reservations are safe and protected.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon orange"><i class="fa-regular fa-calendar-days"></i></span>
+            <span class="stat-label">Real-time Availability</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Get instant updates on room and resort availability.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon gray"><i class="fa-regular fa-face-smile"></i></span>
+            <span class="stat-label">Easy & Convenient</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Book in just a few clicks, anytime, anywhere.</p>
+        </div>
+
+      </section>
+
+      <!-- WHAT YOU CAN DO -->
+      <h3 style="margin-top:32px;">What You Can Do</h3>
+
+      <section class="stats">
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon blue"><i class="fa-solid fa-clipboard-check"></i></span>
+            <span class="stat-label">Track Bookings</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">View all your reservations in one dashboard.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon orange"><i class="fa-solid fa-clock-rotate-left"></i></span>
+            <span class="stat-label">Monitor Upcoming Stays</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Stay updated on your next resort getaway.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon green"><i class="fa-solid fa-credit-card"></i></span>
+            <span class="stat-label">Manage Payments</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Check payment history and pending balances anytime.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon gray"><i class="fa-regular fa-bell"></i></span>
+            <span class="stat-label">Stay Notified</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Get real-time updates on your reservation status.</p>
+        </div>
+
+      </section>
+
+      <!-- SUPPORTING LOCAL TOURISM -->
+      <section class="panel" style="margin-top:32px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h3><i class="fa-solid fa-tree" style="color:#2b8a82;margin-right:8px;"></i>Supporting Local Tourism</h3>
+          <p style="font-size:13px;color:#6b7674;max-width:520px;line-height:1.6;">
+            We are proud to support local businesses and promote sustainable tourism in Pansol, Laguna by helping resorts grow and guests enjoy more.
+          </p>
+        </div>
+        <i class="fa-solid fa-leaf" style="color:#2b8a82;font-size:48px;"></i>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <p style="margin:0 30px;">&copy; 2026 Pansol Resorts. All rights reserved.</p>
+    </footer>
+
+  </div>
+
+</div>
+
+</body>
+</html>

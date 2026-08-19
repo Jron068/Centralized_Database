@@ -46,7 +46,7 @@ def admin_dashboard():
         pending_caretakers = cursor.fetchall()
 
         return render_template(
-            "admin.html",
+            "admin/admin.html",
             username=session.get("fullname"),
             resorts=my_resorts,
             pending_caretakers=pending_caretakers

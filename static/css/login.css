@@ -143,37 +143,55 @@ input:focus{
     font-weight:600;
 }
 
+/* ROLE CARDS — now supports 3 options (Customer / Caretaker / Owner) */
+
 .roles{
-    display:flex;
-    gap:15px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
     margin-top:15px;
     margin-bottom:25px;
 }
 
 .role{
-    flex:1;
     border:1px solid #ddd;
     border-radius:15px;
-    padding:18px;
+    padding:14px 10px;
     display:flex;
-    align-items:center;
-    gap:12px;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:4px;
     cursor:pointer;
     transition:.3s;
+    min-width:0; /* allows text to wrap/shrink instead of overflowing the grid cell */
 }
 
 .role:hover{
     border-color:#157a0c;
 }
 
+.role:has(input:checked){
+    border-color:#167d12;
+    background:#f3fbf2;
+}
+
+.role input[type="radio"]{
+    margin-bottom:4px;
+}
+
 .role strong{
     display:block;
-    font-size:18px;
+    font-size:15px;
+    line-height:1.2;
+    white-space:normal;
+    word-break:break-word;
 }
 
 .role span{
-    font-size:13px;
+    font-size:11.5px;
     color:#666;
+    line-height:1.3;
 }
 
 .login-btn{
@@ -244,6 +262,33 @@ input:focus{
     padding:25px;
 }
 
+.roles{
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+}
+
+.role{
+    padding:12px 8px;
+}
+
+.role strong{
+    font-size:14px;
+}
+
+.role span{
+    font-size:11px;
+}
+
+}
+
+/* Small tablet / large mobile — stack to 2 columns so text has room */
+
+@media(max-width:700px){
+
+.roles{
+    grid-template-columns:repeat(2, 1fr);
+}
+
 }
 
 /* Mobile */
@@ -251,7 +296,22 @@ input:focus{
 @media(max-width:600px){
 
 .roles{
-    flex-direction:column;
+    grid-template-columns:1fr;
+    gap:10px;
+}
+
+.role{
+    flex-direction:row;
+    align-items:center;
+    padding:14px 16px;
+}
+
+.role strong{
+    font-size:16px;
+}
+
+.role span{
+    font-size:12px;
 }
 
 .social{
@@ -334,4 +394,3 @@ input:focus{
     color: #2e7d32;
     border: 1px solid #81c784;
 }
-

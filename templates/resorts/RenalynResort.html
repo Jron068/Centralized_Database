@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lucky Miels Resort | Pansol Resorts</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resort_index.css') }}">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌴</div>
+    <div class="logo-text">
+      <h1>PANSOL RESORTS</h1>
+      <span>Centralized Reservation Hub</span>
+    </div>
+  </div>
+  <nav>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('landing_resortpage') }}" class="active">Resorts</a>
+    <a href="{{ url_for('howitworks') }}">How it Works</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
+  </nav>
+  <div class="auth-buttons">
+    <button class="btn-outline">Log In</button>
+    <button class="btn-outline">Register</button>
+  </div>
+</header>
+
+<div class="main-row">
+  <div>
+    <div class="hero">
+      <div class="loc">📍 Pansol, Calamba, Philippines</div>
+      <h2>Lucky Miels Resort</h2>
+      <p>A tropical sanctuary in the Place of Water. Enjoy soothing hot spring pools, relaxing villas, and warm hospitality for an unforgettable stay.</p>
+      <div class="hero-actions">
+        <button class="btn-solid">Book Now</button>
+        <button class="btn-solid alt">Amenities</button>
+      </div>
+    </div>
+    <div class="facts-bar">
+      <div class="fact"><span class="icon">🛏️</span><div><span class="num">25</span><span class="label">Rooms &amp; Villas</span></div></div>
+      <div class="fact"><span class="icon">🏊</span><div><span class="num">3</span><span class="label">Swimming Pools</span></div></div>
+      <div class="fact"><span class="icon">🍽️</span><div><span class="num">1</span><span class="label">On-site Restaurant</span></div></div>
+      <div class="fact"><span class="icon">🛡️</span><div><span class="num">24/7</span><span class="label">Guest Support</span></div></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h3>Resort Performance</h3>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="val">85%</div><div class="lbl">Occupancy Rate (High Season)</div><div class="delta">↑ 12% vs last year</div></div>
+      <div class="stat-card"><div class="val">4.8/5</div><div class="lbl">Average Rating (230+ Reviews)</div><div class="delta">↑ 0.3 vs last year</div></div>
+      <div class="stat-card"><div class="val">₱12,560</div><div class="lbl">Average Daily Rate (High Season)</div><div class="delta">↑ 8% vs last year</div></div>
+      <div class="stat-card"><div class="val">92%</div><div class="lbl">Guest Satisfaction Rate</div><div class="delta">↑ 10% vs last year</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="two-col">
+        <div>
+          <h4>Peak Season Analytics</h4>
+          <div class="sub">Occupancy Rate Over Time</div>
+          <svg viewBox="0 0 240 90" width="100%" height="90">
+            <polyline fill="none" stroke="#2b8a82" stroke-width="2"
+              points="0,50 20,30 40,45 60,20 80,55 100,25 120,40 140,15 160,50 180,10 200,45 220,20 240,30"/>
+          </svg>
+        </div>
+        <div>
+          <h4>Guest Source</h4>
+          <svg viewBox="0 0 42 42" width="70" height="70">
+            <circle r="16" cx="21" cy="21" fill="transparent" stroke="#1f6b52" stroke-width="8" stroke-dasharray="45 100" stroke-dashoffset="25"/>
+            <circle r="16" cx="21" cy="21" fill="transparent" stroke="#2b8a82" stroke-width="8" stroke-dasharray="25 100" stroke-dashoffset="-20"/>
+            <circle r="16" cx="21" cy="21" fill="transparent" stroke="#7fc4bd" stroke-width="8" stroke-dasharray="15 100" stroke-dashoffset="-45"/>
+            <circle r="16" cx="21" cy="21" fill="transparent" stroke="#bfe0d6" stroke-width="8" stroke-dasharray="10 100" stroke-dashoffset="-60"/>
+            <circle r="16" cx="21" cy="21" fill="transparent" stroke="#e2e6e4" stroke-width="8" stroke-dasharray="5 100" stroke-dashoffset="-70"/>
+          </svg>
+          <ul class="legend">
+            <li><span class="dot" style="background:#1f6b52"></span>Manila 45%</li>
+            <li><span class="dot" style="background:#2b8a82"></span>Laguna 25%</li>
+            <li><span class="dot" style="background:#7fc4bd"></span>Cavite 15%</li>
+            <li><span class="dot" style="background:#bfe0d6"></span>Batangas 10%</li>
+            <li><span class="dot" style="background:#e2e6e4"></span>Others 5%</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Guest Feedback Summary</h4>
+      <div class="sub">What our guests are saying</div>
+      <div class="feedback-row"><span>Cleanliness</span><div class="bar-track"><div class="bar-fill" style="width:98%"></div></div><span>4.9/5</span></div>
+      <div class="feedback-row"><span>Service</span><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span>4.8/5</span></div>
+      <div class="feedback-row"><span>Location</span><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><span>4.7/5</span></div>
+      <div class="feedback-row"><span>Amenities</span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span>4.6/5</span></div>
+      <div class="feedback-row"><span>Value for Money</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><span>4.5/5</span></div>
+      <div class="review-card"><div class="stars">★★★★★</div>"Amazing place for family bonding. Pool and villas are excellent." — Mark S.</div>
+      <div class="review-card"><div class="stars">★★★★★</div>"Staff were very accommodating and friendly. Highly recommended." — John D.</div>
+      <div class="review-card"><div class="stars">★★★★★</div>"We had a relaxing stay. Will definitely come back." — Ana L.</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <span class="active">Overview</span>
+  <span>Room &amp; Rates</span>
+  <span>Amenities</span>
+  <span>Photos</span>
+  <span>Reviews</span>
+</div>
+
+<div class="content-row">
+  <div class="overview-left">
+    <div class="about">
+      <h3>About the Resort</h3>
+      <p>Lucky Miels Resort is your perfect escape from the city. Nestled in the natural hot spring village of Pansol, our resort offers a relaxing atmosphere, modern amenities, and exceptional service.</p>
+      <ul class="checklist">
+        <li><span class="check">✓</span>Natural hot spring pools</li>
+        <li><span class="check">✓</span>Spacious villas &amp; rooms</li>
+        <li><span class="check">✓</span>Family &amp; group friendly</li>
+        <li><span class="check">✓</span>Events &amp; private functions</li>
+      </ul>
+      <button class="btn-line">Explore Amenities</button>
+    </div>
+    <div class="photo-grid">
+      <img class="p1" src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=500" alt="">
+      <img class="p2" src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=500" alt="">
+      <img class="p3" src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=500" alt="">
+      <img class="p4" src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=500" alt="">
+    </div>
+  </div>
+
+  <div class="booking-panel">
+    <h4>Monthly Booking Summary</h4>
+    <div class="sub">Total Bookings</div>
+    <div class="bars">
+      <div class="bar" style="height:55%"></div>
+      <div class="bar" style="height:60%"></div>
+      <div class="bar" style="height:70%"></div>
+      <div class="bar" style="height:65%"></div>
+      <div class="bar" style="height:72%"></div>
+      <div class="bar" style="height:68%"></div>
+      <div class="bar" style="height:75%"></div>
+      <div class="bar" style="height:80%"></div>
+      <div class="bar" style="height:78%"></div>
+      <div class="bar" style="height:90%"></div>
+      <div class="bar" style="height:100%"></div>
+      <div class="bar" style="height:85%"></div>
+    </div>
+    <div class="bars-labels">
+      <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+      <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+    </div>
+    <div class="annual">
+      <h4 style="margin-bottom:10px;">Annual Summary</h4>
+      <div class="row"><span>Total Bookings</span><b>8,450</b></div>
+      <div class="row"><span>Total Revenue</span><b>₱106,280,000</b></div>
+      <div class="row"><span>Repeat Guests</span><b>35%</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="perfect-for">
+  <h3>Perfect For</h3>
+  <div class="pf-cards">
+    <div class="pf-card"><div class="ic">👪</div><h5>Family Getaways</h5><p>Relax and reconnect with your loved ones</p></div>
+    <div class="pf-card"><div class="ic">💚</div><h5>Couples Retreats</h5><p>Romantic escapes in a serene setting</p></div>
+    <div class="pf-card"><div class="ic">👥</div><h5>Group Outings</h5><p>Fun and memorable bonding experiences</p></div>
+    <div class="pf-card"><div class="ic">💼</div><h5>Corporate Events</h5><p>Conferences, meetings and team buildings</p></div>
+  </div>
+</div>
+
+<div class="cta">
+  <div class="cta-left">
+    <div class="cta-icon">📅</div>
+    <div>
+      <h3>Ready to experience Lucky Miels Resort?</h3>
+      <p>Book your stay today and create unforgettable memories.</p>
+    </div>
+  </div>
+  <button class="btn-cta">Book Now</button>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Resorts | Pansol Resorts</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing_resortpage.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/resort_index.css') }}">
+
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌴</div>
+    <div class="logo-text">
+      <h1>PANSOL RESORTS</h1>
+      <span>Centralized Reservation Hub</span>
+    </div>
+  </div>
+  <nav>
+    <a href="{{ url_for('index') }}" class="{{ 'active' if active_page == 'home' }}">Home</a>
+    <a href="{{ url_for('about') }}" class="{{ 'active' if active_page == 'about' }}">About</a>
+    <a href="{{ url_for('landing_resortpage') }}" class="{{ 'active' if active_page == 'resorts' }}">Resorts</a>
+    <a href="{{ url_for('howitworks') }}" class="{{ 'active' if active_page == 'howitworks' }}">How it Works</a>
+    <a href="{{ url_for('contact') }}" class="{{ 'active' if active_page == 'contact' }}">Contact</a>
+  </nav>
+  <div class="auth-buttons">
+    <button class="btn-outline">Log In</button>
+    <button class="btn-outline">Register</button>
+  </div>
+</header>
+
+<div class="page-header">
+  <h1>Explore Our Partner Resorts</h1>
+  <p>Browse every resort in Pansol, Laguna and pick the one that fits your stay</p>
+</div>
+
+<div class="filter-bar">
+  <div class="search-input">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" placeholder="Search resorts by name...">
+  </div>
+  <select class="filter-select">
+    <option>All Locations</option>
+    <option>Pansol, Calamba</option>
+    <option>Pansol, Laguna</option>
+  </select>
+  <select class="filter-select">
+    <option>Price Range</option>
+    <option>Under ₱5,000</option>
+    <option>₱5,000 - ₱10,000</option>
+    <option>Above ₱10,000</option>
+  </select>
+  <div class="sort-chip">
+    <button class="chip active-chip">Top Rated</button>
+    <button class="chip">Nearest</button>
+    <button class="chip">Price: Low to High</button>
+  </div>
+</div>
+
+<div class="results-info">Showing 6 of 6 resorts</div>
+
+<div class="resort-grid">
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/luckymiels.jpg" alt="Lucky Miels Resort">
+      <span class="badge">⭐ Popular</span>
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Lucky Miels Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
+      <p class="rating">⭐ 4.8 <span>(230+ reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Hot Spring</span>
+        <span class="tag">Family Friendly</span>
+        <span class="tag">Villas</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱12,560</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('LuckyMielsResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/sunscape.jpg" alt="Sunscape Resort">
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Sunscape Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+      <p class="rating">⭐ 4.6 <span>(128 reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Hot Spring</span>
+        <span class="tag">Group Friendly</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱9,800</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('SunscapeResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/triplez.jpg" alt="Triple Z Resort">
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Triple Z Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+      <p class="rating">⭐ 4.6 <span>(128 reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Pool</span>
+        <span class="tag">Events</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱7,500</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('TripleZResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/magic.jpg" alt="Magic Kingdom Resort">
+      <span class="badge">🔥 New</span>
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Magic Kingdom Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+      <p class="rating">⭐ 4.6 <span>(128 reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Theme Park</span>
+        <span class="tag">Family Friendly</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱8,200</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('MagicKingdomResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/renalyn.jpg" alt="Renalyn Resort">
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Renalyn Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+      <p class="rating">⭐ 4.6 <span>(128 reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Budget Friendly</span>
+        <span class="tag">Day Use</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱5,900</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('RenalynsResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="resort-card">
+    <div class="card-img">
+      <img src="images/gallely.jpg" alt="Gallely Resort">
+      <span class="fav"><i class="fa-regular fa-heart"></i></span>
+    </div>
+    <div class="card-body">
+      <h3>Gallely Resort</h3>
+      <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+      <p class="rating">⭐ 4.6 <span>(128 reviews)</span></p>
+      <div class="tags">
+        <span class="tag">Hot Spring</span>
+        <span class="tag">Couples</span>
+      </div>
+      <div class="card-footer">
+        <div class="price">From <b>₱6,750</b> /night</div>
+        <button class="btn-select"><a href="{{ url_for('GallelysResort') }}">Select</a></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="pagination">
+  <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+  <button class="page-btn active-page">1</button>
+  <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<script>
+document.querySelectorAll('.fav').forEach(f=>{
+  f.addEventListener('click', e=>{
+    e.stopPropagation();
+    f.querySelector('i').classList.toggle('fa-regular');
+    f.querySelector('i').classList.toggle('fa-solid');
+  });
+});
+document.querySelectorAll('.sort-chip .chip').forEach(c=>{
+  c.addEventListener('click', ()=>{
+    document.querySelectorAll('.sort-chip .chip').forEach(x=>x.classList.remove('active-chip'));
+    c.classList.add('active-chip');
+  });
+});
+document.querySelectorAll('.btn-select').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    // navigate to that resort's resort_index page
+  });
+});
+</script>
+
+</body>
+</html>
