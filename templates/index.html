@@ -1,322 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pansol Resorts</title>
+{% extends "base.html" %}
+{% block title %}Pansol Resorts{% endblock %}
+{% set active_page = 'home' %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    
-</head>
-
-<script>
-const toggle = document.querySelector(".menu-toggle");
-const nav = document.querySelector(".nav-links");
-
-toggle.addEventListener("click", () => {
-    nav.classList.toggle("show");
-});
-</script>
-
-<body>
-
-<!-- ================= NAVBAR ================= -->
-
-<nav class="navbar">
-
-    <div class="logo">
-        <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo">
-    </div>
-
-    <button class="menu-toggle">
-        <i class="fa-solid fa-bars"></i>
-    </button>
-
-    <ul class="nav-links">
-        <li><a href="#">Home</a></li>
-        <li><a class="active" href="#">About</a></li>
-        <li><a href="#">Resorts</a></li>
-        <li><a href="#">How it Works</a></li>
-        <li><a href="#">Contact</a></li>
-    </ul>
-
-    <div class="buttons">
-        <button class="login"><a href="{{url_for('login')}}">Log In</a></button>
-        <button class="register"><a href="{{ url_for('registration') }}">Register</a></button>
-    </div>
-
-</nav>
-
-<!-- ================= HERO ================= -->
-
+{% block content %}
 <section class="hero">
-
     <div class="overlay">
-
         <div class="hero-text">
             <h1>Find. Book. Relax</h1>
-            <p>
-                Your one-stop reservation hub for the best resorts
-                in Pansol, Laguna.
-            </p>
+            <p>Your one-stop reservation hub for the best resorts in Pansol, Laguna.</p>
         </div>
-
     </div>
-
 </section>
-
-<!-- ================= SEARCH BOX ================= -->
 
 <div class="search-box">
-
     <div class="stay-type">
-        <button class="active-btn">Overnight</button>
-        <button>Day Use Stay</button>
+        <button class="active-btn" type="button">Overnight</button>
+        <button type="button">Day Use Stay</button>
     </div>
-
     <div class="booking-bar">
-
-    <!-- Check In -->
-    <div class="booking-item">
-        <label>Check In</label>
-
-        <div class="input-box">
-            <i class="fa-regular fa-calendar"></i>
-
-            <input type="date" id="checkin">
-
+        <div class="booking-item">
+            <label>Check In</label>
+            <div class="input-box"><i class="fa-regular fa-calendar"></i><input type="date" id="checkin"></div>
+        </div>
+        <div class="booking-item">
+            <label>Check Out</label>
+            <div class="input-box"><i class="fa-regular fa-calendar"></i><input type="date" id="checkout"></div>
+        </div>
+        <div class="booking-item">
+            <label>Rooms</label>
+            <div class="input-box">
+                <select><option>1 Room</option><option>2 Rooms</option><option>3 Rooms</option><option>4 Rooms</option></select>
+            </div>
+        </div>
+        <div class="booking-item">
+            <label>Children</label>
+            <div class="input-box"><input type="number" id="children" min="0" max="10" value="0" placeholder="Children"></div>
+        </div>
+        <div class="booking-item">
+            <label>Adult</label>
+            <div class="input-box"><input type="number" id="adult" min="1" max="20" value="2" placeholder="Adults"></div>
         </div>
     </div>
-
-    <!-- Check Out -->
-    <div class="booking-item">
-        <label>Check Out</label>
-
-        <div class="input-box">
-            <i class="fa-regular fa-calendar"></i>
-
-            <input type="date" id="checkout">
-
-        </div>
-    </div>
-
-    <!-- Rooms -->
-    <div class="booking-item">
-
-        <label>Rooms</label>
-
-        <div class="input-box">
-
-            <select>
-
-                <option>1 Room</option>
-                <option>2 Rooms</option>
-                <option>3 Rooms</option>
-                <option>4 Rooms</option>
-
-            </select>
-
-        </div>
-
-    </div>
-
-    <!-- Children -->
-
-    <div class="booking-item">
-
-        <label>Children</label>
-
-        <div class="input-box">
-
-            <input
-                type="number"
-                id="children"
-                min="0"
-                max="10"
-                value="0"
-                placeholder="Children">
-        </div>
-
-    </div>
-
-    <!-- Adult -->
-
-    <div class="booking-item">
-
-        <label>Adult</label>
-
-        <div class="input-box">
-
-            <input
-            type="number"
-            id="adult"
-            min="1"
-            max="20"
-            value="2"
-            placeholder="Adults">
-
-        </div>
-
-    </div>
-
 </div>
-
-</div>
-
-<!-- ================= TITLE ================= -->
 
 <section class="partner">
-
     <h2>Our Partner Resorts</h2>
-
-    <div class="divider">
-        <span></span>
-        <i class="fa-solid fa-spa"></i>
-        <span></span>
-    </div>
-
+    <div class="divider"><span></span><i class="fa-solid fa-spa"></i><span></span></div>
 </section>
 
-
-<!-- ================= PARTNER RESORTS ================= -->
- <section class="partner-resorts">
-
+<section class="partner-resorts">
     <div class="resort-card">
-
-        <img src="images/luckymiels.jpg" alt="Lucky Miels Resort">
-
+        <img src="{{ url_for('static', filename='images/luckymiels.jpg') }}" alt="Lucky Miels Resort">
         <div class="card-content">
-
             <h3>Lucky Miels Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
     <div class="resort-card">
-
-        <img src="images/sunscape.jpg" alt="Sunscape">
-
+        <img src="{{ url_for('static', filename='images/sunscape.jpg') }}" alt="Sunscape Resort">
         <div class="card-content">
-
             <h3>Sunscape Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
     <div class="resort-card">
-
-        <img src="images/triplez.jpg">
-
+        <img src="{{ url_for('static', filename='images/triplez.jpg') }}" alt="Triple Z Resort">
         <div class="card-content">
-
             <h3>Triple Z Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
     <div class="resort-card">
-
-        <img src="images/magic.jpg">
-
+        <img src="{{ url_for('static', filename='images/magic.jpg') }}" alt="Magic Kingdom Resort">
         <div class="card-content">
-
             <h3>Magic Kingdom Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
     <div class="resort-card">
-
-        <img src="images/renalyn.jpg">
-
+        <img src="{{ url_for('static', filename='images/renalyn.jpg') }}" alt="Renalyn Resort">
         <div class="card-content">
-
             <h3>Renalyn Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
     <div class="resort-card">
-
-        <img src="images/gallely.jpg">
-
+        <img src="{{ url_for('static', filename='images/gallely.jpg') }}" alt="Gallely Resort">
         <div class="card-content">
-
             <h3>Gallely Resort</h3>
-
-            <p class="location">
-                <i class="fa-solid fa-location-dot"></i>
-                Pansol, Laguna
-            </p>
-
-            <p class="rating">
-                ⭐ 4.6 (128 reviews)
-            </p>
-
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
+            <p class="rating">⭐ 4.6 (128 reviews)</p>
         </div>
-
     </div>
-
 </section>
+{% endblock %}
 
-
-
-</body>
-</html>
+{% block extra_scripts %}
+<script>
+document.querySelectorAll(".stay-type button").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".stay-type button").forEach(b => b.classList.remove("active-btn"));
+        btn.classList.add("active-btn");
+    });
+});
+</script>
+{% endblock %}

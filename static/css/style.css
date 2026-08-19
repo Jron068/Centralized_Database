@@ -1,0 +1,269 @@
+/* =========================================================
+   Pansol Resorts — shared stylesheet for Bootstrap pages
+   (about.html, contact.html, howitworks.html)
+
+   This was previously an EMPTY file, which is the main reason
+   these three pages looked unaligned with index.html — every
+   custom class below (.page-title, .contact-heading, .step-badge,
+   .mission-card, .find-us-card, .custom-input, etc.) had no CSS
+   backing it, so only raw Bootstrap defaults were rendering.
+
+   Tokens (font, green accent, radius, shadow) are pulled directly
+   from index.css so all pages read as one consistent brand.
+   ========================================================= */
+
+
+/* ---------- HEADER (single source of truth, matches resort_index look) ---------- */
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;
+  background:#fff;border-bottom:1px solid #e2e6e4;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,#eaf6ee,#dff0e6);
+  display:flex;align-items:center;justify-content:center;font-size:22px;}
+.logo-text h1{font-size:18px;letter-spacing:.5px;color:#1f6b52;font-family:'Trebuchet MS',sans-serif;margin:0;}
+.logo-text span{font-size:11px;color:#6b7674;font-family:'Trebuchet MS',sans-serif;}
+nav{display:flex;gap:32px;font-family:'Trebuchet MS',sans-serif;font-size:15px;color:#333;}
+nav a{text-decoration:none;color:#333;padding-bottom:6px;}
+nav a.active{color:#2f8f6e;border-bottom:2px solid #2f8f6e;font-weight:600;}
+.auth-buttons{display:flex;gap:12px;font-family:'Trebuchet MS',sans-serif;}
+.auth-buttons .btn-outline a{text-decoration:none;color:inherit;}
+.btn-outline{padding:8px 20px;border:1px solid #ccc;border-radius:20px;background:#fff;font-size:14px;cursor:pointer;}
+
+/* ---------- Shared page frame (About / Contact / How It Works) ---------- */
+.page-wrap{max-width:1280px;margin:0 auto;padding:26px 40px;font-family:'Trebuchet MS',sans-serif;}
+.page-header{text-align:center;margin-bottom:36px;}
+.page-header h1{font-size:34px;color:#1c2a28;margin-bottom:8px;}
+.page-header p{color:#6b7674;font-size:15px;}
+
+.card-block{background:#fff;border:1px solid #e2e6e4;border-radius:12px;
+  padding:28px 32px;box-shadow:0 4px 18px rgba(0,0,0,.05);margin-bottom:24px;}
+
+.btn-cta{background:#2b8a82;color:#fff;border:none;padding:12px 26px;border-radius:22px;
+  font-weight:600;font-size:14px;cursor:pointer;}
+
+   :root{
+  --brand-green: #00A86B;
+  --brand-green-dark: #2d7f53;
+  --brand-green-light: #8BC34A;
+  --brand-accent: #3ea87b;
+  --brand-tan: #6b4b33;
+  --text-dark: #333;
+  --text-muted: #666;
+  --border-light: #d9d9d9;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow-soft: 0 5px 18px rgba(0,0,0,.10);
+  --shadow-hover: 0 10px 25px rgba(0,0,0,.15);
+}
+
+body{
+  font-family:'Poppins', sans-serif;
+  color: var(--text-dark);
+}
+
+/* ---------- Shared page heading style (About / How It Works) ---------- */
+.page-title{
+  color: var(--brand-tan);
+}
+
+.contact-heading{
+  color: var(--brand-green-dark);
+}
+
+.section-subheading{
+  color: var(--text-dark);
+  letter-spacing: .04em;
+  font-size: 1.05rem;
+}
+
+/* ---------- Navbar polish (shared across Bootstrap pages) ---------- */
+.navbar .nav-link{
+  font-weight: 500;
+  color: var(--text-dark) !important;
+  position: relative;
+}
+
+.navbar .nav-link.active{
+  color: var(--brand-green-dark) !important;
+}
+
+.navbar .nav-link.active::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-6px;
+  height:3px;
+  border-radius:2px;
+  background: var(--brand-green-light);
+}
+
+.nav-subtitle{
+  font-size: .72rem;
+}
+
+.user-avatar{
+  width: 34px;
+  height: 34px;
+  font-size: .95rem;
+}
+
+/* ---------- About: hero banner ---------- */
+.about-hero{
+  background:
+    linear-gradient(rgba(0,40,25,.55), rgba(0,40,25,.55)),
+    url("../images/bg_landingpage.jpg") center/cover;
+  min-height: 260px;
+}
+
+/* ---------- About: mission / vision cards ---------- */
+.mission-card{
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-soft) !important;
+  background: #fff;
+}
+
+.leading-relaxed{
+  line-height: 1.7;
+}
+
+/* ---------- About: "Why choose" feature dividers ---------- */
+.border-end-md{
+  border-color: var(--border-light) !important;
+}
+
+/* ---------- About / How it Works: bottom banners ---------- */
+.banner-tourism,
+.banner-help{
+  background: #e8f4ef;
+  border: 1px solid #d7ecdf;
+}
+
+.banner-help{
+  background: #f4f9f2;
+}
+
+/* ---------- How It Works: numbered steps ---------- */
+.step-card{
+  border-radius: var(--radius-md) !important;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.step-card:hover{
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover) !important;
+}
+
+.step-badge{
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--brand-green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-illustration-box{
+  background: #f1f8f4;
+  border-radius: var(--radius-md);
+  min-height: 96px;
+}
+
+/* ---------- Contact: info list + form ---------- */
+.contact-info-list a,
+.location-link{
+  transition: color .2s ease;
+}
+
+.contact-info-list a:hover,
+.location-link:hover{
+  color: var(--brand-green-dark) !important;
+}
+
+.custom-input{
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  padding: 14px 16px;
+}
+
+.custom-input::placeholder{
+  color: #9a9a9a;
+  letter-spacing: .03em;
+  font-size: .85rem;
+}
+
+.custom-input:focus{
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 3px rgba(0,168,107,.12);
+}
+
+/* ---------- Contact: Find Us card + map ---------- */
+.find-us-card{
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.map-wrapper{
+  border-radius: var(--radius-md);
+  line-height: 0;
+}
+
+/* ---------- Buttons ---------- */
+.btn-success{
+  background-color: var(--brand-green) !important;
+  border-color: var(--brand-green) !important;
+}
+
+.btn-success:hover{
+  background-color: var(--brand-green-dark) !important;
+  border-color: var(--brand-green-dark) !important;
+}
+
+.text-success{
+  color: var(--brand-green) !important;
+}
+
+/* =========================================================
+   Alignment / sizing consistency across all three pages,
+   matched to index.css breakpoints (992 / 768 / 480)
+   ========================================================= */
+
+@media (max-width: 991.98px){
+  .about-hero h1{ font-size: 2rem; }
+  .find-us-card .row > div{ margin-bottom: 14px; }
+}
+
+@media (max-width: 767.98px){
+  .border-end-md{
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .banner-tourism,
+  .banner-help{
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .banner-help .btn{
+    width: 100%;
+  }
+
+  .step-card .col-md-5{
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 575.98px){
+  .about-hero{ min-height: 200px; }
+  .about-hero h1{ font-size: 1.6rem; }
+  .about-hero p{ font-size: .95rem; }
+  .mission-card{ padding: 1.5rem !important; }
+}
+
+

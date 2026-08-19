@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts | Profile Setting</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width: 220px; height: auto;">
+    </div>
+
+    <nav class="nav">
+      <a href="{{ url_for('customer_landingpage') }}" class="nav-item">
+        <i class="fa-solid fa-grip"></i> DASHBOARD
+      </a>
+
+      <p class="nav-label">My Bookings</p>
+      <a href="{{ url_for('customer_reservation') }}" class="nav-item">
+        <i class="fa-regular fa-calendar-check"></i> My Reservation
+      </a>
+      <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
+      </a>
+
+      <p class="nav-label">My Account</p>
+      <a href="{{ url_for('customer_profileSetting') }}" class="nav-item active">
+        <i class="fa-solid fa-gear"></i> Profile Setting
+      </a>
+      <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
+        <i class="fa-solid fa-lock"></i> Change Password
+      </a>
+
+      <p class="nav-label">Support</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-circle-question"></i> Contact Support
+      </a>
+    </nav>
+
+    <a class="logout" href="{{ url_for('login') }}"
+    style="margin-left:0px;
+    display:flex;
+    align-items:center;
+    margin-top: 130%;
+    color:#fff;
+    text-decoration:none;
+    opacity:.9;
+      "> &#8592; Log Out</a>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+      </div>
+
+      <nav class="topbar-links">
+        <a href="/customer_landingpage">Home</a>
+        <a href="/customer_aboutpage">About</a>
+        <a href="/resorts">Resorts</a>
+        <a href="/customer_howitworks">How it Works</a>
+      </nav>
+
+      <div class="topbar-user">
+        <i class="fa-regular fa-bell"></i>
+        <div class="avatar"></div>
+        <span>{{ username }}</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <h1>Profile Setting</h1>
+      <p class="subtitle">Update your personal information.</p>
+
+      <div class="panel" style="margin-top:20px; max-width:760px;">
+        <h3>Personal Information</h3>
+        <p class="subtitle" style="margin-bottom:16px;">This information is stored on your account.</p>
+
+        <form method="POST" action="{{ url_for('customer_profileSetting') }}">
+          <div class="form-grid">
+            <div class="field">
+              <label for="fullname">Full Name</label>
+              <input type="text" id="fullname" name="fullname" value="{{ account.fullname }}" required>
+            </div>
+            <div class="field">
+              <label for="email">Account Email</label>
+              <input type="email" id="email" name="email" value="{{ account.email }}" required>
+              <small>Used to sign in — changing this updates your login email.</small>
+            </div>
+            <div class="field">
+              <label for="contact_email">Contact Email</label>
+              <input type="email" id="contact_email" name="contact_email" value="{{ customer.email or '' }}">
+            </div>
+            <div class="field">
+              <label for="phone">Phone Number</label>
+              <input type="text" id="phone" name="phone" value="{{ customer.phone or '' }}" placeholder="+63 9XX XXX XXXX">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-save">Save Changes</button>
+            <a href="{{ url_for('customer_landingpage') }}" class="btn-cancel">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

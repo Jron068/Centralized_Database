@@ -5,7 +5,7 @@ from config import get_connection
 
 @app.route("/otp")
 def otp():
-    return render_template("otp.html")
+    return render_template("auth/otp.html")
 
 @app.route("/verify-otp", methods=["POST"])
 def verify_otp():
@@ -53,4 +53,4 @@ def verify_otp():
 
 @app.route("/verification-done")
 def verification_done():
-    return render_template("verified_done.html")
+    return render_template("auth/verified_done.html")

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts | How It Works</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo" style="width: 220px; height: auto;">          
+    </div>
+
+    <nav class="nav">
+
+      <a href="/customer_landingpage" class="nav-item">
+        <i class="fa-solid fa-grip"></i> DASHBOARD
+      </a>
+
+      <p class="nav-label">My Bookings</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-calendar-check"></i> My Reservation
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
+      </a>
+
+      <p class="nav-label">My Account</p>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-gear"></i> Profile Setting
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fa-solid fa-lock"></i> Change Password
+      </a>
+
+      <p class="nav-label">Support</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-circle-question"></i> Contact Support
+      </a>
+
+    </nav>
+    <a class="logout" href="{{ url_for('login') }}" 
+    style="margin-left:0px;
+    display:flex;
+    align-items:center;
+    margin-top: 200%;
+    color:#fff;
+    text-decoration:none;
+    opacity:.9;
+      "> &#8592; Log Out</a>  
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP NAV -->
+    <header class="topbar">
+
+      <div class="logo"> 
+        <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo">      
+      </div>
+
+      <nav class="topbar-links">
+        <a href="/customer_landingpage">Home</a>
+        <a href="/customer_aboutpage">About</a>
+        <a href="/resorts">Resorts</a>
+        <a href="/customer_howitworks" class="active">How it Works</a>
+      </nav>
+
+      <div class="topbar-user">
+        <i class="fa-regular fa-bell"></i>
+        <div class="avatar"></div>
+        <span>{{ username }}</span>
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <h1>How It Works</h1>
+      <p class="subtitle">Booking your next getaway in Pansol, Laguna is quick and simple</p>
+
+      <!-- STEPS -->
+      <h3 style="margin-top:32px;">Book in 4 Easy Steps</h3>
+
+      <section class="stats">
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon blue"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="stat-label">1. Browse Resorts</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Explore our list of top-rated resorts in Pansol and compare amenities, prices, and reviews.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon orange"><i class="fa-regular fa-calendar-days"></i></span>
+            <span class="stat-label">2. Check Availability</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Select your check-in and check-out dates, along with the number of guests for your stay.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon green"><i class="fa-solid fa-credit-card"></i></span>
+            <span class="stat-label">3. Confirm & Pay</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Review your booking details and complete your payment securely through our platform.</p>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon gray"><i class="fa-solid fa-suitcase"></i></span>
+            <span class="stat-label">4. Enjoy Your Stay</span>
+          </div>
+          <p style="font-size:12.5px;color:#6b7674;margin-top:8px;">Receive your confirmation and get ready to relax — your reservation is all set.</p>
+        </div>
+
+      </section>
+
+      <!-- FOR CUSTOMERS -->
+      <h3 style="margin-top:32px;">Managing Your Booking</h3>
+
+      <section class="panels">
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-clipboard-check" style="color:#2b8a82;margin-right:8px;"></i>Track Your Reservations</h3>
+          <p style="color:#5b6663;line-height:1.7;font-size:14px;">
+            Once booked, you can view the full status of your reservation — confirmed, pending, or completed — anytime from your dashboard.
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa-solid fa-bell" style="color:#2b8a82;margin-right:8px;"></i>Stay Updated</h3>
+          <p style="color:#5b6663;line-height:1.7;font-size:14px;">
+            Get real-time notifications for booking confirmations, payment updates, and any changes to your reservation.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- FAQ -->
+      <h3 style="margin-top:32px;">Frequently Asked Questions</h3>
+
+      <section class="panel" style="margin-top:16px;">
+        <div style="padding:14px 0;border-bottom:1px solid #e7ece9;">
+          <h4 style="margin:0 0 6px 0;font-size:14.5px;color:#1c2624;">Can I cancel or modify my reservation?</h4>
+          <p style="margin:0;font-size:13px;color:#6b7674;line-height:1.6;">Yes, you can manage or cancel your reservation from the "My Reservation" page, subject to each resort's cancellation policy.</p>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid #e7ece9;">
+          <h4 style="margin:0 0 6px 0;font-size:14.5px;color:#1c2624;">What payment methods are accepted?</h4>
+          <p style="margin:0;font-size:13px;color:#6b7674;line-height:1.6;">We accept major payment methods including cards, e-wallets, and bank transfers, depending on the resort's setup.</p>
+        </div>
+        <div style="padding:14px 0;">
+          <h4 style="margin:0 0 6px 0;font-size:14.5px;color:#1c2624;">Is my payment secure?</h4>
+          <p style="margin:0;font-size:13px;color:#6b7674;line-height:1.6;">Absolutely. All transactions are processed securely to protect your personal and payment information.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <p style="margin:0 30px;">&copy; 2026 Pansol Resorts. All rights reserved.</p>
+    </footer>
+
+  </div>
+
+</div>
+
+</body>
+</html>

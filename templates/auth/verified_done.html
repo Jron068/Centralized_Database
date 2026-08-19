@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Verification Successful</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/verification.css') }}">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left-panel">
+
+        <div class="logo">
+
+            <img src="{{ url_for('static', filename='images/logo.png') }}">
+
+            <div>
+                <h3>PANSOL RESORTS</h3>
+                <p>Reservation System</p>
+            </div>
+
+        </div>
+
+        <div class="progress">
+
+            <div class="step done">
+                <div class="circle">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <span>Account Verification</span>
+            </div>
+
+            <div class="line active"></div>
+
+            <div class="step done">
+                <div class="circle">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <span>Verification</span>
+            </div>
+
+            <div class="line active"></div>
+
+            <div class="step active">
+                <div class="circle">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <span>Completed</span>
+            </div>
+
+        </div>
+
+        <div class="content success">
+
+            <div class="success-icon">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <h2>Verification Successful</h2>
+
+            <p>
+                Your account has been successfully verified.
+            </p>
+
+            <a href="{{ url_for('index') }}" class="dashboard-btn">
+                Go to Dashboard
+            </a>
+
+            <a href="{{ url_for('index') }}" class="back-home">
+                Back to Home
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="right-panel">
+
+        <img src="{{ url_for('static', filename='images/side_panel.png') }}" alt="">
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

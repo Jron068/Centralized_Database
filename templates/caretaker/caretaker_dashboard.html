@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts | Dashboard Overview</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker_dashboard.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <i class="fa-solid fa-leaf brand-icon"></i>
+      <div>
+        <h2>PANSOL RESORTS</h2>
+        <span>Centralized Reservation Hub</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="#" class="nav-item active"><i class="fa-solid fa-grip"></i> Dashboard</a>
+      <a href="#" class="nav-item"><i class="fa-solid fa-arrows-rotate"></i> Updates</a>
+      <a href="#" class="nav-item"><i class="fa-solid fa-users"></i> Guests</a>
+      <a href="#" class="nav-item"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+      <a href="#" class="nav-item"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</a>
+      <a href="#" class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</a>
+    </nav>
+
+    <a href="#" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP NAV -->
+    <header class="topbar">
+
+      <div class="topbar-logo">
+        <i class="fa-solid fa-leaf brand-icon small"></i>
+        <span>PANSOL RESORTS</span>
+      </div>
+
+      <nav class="topbar-links">
+        <a href="#">Dashboard</a>
+        <a href="#">Updates</a>
+        <a href="#">Reports</a>
+        <a href="#">Messages</a>
+      </nav>
+
+      <div class="topbar-user">
+        <i class="fa-regular fa-bell"></i>
+        <div class="avatar"></div>
+        <span>Castillo, Aron-John</span>
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <h1>Dashboard Overview</h1>
+      <p class="subtitle">Welcome back! Here's what happening with your resorts today</p>
+
+      <!-- TOP GRID -->
+      <section class="grid-2x2">
+
+        <!-- Resort Status -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Resort Status</h3>
+            <span class="badge available">Available</span>
+          </div>
+          <p class="resort-name">Lucky Miels</p>
+          <div class="resort-image"></div>
+          <button class="btn-primary">Update Availability</button>
+        </div>
+
+        <!-- Recent Updates -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Recent Updates</h3>
+            <a href="#" class="view-all">View All</a>
+          </div>
+
+          <div class="update-row">
+            <div class="update-thumb"></div>
+            <div class="update-info">
+              <h4>Resort Photos Updated</h4>
+              <p>Photo recently updated to gallery</p>
+            </div>
+            <span class="update-date">May 15, 2026</span>
+          </div>
+
+          <div class="update-row">
+            <div class="update-thumb"></div>
+            <div class="update-info">
+              <h4>Resort Photos Updated</h4>
+              <p>Photo recently updated to gallery</p>
+            </div>
+            <span class="update-date">May 15, 2026</span>
+          </div>
+
+          <div class="update-row">
+            <div class="update-thumb"></div>
+            <div class="update-info">
+              <h4>Resort Photos Updated</h4>
+              <p>Photo recently updated to gallery</p>
+            </div>
+            <span class="update-date">May 15, 2026</span>
+          </div>
+
+        </div>
+
+        <!-- Messages -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Messages</h3>
+            <a href="#" class="view-all">View All</a>
+          </div>
+
+          <div class="message-row">
+            <div class="msg-avatar"></div>
+            <div class="message-info">
+              <h4>Aron-John</h4>
+              <p>Great, thank you for the reply</p>
+            </div>
+            <span class="msg-time">10:18 AM</span>
+          </div>
+
+          <div class="message-row">
+            <div class="msg-avatar"></div>
+            <div class="message-info">
+              <h4>Owner</h4>
+              <p>Please log the maintenance report</p>
+            </div>
+            <span class="msg-time">11:35 AM</span>
+          </div>
+
+          <div class="message-row">
+            <div class="msg-avatar"></div>
+            <div class="message-info">
+              <h4>Bryan D.</h4>
+              <p>Guest checked in successfully</p>
+            </div>
+            <span class="msg-time">Yesterday</span>
+          </div>
+
+        </div>
+
+        <!-- Upload Resort Updates -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Upload Resort Updates</h3>
+          </div>
+          <p class="resort-name">Lucky Miels</p>
+
+          <div class="dropzone">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Drag and drop photos here</p>
+            <span>Or click to browse</span>
+            <small>JPG, PNG up to 10MB</small>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- BOTTOM GRID -->
+      <section class="grid-2col">
+
+        <!-- Upcoming Reservations -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Upcoming Reservations</h3>
+            <a href="#" class="view-all">View All</a>
+          </div>
+
+          <div class="reservation">
+            <div class="reservation-thumb thumb-1"></div>
+            <div class="reservation-info">
+              <h4>Sunscape Resort</h4>
+              <p>May 20 - May 22, 2026 &nbsp;&middot;&nbsp; 3 Guests</p>
+            </div>
+            <span class="badge confirmed">Confirmed</span>
+          </div>
+
+          <div class="reservation">
+            <div class="reservation-thumb thumb-2"></div>
+            <div class="reservation-info">
+              <h4>Sunscape Resort</h4>
+              <p>May 25 - May 27, 2026 &nbsp;&middot;&nbsp; 2 Guests</p>
+            </div>
+            <span class="badge pending">Pending</span>
+          </div>
+
+          <div class="reservation">
+            <div class="reservation-thumb thumb-3"></div>
+            <div class="reservation-info">
+              <h4>Lucky Miels</h4>
+              <p>May 29 - May 31, 2026 &nbsp;&middot;&nbsp; 4 Guests</p>
+            </div>
+            <span class="badge confirmed">Confirmed</span>
+          </div>
+
+        </div>
+
+        <!-- Property Status -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Property Status</h3>
+          </div>
+          <p class="panel-note">Update availability for each property</p>
+
+          <div class="property-row">
+            <span>Oceanview Villa</span>
+            <div class="status-toggle">
+              <span class="status-label off">Fully Reserved</span>
+              <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="property-row">
+            <span>Sunset Beach Resort</span>
+            <div class="status-toggle">
+              <span class="status-label on">Available</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="property-row">
+            <span>Mountain Lodge</span>
+            <div class="status-toggle">
+              <span class="status-label on">Available</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="property-row">
+            <span>Lucky Miels Villa</span>
+            <div class="status-toggle">
+              <span class="status-label on">Available</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+</div>
+
+</body>
+</html>

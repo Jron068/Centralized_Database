@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Pansol Resorts - Contact Us{% endblock %}
+{% set active_page = 'contact' %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:36px;margin-bottom:30px;">
+    <div>
+      <h2 style="color:#1f6b52;margin-bottom:10px;">Get in Touch</h2>
+      <p style="color:#6b7674;margin-bottom:20px;">Have a question or need assistance? Reach out to us and we'll get back to you as soon as possible.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <i class="bi bi-telephone-fill" style="color:#2b8a82;"></i><span>+63 123 456 789</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <i class="bi bi-envelope-fill" style="color:#2b8a82;"></i><span>info@pansolresorts.com</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <i class="bi bi-geo-alt-fill" style="color:#2b8a82;margin-top:2px;"></i>
+          <a href="https://maps.google.com/?q=Pansol,Calamba,Laguna" target="_blank" style="color:#1c2a28;text-decoration:none;">Baranggay Pansol, Laguna, Philippines</a>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <i class="bi bi-clock-fill" style="color:#2b8a82;margin-top:2px;"></i>
+          <div>
+            <div>Monday – Sunday</div>
+            <div style="color:#6b7674;font-size:12.5px;">8:00 am – 8:00 pm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-block">
+      <h3 style="font-size:14px;letter-spacing:.06em;color:#333;margin-bottom:18px;">SEND US A MESSAGE</h3>
+      <form action="#" method="POST" style="display:flex;flex-direction:column;gap:14px;">
+        <input type="text" placeholder="FULLNAME" required style="border-radius:10px;border:1px solid #d9d9d9;padding:14px 16px;">
+        <input type="email" placeholder="EMAIL ADDRESS" required style="border-radius:10px;border:1px solid #d9d9d9;padding:14px 16px;">
+        <input type="tel" placeholder="PHONE NUMBER" style="border-radius:10px;border:1px solid #d9d9d9;padding:14px 16px;">
+        <textarea rows="4" placeholder="YOUR MESSAGE" required style="border-radius:10px;border:1px solid #d9d9d9;padding:14px 16px;"></textarea>
+        <button type="submit" class="btn-cta" style="align-self:flex-start;">Send Message</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card-block">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;margin-bottom:20px;">
+      <div>
+        <h2 style="color:#1f6b52;margin-bottom:4px;">Find Us</h2>
+        <p style="color:#6b7674;">How to get here</p>
+      </div>
+      <div style="font-size:13.5px;line-height:1.7;color:#444;">
+        <p>The <b>Pansol Resorts</b> is located at <b>Baranggay Pansol, Calamba, Philippines</b>, 3 hours drive from Metro Manila.</p>
+        <p><b>By Car:</b> Take SLEX → CALAX → Exit to Pansol</p>
+        <p><b>By Bus:</b> Ride a bus bound for Los Baños or Calamba and ask to be dropped off at Pansol</p>
+      </div>
+    </div>
+    <div style="border-radius:12px;overflow:hidden;">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15470.832717901592!2d121.1718873!3d14.1826625!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd63f282460ddb%3A0x8e8334812f8a846c!2sPansol%2C%20Calamba%2C%20Laguna!5e0!3m2!1sen!2sph!4v1700000000000!5m2!1sen!2sph"
+        width="100%" height="380" style="border:0;" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+  </div>
+</div>
+{% endblock %}

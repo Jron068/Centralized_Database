@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts | My Reservation</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width: 220px; height: auto;">
+    </div>
+
+    <nav class="nav">
+
+      <a href="{{ url_for('customer_landingpage') }}" class="nav-item">
+        <i class="fa-solid fa-grip"></i> DASHBOARD
+      </a>
+
+      <p class="nav-label">My Bookings</p>
+      <a href="{{ url_for('customer_reservation') }}" class="nav-item active">
+        <i class="fa-regular fa-calendar-check"></i> My Reservation
+      </a>
+      <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
+      </a>
+
+      <p class="nav-label">My Account</p>
+      <a href="{{ url_for('customer_profileSetting') }}" class="nav-item">
+        <i class="fa-solid fa-gear"></i> Profile Setting
+      </a>
+      <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
+        <i class="fa-solid fa-lock"></i> Change Password
+      </a>
+
+      <p class="nav-label">Support</p>
+      <a href="#" class="nav-item">
+        <i class="fa-regular fa-circle-question"></i> Contact Support
+      </a>
+    </nav>
+
+    <a class="logout" href="{{ url_for('login') }}"
+    style="margin-left:0px;
+    display:flex;
+    align-items:center;
+    margin-top: 130%;
+    color:#fff;
+    text-decoration:none;
+    opacity:.9;
+      "> &#8592; Log Out</a>
+  </aside>
+
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP NAV -->
+    <header class="topbar">
+
+      <div class="logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+      </div>
+
+      <nav class="topbar-links">
+        <a href="/customer_landingpage">Home</a>
+        <a href="/customer_aboutpage">About</a>
+        <a href="/resorts">Resorts</a>
+        <a href="/customer_howitworks">How it Works</a>
+      </nav>
+
+      <div class="topbar-user">
+        <i class="fa-regular fa-bell"></i>
+        <div class="avatar"></div>
+        <span>{{ username }}</span>
+      </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <h1>My Reservation</h1>
+      <p class="subtitle">All of your bookings across every partner resort, in one place.</p>
+
+      <div class="panel" style="margin-top:20px;">
+        <h3>Booking History</h3>
+        <p class="subtitle" style="margin-bottom:16px;">{{ reservations|length }} total booking{{ '' if reservations|length == 1 else 's' }}</p>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Resort</th>
+                <th>Room</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Guests</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reservations %}
+              <tr>
+                <td><strong>{{ r.resort_name }}</strong></td>
+                <td>{{ r.room_name }}</td>
+                <td>{{ r.check_in.strftime('%b %d, %Y') if r.check_in else '—' }}</td>
+                <td>{{ r.check_out.strftime('%b %d, %Y') if r.check_out else '—' }}</td>
+                <td>{{ r.guests }}</td>
+                <td>₱{{ '%.2f'|format(r.total_amount) if r.total_amount else '0.00' }}</td>
+                <td><span class="badge {{ r.reservation_status|lower }}">{{ r.reservation_status }}</span></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

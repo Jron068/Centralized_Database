@@ -30,35 +30,26 @@ body {
   width: 250px;
   background: #163a2b;
   color: #fff;
-  padding: 28px 20px;
+  padding: 24px 20px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 36px;
+  justify-content: center;
+  margin-bottom: 24px;
 }
 
-.brand-icon {
-  color: #6fbf8b;
-  font-size: 22px;
+.brand img {
+  max-width: 100%;
+  height: auto;
 }
 
-.brand-icon.small {
-  font-size: 18px;
-  color: #2f855a;
-}
-
-.brand h2 {
-  font-size: 15px;
-  letter-spacing: 0.5px;
-}
-
-.brand span {
-  font-size: 11px;
-  color: #a9c4b3;
+.nav {
+  flex: 1;
 }
 
 .nav-label {
@@ -79,6 +70,7 @@ body {
   padding: 10px 12px;
   border-radius: 8px;
   margin-bottom: 2px;
+  transition: background 0.2s;
 }
 
 .nav-item i {
@@ -96,6 +88,93 @@ body {
   font-weight: 600;
 }
 
+.logout {
+  color: #d7e6dc;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 12px;
+  margin-top: auto;
+  display: block;
+}
+
+.logout:hover {
+  color: #fff;
+}
+
+/* ---------- NAVBAR / TOPBAR ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 16px 32px;
+  border-bottom: 1px solid #e7ece9;
+  min-height: 65px;
+}
+
+.topbar-links {
+  display: flex;
+  gap: 32px;
+}
+
+.topbar-links a {
+  color: #445248;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.topbar-links a:hover {
+  color: #2f855a;
+}
+
+/* Indicator para sa aktibong link sa Topbar */
+.topbar-links a.active {
+  color: #2f855a;
+  font-weight: 700;
+}
+
+.topbar-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #2f855a;
+  border-radius: 2px;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #163a2b;
+}
+
+.topbar-user i {
+  font-size: 16px;
+  color: #445248;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #d1e2d8;
+  color: #163a2b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
 /* ---------- MAIN ---------- */
 
 .main {
@@ -351,3 +430,4 @@ body {
   .panels { grid-template-columns: 1fr; }
   .topbar-links { display: none; }
 }
+

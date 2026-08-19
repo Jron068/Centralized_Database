@@ -54,7 +54,7 @@ def registration():
             """
         )
         resorts = cursor.fetchall()
-        return render_template("registration.html", resorts=resorts)
+        return render_template("auth/registration.html", resorts=resorts)
     finally:
         cursor.close()
         conn.close()
@@ -187,7 +187,7 @@ def verification():
 def caretaker_dashboard():
     if session.get("role") != "caretaker":
         return redirect(url_for("login"))
-    return render_template("caretaker_dashboard.html", fullname=session.get("fullname"))
+    return render_template("caretaker/caretaker_dashboard.html", fullname=session.get("fullname"))
 
 @app.route("/customer-dashboard")
 def customer_dashboard():

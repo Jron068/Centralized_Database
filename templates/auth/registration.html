@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registration | Pansol Resorts</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/registration.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ================= LEFT PANEL ================= -->
+
+    <div class="left-panel">
+
+        <!-- LOGO -->
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+        </div>
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>Create Your Account</h1>
+
+            <p>
+                Join Pansol Resorts and start exploring amazing resorts.
+            </p>
+        </div>
+
+        <!-- STEPS -->
+        <div class="steps">
+
+            <div class="step active">
+                <div class="circle">1</div>
+                <span>Account Info</span>
+            </div>
+
+            <div class="arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
+            <div class="step">
+                <div class="circle">2</div>
+                <span>Verification</span>
+            </div>
+
+            <div class="arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
+            <div class="step">
+                <div class="circle">3</div>
+                <span>Completed</span>
+            </div>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form action="/verification" method="POST">
+
+            <!-- REGISTER AS -->
+
+            <h4>I am registering as</h4>
+
+            <div class="account-type">
+
+                <!-- CUSTOMER -->
+
+                <label class="card">
+
+                    <input type="radio" name="role" value="customer" checked>
+
+                    <div class="icon">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+
+                    <div>
+                        <h3>Customer</h3>
+
+                        <p>
+                            I want to book for myself and my family.
+                        </p>
+                    </div>
+
+                </label>
+
+
+                <!-- CARETAKER -->
+
+                <label class="card">
+
+                    <input type="radio" name="role" value="caretaker">
+
+                    <div class="icon">
+                        <i class="fa-solid fa-house"></i>
+                    </div>
+
+                    <div>
+                        <h3>Caretaker</h3>
+
+                        <p>
+                            I want to manage resort operations.
+                        </p>
+                    </div>
+
+                </label>
+
+            </div>
+
+
+            <!-- RESORT SELECTION -->
+
+            <div class="form-group resort-box" id="resortBox">
+
+                <label>Select Resort Applying For</label>
+
+                <select name="resort_id">
+
+                    
+
+
+                    {% for resort in resorts %}
+
+                    <option value="{{ resort.resort_id }}">
+                        {{ resort.resort_name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- FULL NAME -->
+
+            <div class="form-group">
+
+                <label>Full Name</label>
+
+                <input 
+                    type="text"
+                    name="fullname"
+                    placeholder="Enter your Full Name"
+                    required>
+
+            </div>
+
+
+            <!-- EMAIL PHONE -->
+
+            <div class="row">
+
+                <div class="form-group">
+
+                    <label>Email Address</label>
+
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Enter your Email"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Phone Number</label>
+
+                    <div class="phone">
+
+                        <span>+63</span>
+
+                        <input
+                            type="text"
+                            name="phone"
+                            placeholder="Enter your Number"
+                            required>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="row">
+
+                <div class="form-group">
+
+                    <label>Password</label>
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Enter Password"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Confirm Password</label>
+
+                    <input
+                        type="password"
+                        name="confirm_password"
+                        placeholder="Re-enter Password"
+                        required>
+
+                </div>
+
+            </div>
+
+
+            <!-- TERMS -->
+
+            <div class="checkbox">
+
+                <input type="checkbox" required>
+
+                <label>
+                    I agree to the
+                    <a href="#">Terms and Conditions</a>
+                    and
+                    <a href="#">Privacy Policy</a>
+                </label>
+
+            </div>
+
+
+            <!-- BUTTON -->
+
+            <button type="submit" class="btn">
+                Continue
+            </button>
+
+        </form>
+
+
+        <div class="login">
+
+            Already have an account?
+
+            <a href="/login">
+                Log In
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= RIGHT PANEL ================= -->
+
+    <div class="right-panel">
+
+        <img
+            src="{{ url_for('static', filename='images/side_panel.png') }}"
+            alt="Resort">
+
+    </div>
+
+</div>
+
+
+<script>
+
+const customer = document.querySelector('input[value="customer"]');
+const caretaker = document.querySelector('input[value="caretaker"]');
+const resortBox = document.getElementById("resortBox");
+
+function toggleResort(){
+
+    if(caretaker.checked){
+        resortBox.style.display = "block";
+    }
+    else{
+        resortBox.style.display = "none";
+    }
+
+}
+
+customer.addEventListener("change", toggleResort);
+caretaker.addEventListener("change", toggleResort);
+
+toggleResort();
+
+</script>
+
+
+</body>
+
+</html>

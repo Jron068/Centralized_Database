@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pansol Resorts — Favorite Resorts</title>
+  <link rel="stylesheet" href="../static/css/customer_style/favorites.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
+      <div class="logo-text">
+        <h1>PANSOL RESORTS</h1>
+        <span>Your Escape, Our Priority</span>
+      </div>
+    </div>
+    <nav class="top-nav">
+      <a href="home.html">Home</a>
+      <a href="resorts.html">Resorts</a>
+      <a href="deals.html">Deals</a>
+      <a href="favorites.html" class="active">Favorites</a>
+    </nav>
+    <div class="user-profile">
+      <i class="fa-regular fa-bell icon-btn"></i>
+      <div class="avatar">AJ</div>
+      <div class="user-info">
+        <span class="user-name">Aron-John C.</span>
+        <span class="user-role">Customer</span>
+      </div>
+      <i class="fa-solid fa-chevron-down dropdown-icon"></i>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <a href="#" class="sidebar-item active-dash"><i class="fa-solid fa-house"></i> Dashboard</a>
+      
+      <div class="sidebar-group">
+        <span class="group-title">BOOKINGS</span>
+        <a href="#" class="sidebar-item"><i class="fa-regular fa-bookmark"></i> My Bookings</a>
+        <a href="#" class="sidebar-item"><i class="fa-solid fa-clock-rotate-left"></i> Booking History</a>
+      </div>
+
+      <div class="sidebar-group">
+        <span class="group-title">ACCOUNT</span>
+        <a href="#" class="sidebar-item"><i class="fa-regular fa-user"></i> Profile Settings</a>
+        <a href="#" class="sidebar-item"><i class="fa-regular fa-credit-card"></i> Payment Methods</a>
+      </div>
+
+      <div class="sidebar-group">
+        <span class="group-title">SUPPORT</span>
+        <a href="#" class="sidebar-item"><i class="fa-regular fa-circle-question"></i> Help Center</a>
+        <a href="#" class="sidebar-item"><i class="fa-regular fa-comment"></i> Contact Support</a>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-item"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="content-header">
+        <h2>Your Saved Favorites</h2>
+        <p>Quick access to all the resort getaways you saved for later</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Favorite Card 1 -->
+        <div class="resort-card">
+          <div class="card-image-placeholder">
+            <button class="favorite-btn active"><i class="fa-solid fa-heart"></i></button>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h3>Lucky Miels Resort</h3>
+              <span class="rating"><i class="fa-solid fa-star"></i> 4.6 <span>(128)</span></span>
+            </div>
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
+            <div class="schedules">
+              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
+              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
+            </div>
+            <div class="pricing">
+              <span class="price">₱1,200</span> <span class="unit">/ Day Tour</span>
+            </div>
+            <button class="btn-primary">View Details</button>
+          </div>
+        </div>
+
+        <!-- Favorite Card 2 -->
+        <div class="resort-card">
+          <div class="card-image-placeholder">
+            <button class="favorite-btn active"><i class="fa-solid fa-heart"></i></button>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h3>Sunscape Resort</h3>
+              <span class="rating"><i class="fa-solid fa-star"></i> 4.7 <span>(142)</span></span>
+            </div>
+            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
+            <div class="schedules">
+              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
+              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
+            </div>
+            <div class="pricing">
+              <span class="price">₱1,300</span> <span class="unit">/ Day Tour</span>
+            </div>
+            <button class="btn-primary">View Details</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</body>
+</html>

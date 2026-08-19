@@ -20,48 +20,19 @@
   img{display:block;max-width:100%;}
   h1,h2,h3,h4{margin:0;}
 
-  /* ===== top header ===== */
-  .topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:14px 28px;background:var(--card);border-bottom:1px solid var(--line);
-    position:sticky;top:0;z-index:50;
-  }
-  .brand{display:flex;align-items:center;gap:10px;}
-  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--leaf-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .brand .word b{display:block;font-size:16px;font-weight:800;color:var(--forest);letter-spacing:.01em;}
-  .brand .word span{display:block;font-size:10.5px;color:var(--slate);font-weight:600;}
-  .topnav{display:flex;align-items:center;gap:30px;}
-  .navlinks{display:flex;gap:26px;font-size:14px;font-weight:700;color:var(--slate);}
-  .navlinks a{padding:6px 2px;border-bottom:2px solid transparent;}
-  .navlinks a.active{color:var(--leaf);border-color:var(--leaf);}
-  .navicons{display:flex;align-items:center;gap:16px;}
-  .bell{width:19px;height:19px;color:var(--slate);}
-  .who{display:flex;align-items:center;gap:9px;}
-  .avatar{width:32px;height:32px;border-radius:50%;background:var(--leaf-light);color:var(--forest);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
-  .who .txt b{display:block;font-size:12.5px;line-height:1.3;}
-  .who .txt span{display:block;font-size:11px;color:var(--slate);line-height:1.3;}
-  .who svg{width:13px;height:13px;color:var(--slate);}
-
   /* ===== app shell ===== */
-  .app{display:flex;align-items:flex-start;}
+  .app{display:flex;min-height:100vh;align-items:stretch;}
+  .app-content{flex:1;display:flex;flex-direction:column;min-width:0;}
 
-  /* ===== sidebar ===== */
-  .sidebar{
-    width:212px;flex-shrink:0;background:var(--forest);min-height:calc(100vh - 63px);
-    padding:22px 16px 20px;position:sticky;top:63px;display:flex;flex-direction:column;
-  }
-  .navsec{margin-bottom:20px;}
-  .navsec .lbl{font-size:10px;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.45);padding:0 10px 8px;text-transform:uppercase;}
-  .navitem{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;color:rgba(255,255,255,.85);font-size:13.5px;font-weight:600;margin-bottom:2px;}
-  .navitem svg{width:17px;height:17px;flex-shrink:0;opacity:.85;}
-  .navitem.active{background:rgba(255,255,255,.14);color:#fff;}
-  .navitem:hover:not(.active){background:rgba(255,255,255,.07);}
-  .sidebar-spacer{flex:1;}
-  .logout{display:flex;align-items:center;gap:11px;padding:10px;color:rgba(255,255,255,.8);font-size:13.5px;font-weight:700;border-top:1px solid rgba(255,255,255,.12);padding-top:16px;}
-  .logout svg{width:17px;height:17px;}
+  /* Sidebar and topbar are intentionally NOT redefined here.
+     customer.css (loaded alongside this file) is the single source of
+     truth for .sidebar, .brand, .nav, .nav-item, .logout, .topbar,
+     .logo, .topbar-links, .topbar-user, .avatar — so this page's
+     sidebar/navbar are always pixel-identical in size, font, and
+     hover/active animation to customer_landingpage.html. */
 
   /* ===== main content ===== */
-  .main{flex:1;min-width:0;padding:26px 32px 70px;}
+  .page-content{flex:1;min-width:0;padding:26px 32px 70px;}
   .pagehead h1{font-size:23px;font-weight:800;color:var(--forest-dark);margin-bottom:3px;}
   .pagehead p{font-size:13.5px;color:var(--slate);margin:0 0 20px;}
 
@@ -268,7 +239,7 @@
   .revphotos svg{width:100%;height:100%;}
 
   @media(max-width:980px){
-    .navlinks{display:none;}
+    .topbar-links{display:none;}
     .sidebar{display:none;}
     .drow{grid-template-columns:1fr;}
     .ov3{grid-template-columns:1fr;}

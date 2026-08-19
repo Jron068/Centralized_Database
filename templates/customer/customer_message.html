@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Messages | Pansol Resorts{% endblock %}
+
+{% block sidebar_messages %}
+<a href="{{ url_for('customer_messages') }}" class="nav-item active">
+  <i class="fa-regular fa-comment-dots"></i> Messages
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Messages</h1>
+    <p class="subtitle">Conversations with resorts and support</p>
+  </div>
+</div>
+
+<div class="messages-layout">
+
+  <div class="thread-list">
+
+    <div class="thread-item active">
+      <div class="thread-avatar"></div>
+      <div class="thread-meta">
+        <h5>Lucky Miels Resort</h5>
+        <p>Your booking is confirmed!</p>
+      </div>
+      <span class="thread-time">10:55 AM</span>
+    </div>
+
+    <div class="thread-item">
+      <div class="thread-avatar" style="background:#3b7dd8;"></div>
+      <div class="thread-meta">
+        <h5>Support Team</h5>
+        <p>Let us know if you need help.</p>
+      </div>
+      <span class="thread-time">Yesterday</span>
+      <span class="thread-unread"></span>
+    </div>
+
+    <div class="thread-item">
+      <div class="thread-avatar" style="background:#e0812e;"></div>
+      <div class="thread-meta">
+        <h5>Sunscape Resort</h5>
+        <p>Thanks for your reservation.</p>
+      </div>
+      <span class="thread-time">May 12</span>
+    </div>
+
+    <div class="thread-item">
+      <div class="thread-avatar" style="background:#8a9089;"></div>
+      <div class="thread-meta">
+        <h5>Triple Z Resort</h5>
+        <p>Your request was received.</p>
+      </div>
+      <span class="thread-time">May 10</span>
+    </div>
+
+  </div>
+
+  <div class="chat-pane">
+    <div class="chat-header">Lucky Miels Resort</div>
+
+    <div class="chat-body">
+      <div class="chat-bubble received">
+        Hi Aron-John! Your reservation for May 13–15 has been confirmed. See you soon!
+        <time>10:40 AM</time>
+      </div>
+      <div class="chat-bubble sent">
+        Great, thank you! Is early check-in available?
+        <time>10:48 AM</time>
+      </div>
+      <div class="chat-bubble received">
+        Yes, early check-in is available from 12:00 PM at no extra charge.
+        <time>10:55 AM</time>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <input type="text" placeholder="Type a message...">
+      <button class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
