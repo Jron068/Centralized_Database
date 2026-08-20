@@ -271,6 +271,127 @@
 
 
         /* =====================================================
+           DATE PICKER POPOVER
+        ====================================================== */
+
+        .box {
+            cursor: pointer;
+        }
+
+        .datepop {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            z-index: 50;
+
+            width: 260px;
+
+            background: #ffffff;
+            border: 1px solid #d6e4dd;
+            border-radius: 12px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+
+            padding: 12px;
+        }
+
+        .datepop.open {
+            display: block;
+        }
+
+        .dp-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .dp-head b {
+            font-size: 13px;
+            color: #0B4A30;
+        }
+
+        .dp-nav {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dp-nav button {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #d6e4dd;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #075b3c;
+            padding: 0;
+        }
+
+        .dp-nav button:hover {
+            background: #EAF4EE;
+        }
+
+        .dp-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .dp-dow {
+            font-size: 10px;
+            text-align: center;
+            color: #6b8a7a;
+            padding: 3px 0;
+            font-weight: 600;
+        }
+
+        .dp-day {
+            font-size: 12px;
+            text-align: center;
+            padding: 6px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #17392a;
+        }
+
+        .dp-day:hover {
+            background: #EAF4EE;
+        }
+
+        .dp-day.muted {
+            color: #c4d3cc;
+            cursor: default;
+        }
+
+        .dp-day.muted:hover {
+            background: none;
+        }
+
+        .dp-day.disabled {
+            color: #d8dfda;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+
+        .dp-day.disabled:hover {
+            background: none;
+        }
+
+        .dp-day.selected {
+            background: #0B4A30;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .dp-day.today {
+            box-shadow: inset 0 0 0 1px #0B4A30;
+        }
+
+
+        /* =====================================================
            DETAIL SECTION
         ====================================================== */
 
@@ -1336,13 +1457,16 @@
                         </h3>
 
 
-                        <div class="af">
+                        <div class="af"
+                             style="position:relative;">
 
                             <label>
                                 Check-in
                             </label>
 
-                            <div class="box">
+                            <div class="box"
+                                 id="ci-box"
+                                 onclick="openDatePicker('ci', event)">
 
                                 <span id="ci-date">
                                     May 28, 2026
@@ -1365,16 +1489,24 @@
 
                             </div>
 
+
+                            <div class="datepop"
+                                 id="ci-pop">
+                            </div>
+
                         </div>
 
 
-                        <div class="af">
+                        <div class="af"
+                             style="position:relative;">
 
                             <label>
                                 Check-out
                             </label>
 
-                            <div class="box">
+                            <div class="box"
+                                 id="co-box"
+                                 onclick="openDatePicker('co', event)">
 
                                 <span id="co-date">
                                     May 29, 2026
@@ -1397,6 +1529,11 @@
 
                             </div>
 
+
+                            <div class="datepop"
+                                 id="co-pop">
+                            </div>
+
                         </div>
 
 
@@ -1408,18 +1545,41 @@
 
                             <div class="box">
 
-                                <span>
-                                    2 Guests
-                                </span>
+                                 <div class="sfield">
 
-                                <svg viewBox="0 0 24 24"
-                                     fill="none"
-                                     stroke="currentColor"
-                                     stroke-width="2">
+                                    <svg viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2">
 
-                                    <path d="M6 9l6 6 6-6"/>
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
 
-                                </svg>
+                                        <circle cx="9"
+                                                cy="7"
+                                                r="4"/>
+
+                                    </svg>
+
+
+                                    <select>
+
+                                        <option>
+                                            2 Guests
+                                        </option>
+
+                                        <option>
+                                            4 Guests
+                                        </option>
+
+                                        <option>
+                                            6+ Guests
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                          
 
                             </div>
 
@@ -3636,6 +3796,277 @@ cardRow.addEventListener(
         passive: false
     }
 );
+
+
+/* ============================================================
+   CHECK-IN / CHECK-OUT DATE PICKER
+============================================================ */
+
+const MONTH_NAMES = [
+    'January', 'February', 'March', 'April',
+    'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December'
+];
+
+const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+const stayDates = {
+    ci: new Date(2026, 4, 28),
+    co: new Date(2026, 4, 29)
+};
+
+const dpView = {
+    ci: new Date(2026, 4, 1),
+    co: new Date(2026, 4, 1)
+};
+
+let activeDatePicker = null;
+
+
+function fmtDate(d) {
+
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+
+}
+
+
+function sameDay(a, b) {
+
+    return a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+
+}
+
+
+function openDatePicker(which, evt) {
+
+    evt.stopPropagation();
+
+
+    if (activeDatePicker === which) {
+
+        closeDatePicker();
+
+        return;
+
+    }
+
+
+    closeDatePicker();
+
+
+    activeDatePicker = which;
+
+    dpView[which] = new Date(
+        stayDates[which].getFullYear(),
+        stayDates[which].getMonth(),
+        1
+    );
+
+
+    document
+        .getElementById(which + '-pop')
+        .classList
+        .add('open');
+
+
+    renderDatePicker(which);
+
+}
+
+
+function closeDatePicker() {
+
+    if (!activeDatePicker) {
+        return;
+    }
+
+
+    document
+        .getElementById(activeDatePicker + '-pop')
+        .classList
+        .remove('open');
+
+
+    activeDatePicker = null;
+
+}
+
+
+document.addEventListener('click', (e) => {
+
+    if (!activeDatePicker) {
+        return;
+    }
+
+
+    const pop =
+        document.getElementById(activeDatePicker + '-pop');
+
+
+    if (pop && !pop.contains(e.target)) {
+
+        closeDatePicker();
+
+    }
+
+});
+
+
+function shiftDpMonth(which, dir, evt) {
+
+    evt.stopPropagation();
+
+    dpView[which].setMonth(
+        dpView[which].getMonth() + dir
+    );
+
+    renderDatePicker(which);
+
+}
+
+
+function renderDatePicker(which) {
+
+    const pop =
+        document.getElementById(which + '-pop');
+
+
+    const view = dpView[which];
+
+    const year = view.getFullYear();
+
+    const month = view.getMonth();
+
+
+    const firstDow =
+        new Date(year, month, 1).getDay();
+
+    const daysInMonth =
+        new Date(year, month + 1, 0).getDate();
+
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+
+    const minDate =
+        which === 'co' ? stayDates.ci : today;
+
+
+    let cells = '';
+
+
+    for (let i = 0; i < firstDow; i++) {
+
+        cells += `<div class="dp-day muted"></div>`;
+
+    }
+
+
+    for (let day = 1; day <= daysInMonth; day++) {
+
+        const cellDate =
+            new Date(year, month, day);
+
+        const isDisabled =
+            cellDate < minDate;
+
+        const isSelected =
+            sameDay(cellDate, stayDates[which]);
+
+        const isToday =
+            sameDay(cellDate, today);
+
+
+        const classes = [
+            'dp-day',
+            isDisabled ? 'disabled' : '',
+            isSelected ? 'selected' : '',
+            (isToday && !isSelected) ? 'today' : ''
+        ].filter(Boolean).join(' ');
+
+
+        cells += `
+            <div class="${classes}"
+                 ${isDisabled
+                    ? ''
+                    : `onclick="pickDate('${which}', ${year}, ${month}, ${day}, event)"`}>
+                ${day}
+            </div>
+        `;
+
+    }
+
+
+    pop.innerHTML = `
+
+        <div class="dp-head">
+
+            <b>${MONTH_NAMES[month]} ${year}</b>
+
+            <div class="dp-nav">
+
+                <button onclick="shiftDpMonth('${which}', -1, event)">‹</button>
+
+                <button onclick="shiftDpMonth('${which}', 1, event)">›</button>
+
+            </div>
+
+        </div>
+
+
+        <div class="dp-grid">
+
+            ${DOW_NAMES.map(d => `<div class="dp-dow">${d}</div>`).join('')}
+
+            ${cells}
+
+        </div>
+
+    `;
+
+}
+
+
+function pickDate(which, year, month, day, evt) {
+
+    evt.stopPropagation();
+
+
+    const chosen =
+        new Date(year, month, day);
+
+
+    stayDates[which] = chosen;
+
+
+    document
+        .getElementById(which + '-date')
+        .textContent = fmtDate(chosen);
+
+
+    if (which === 'ci' && stayDates.co <= chosen) {
+
+        const nextDay =
+            new Date(chosen);
+
+        nextDay.setDate(chosen.getDate() + 1);
+
+        stayDates.co = nextDay;
+
+        document
+            .getElementById('co-date')
+            .textContent = fmtDate(nextDay);
+
+    }
+
+
+    closeDatePicker();
+
+}
 
 
 /* ============================================================
