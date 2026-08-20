@@ -15,8 +15,198 @@ def get_customer_row(cursor):
 
 @app.route("/customer_landingpage")
 def customer_landingpage():
-    fullname = session.get("fullname", "Guest")
-    return render_template("customer/customer_landingpage.html", username=fullname)
+
+    # Make sure the customer is logged in
+    if "account_id" not in session:
+        return redirect(url_for("login"))
+
+    account_id = session["account_id"]
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        # ==========================================
+        # 1. GET CUSTOMER
+        # ==========================================
+
+        cursor.execute("""
+            SELECT
+                c.customer_id,
+                a.fullname,
+                a.email
+            FROM customers c
+            JOIN accounts a
+                ON c.account_id = a.account_id
+            WHERE c.account_id = %s
+        """, (account_id,))
+
+        customer = cursor.fetchone()
+
+        if not customer:
+            return "Customer account not found", 404
+
+        customer_id = customer["customer_id"]
+
+
+        # ==========================================
+        # 2. TOTAL BOOKINGS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM reservations
+            WHERE customer_id = %s
+        """, (customer_id,))
+
+        total_bookings = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 3. UPCOMING STAYS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM reservations
+            WHERE customer_id = %s
+              AND check_in >= CURDATE()
+              AND reservation_status IN ('Pending', 'Confirmed')
+        """, (customer_id,))
+
+        upcoming_stays = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 4. COMPLETED RESERVATIONS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM reservations
+            WHERE customer_id = %s
+              AND reservation_status = 'Completed'
+        """, (customer_id,))
+
+        completed_steps = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 5. PENDING PAYMENTS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM payments p
+            JOIN reservations r
+                ON p.reservation_id = r.reservation_id
+            WHERE r.customer_id = %s
+              AND p.payment_status = 'Pending'
+        """, (customer_id,))
+
+        pending_payment = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 6. UPCOMING RESERVATIONS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT
+                r.reservation_id,
+                rs.resort_name,
+                r.check_in,
+                r.check_out,
+                r.guests,
+                r.total_amount,
+                r.reservation_status
+            FROM reservations r
+            JOIN resorts rs
+                ON r.resort_id = rs.resort_id
+            WHERE r.customer_id = %s
+              AND r.check_in >= CURDATE()
+              AND r.reservation_status IN ('Pending', 'Confirmed')
+            ORDER BY r.check_in ASC
+            LIMIT 5
+        """, (customer_id,))
+
+        upcoming_reservations = cursor.fetchall()
+
+
+        # ==========================================
+        # 7. RECENT RESERVATIONS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT
+                r.reservation_id,
+                rs.resort_name,
+                r.check_in,
+                r.check_out,
+                r.reservation_status,
+                r.created_at
+            FROM reservations r
+            JOIN resorts rs
+                ON r.resort_id = rs.resort_id
+            WHERE r.customer_id = %s
+            ORDER BY r.created_at DESC
+            LIMIT 5
+        """, (customer_id,))
+
+        recent_reservations = cursor.fetchall()
+
+
+        # ==========================================
+        # 8. UNREAD MESSAGES
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM messages
+            WHERE receiver_account = %s
+              AND is_read = 0
+        """, (account_id,))
+
+        unread_messages = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 9. UNREAD NOTIFICATIONS
+        # ==========================================
+
+        cursor.execute("""
+            SELECT COUNT(*) AS total
+            FROM notifications
+            WHERE account_id = %s
+              AND is_read = 0
+        """, (account_id,))
+
+        unread_notifications = cursor.fetchone()["total"]
+
+
+        # ==========================================
+        # 10. SEND DATA TO HTML
+        # ==========================================
+
+        return render_template(
+            "customer/customer_landingpage.html",
+
+            username=customer["fullname"],
+
+            total_bookings=total_bookings,
+            upcoming_stays=upcoming_stays,
+            completed_steps=completed_steps,
+            pending_payment=pending_payment,
+
+            upcoming_reservations=upcoming_reservations,
+            recent_reservations=recent_reservations
+        )
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.route("/customer_aboutpage")
 def customer_aboutpage():

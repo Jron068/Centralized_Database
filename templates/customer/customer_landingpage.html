@@ -86,7 +86,7 @@
     <!-- CONTENT -->
     <main class="content">
 
-      <h1>Welcome back, Aron-John!</h1>
+      <h1>Welcome back, {{username}}!</h1>
       <p class="subtitle">Here's what happening with your reservation</p>
 
       <!-- STAT CARDS -->
@@ -97,7 +97,7 @@
             <span class="stat-icon blue"><i class="fa-regular fa-calendar"></i></span>
             <span class="stat-label">Total Bookings</span>
           </div>
-          <div class="stat-value">5</div>
+          <div class="stat-value">{{ total_bookings }}</div>
           <a href="#" class="stat-link">View All Bookings</a>
         </div>
 
@@ -106,7 +106,7 @@
             <span class="stat-icon orange"><i class="fa-regular fa-clock"></i></span>
             <span class="stat-label">Upcoming Stays</span>
           </div>
-          <div class="stat-value">5</div>
+          <div class="stat-value">{{ upcoming_stays }}</div>
           <a href="#" class="stat-link">View Upcoming</a>
         </div>
 
@@ -115,7 +115,7 @@
             <span class="stat-icon green"><i class="fa-solid fa-circle-check"></i></span>
             <span class="stat-label">Completed Steps</span>
           </div>
-          <div class="stat-value">5</div>
+          <div class="stat-value">{{ completed_steps }}</div>
           <a href="#" class="stat-link">View History</a>
         </div>
 
@@ -124,7 +124,7 @@
             <span class="stat-icon gray"><i class="fa-regular fa-circle-question"></i></span>
             <span class="stat-label">Pending Payment</span>
           </div>
-          <div class="stat-value">5</div>
+          <div class="stat-value">{{pending_payment}}</div>
           <a href="#" class="stat-link">View Payment</a>
         </div>
         
@@ -138,36 +138,38 @@
 
           <h3>Upcoming Reservations</h3>
 
-          <div class="reservation">
-            <div class="reservation-thumb thumb-1"></div>
-            <div class="reservation-info">
-              <h4>Lucky Miels Resort</h4>
-              <p>May 13 - May 15, 2026</p>
-              <p>2 Rooms, 4 Adults, 1 Children</p>
-            </div>
-            <span class="badge confirmed">Confirmed</span>
-          </div>
+          <div class="reservations-container">
 
-          <div class="reservation">
-            <div class="reservation-thumb thumb-2"></div>
-            <div class="reservation-info">
-              <h4>Sunscape</h4>
-              <p>May 13 - May 15, 2026</p>
-              <p>2 Rooms, 4 Adults</p>
-            </div>
-            <span class="badge confirmed">Confirmed</span>
-          </div>
+              {% if upcoming_reservations %}
 
-          <div class="reservation">
-            <div class="reservation-thumb thumb-3"></div>
-            <div class="reservation-info">
-              <h4>Triple Z</h4>
-              <p>May 13 - May 14, 2026</p>
-              <p>2 Rooms, 2 Adults</p>
-            </div>
-            <span class="badge confirmed">Confirmed</span>
-          </div>
+                  {% for reservation in upcoming_reservations %}
 
+                  <div class="reservation-card">
+                      <h4>{{ reservation.resort_name }}</h4>
+
+                      <p>{{ reservation.check_in }}
+                          -
+                          {{ reservation.check_out }}
+                      </p>
+
+                      <p>
+                          {{ reservation.guests }} Guests
+                      </p>
+
+                      <p>
+                          ₱{{ "{:,.2f}".format(reservation.total_amount) }}
+                      </p>
+
+                      <span class="badge {{ reservation.reservation_status|lower }}">
+                          {{ reservation.reservation_status }}
+                      </span>
+                  </div>
+                  {% endfor %}
+              {% else %}
+                  <p>You don't have any upcoming reservations.</p>
+              {% endif %}
+          </div>
+          
           <a href="#" class="view-all">View All Reservation</a>
 
         </div>
@@ -177,28 +179,38 @@
 
           <h3>Recent Activity</h3>
 
-          <ul class="activity-list">
-            <li>
-              <p>Reservation confirmed at <strong>Lucky Miels</strong></p>
-              <span>May 10, 2026 - 10:55 AM</span>
-            </li>
-            <li>
-              <p>Payment confirmed at <strong>Lucky Miels</strong></p>
-              <span>May 10, 2026 - 10:55 AM</span>
-            </li>
-            <li>
-              <p>Reservation confirmed at <strong>Magic Kingdom</strong></p>
-              <span>May 10, 2026 - 10:55 AM</span>
-            </li>
-            <li>
-              <p>Reservation cancelled at <strong>Triple Z</strong></p>
-              <span>May 10, 2026 - 10:55 AM</span>
-            </li>
-            <li>
-              <p>Reservation confirmed at <strong>Sunscape</strong></p>
-              <span>May 10, 2026 - 10:55 AM</span>
-            </li>
-          </ul>
+          <div class="recent-activity">
+
+            {% if recent_reservations %}
+
+                {% for reservation in recent_reservations %}
+
+                <div class="activity-item">
+
+                    <div>
+                        <strong>{{ reservation.resort_name }}</strong>
+
+                        <p>
+                            Reservation status:
+                            {{ reservation.reservation_status }}
+                        </p>
+
+                        <small>
+                            {{ reservation.created_at }}
+                        </small>
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>No recent activity.</p>
+
+            {% endif %}
+
+        </div>
 
           <a href="#" class="view-all">View All Activity</a>
 
