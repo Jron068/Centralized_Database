@@ -249,3 +249,740 @@
     .loc-grid2{grid-template-columns:1fr;}
     .rev-summary{grid-template-columns:1fr;}
   }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        font-family: 'Manrope', sans-serif;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        overflow-x: hidden;
+      }
+
+      /* =====================================================
+           SIDEBAR
+        ====================================================== */
+      .sidebar {
+        flex: 0 0 250px;
+        width: 250px;
+        max-width: 250px;
+        min-height: 100vh;
+      }
+
+      /* =====================================================
+           MAIN CONTENT
+        ====================================================== */
+      .main {
+        flex: 1;
+        min-width: 0;
+        width: calc(100% - 250px);
+        max-width: calc(100% - 250px);
+        overflow-x: hidden;
+      }
+
+      .topbar {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .topbar-links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: nowrap;
+      }
+
+      .topbar-user {
+        flex-shrink: 0;
+      }
+
+      /* =====================================================
+           PAGE CONTENT
+        ====================================================== */
+      .page-content {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+      }
+
+      .pagehead {
+        width: 100%;
+      }
+
+      /* =====================================================
+           SEARCH AREA
+        ====================================================== */
+      .searchrow {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .sfield {
+        min-width: 0;
+      }
+
+      .sfield.grow {
+        flex: 1;
+      }
+
+      /* =====================================================
+           RESORT CAROUSEL
+        ====================================================== */
+      .cardrow-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        padding: 0 42px;
+      }
+
+      .cardrow {
+        display: flex;
+        width: 100%;
+        max-width: 100%;
+        gap: 16px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        cursor: grab;
+        padding: 2px 0 12px;
+      }
+
+      .cardrow::-webkit-scrollbar {
+        display: none;
+      }
+
+      .cardrow.dragging {
+        cursor: grabbing;
+        scroll-behavior: auto;
+        scroll-snap-type: none;
+      }
+
+      /* =====================================================
+           RESORT CARD
+        ====================================================== */
+      .rcard {
+        flex: 0 0 240px;
+        width: 240px;
+        min-width: 240px;
+        scroll-snap-align: start;
+        user-select: none;
+      }
+
+      .rcard .thumb {
+        width: 100%;
+      }
+
+      .rcard .body {
+        width: 100%;
+      }
+
+      /* =====================================================
+           CAROUSEL ARROWS
+        ====================================================== */
+      .scrollbtn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid #d6e4dd;
+        background: #ffffff;
+        color: #075b3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 20;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          opacity 0.2s ease;
+      }
+
+      .scrollbtn:hover {
+        transform: translateY(-50%) scale(1.06);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+      }
+
+      .scrollbtn.left {
+        left: 4px;
+      }
+
+      .scrollbtn.right {
+        right: 4px;
+      }
+
+      .scrollbtn.hidden {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      /* =====================================================
+           TRUST SECTION
+        ====================================================== */
+      .trust {
+        width: 100%;
+        max-width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+      }
+
+      .trust-item {
+        min-width: 0;
+      }
+
+      /* =====================================================
+           DATE PICKER POPOVER
+        ====================================================== */
+      .box {
+        cursor: pointer;
+      }
+
+      .datepop {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 50;
+        width: 260px;
+        background: #ffffff;
+        border: 1px solid #d6e4dd;
+        border-radius: 12px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+        padding: 12px;
+      }
+
+      .datepop.open {
+        display: block;
+      }
+
+      .dp-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .dp-head b {
+        font-size: 13px;
+        color: #0B4A30;
+      }
+
+      .dp-nav {
+        display: flex;
+        gap: 4px;
+      }
+
+      .dp-nav button {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #d6e4dd;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #075b3c;
+        padding: 0;
+      }
+
+      .dp-nav button:hover {
+        background: #EAF4EE;
+      }
+
+      .dp-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+
+      .dp-dow {
+        font-size: 10px;
+        text-align: center;
+        color: #6b8a7a;
+        padding: 3px 0;
+        font-weight: 600;
+      }
+
+      .dp-day {
+        font-size: 12px;
+        text-align: center;
+        padding: 6px 0;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #17392a;
+      }
+
+      .dp-day:hover {
+        background: #EAF4EE;
+      }
+
+      .dp-day.muted {
+        color: #c4d3cc;
+        cursor: default;
+      }
+
+      .dp-day.muted:hover {
+        background: none;
+      }
+
+      .dp-day.disabled {
+        color: #d8dfda;
+        text-decoration: line-through;
+        cursor: not-allowed;
+      }
+
+      .dp-day.disabled:hover {
+        background: none;
+      }
+
+      .dp-day.selected {
+        background: #0B4A30;
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .dp-day.today {
+        box-shadow: inset 0 0 0 1px #0B4A30;
+      }
+
+      /* =====================================================
+           DETAIL SECTION
+        ====================================================== */
+      .detail {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .drow {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .heroimg {
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .heroimg svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .thumbstrip {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+
+      /* =====================================================
+           TABLET
+        ====================================================== */
+      @media (max-width: 1100px) {
+        .sidebar {
+          flex-basis: 220px;
+          width: 220px;
+          max-width: 220px;
+        }
+
+        .main {
+          width: calc(100% - 220px);
+          max-width: calc(100% - 220px);
+        }
+
+        .topbar-links {
+          gap: 18px;
+        }
+
+        .topbar-links a {
+          font-size: 13px;
+        }
+
+        .searchrow {
+          flex-wrap: wrap;
+        }
+
+        .searchrow .grow {
+          flex: 1 1 100%;
+        }
+
+        .sfield {
+          flex: 1;
+        }
+
+        .trust {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .rcard {
+          flex-basis: 230px;
+          width: 230px;
+          min-width: 230px;
+        }
+      }
+
+      /* =====================================================
+           TABLET / SMALL LAPTOP
+        ====================================================== */
+      @media (max-width: 850px) {
+        .sidebar {
+          flex-basis: 200px;
+          width: 200px;
+          max-width: 200px;
+        }
+
+        .main {
+          width: calc(100% - 200px);
+          max-width: calc(100% - 200px);
+        }
+
+        .topbar {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+
+        .topbar .logo img {
+          max-width: 150px;
+          height: auto;
+        }
+
+        .topbar-links {
+          gap: 12px;
+        }
+
+        .topbar-links a {
+          font-size: 12px;
+        }
+
+        .topbar-user span {
+          display: none;
+        }
+
+        .page-content {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+
+        .cardrow-wrap {
+          padding-left: 38px;
+          padding-right: 38px;
+        }
+
+        .rcard {
+          flex-basis: 220px;
+          width: 220px;
+          min-width: 220px;
+        }
+      }
+
+      /* =====================================================
+           MOBILE
+        ====================================================== */
+      @media (max-width: 700px) {
+        .app {
+          display: block;
+          width: 100%;
+          min-height: 100vh;
+        }
+
+        /* -------------------------------------------------
+               SIDEBAR
+            -------------------------------------------------- */
+        .sidebar {
+          position: relative;
+          width: 100%;
+          max-width: 100%;
+          min-height: auto;
+          padding: 12px 15px;
+          display: block;
+        }
+
+        .sidebar .brand {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .sidebar .brand img {
+          width: 190px !important;
+          max-width: 80%;
+        }
+
+        .sidebar .nav {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .sidebar .nav-label {
+          display: none;
+        }
+
+        .sidebar .nav-item {
+          padding: 8px 10px;
+          font-size: 11px;
+        }
+
+        .sidebar .logout {
+          display: flex !important;
+          justify-content: center;
+          margin-top: 10px !important;
+          font-size: 12px;
+        }
+
+        /* -------------------------------------------------
+               MAIN
+            -------------------------------------------------- */
+        .main {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+
+        /* -------------------------------------------------
+               TOP NAV
+            -------------------------------------------------- */
+        .topbar {
+          height: auto !important;
+          min-height: 70px;
+          padding: 10px 15px !important;
+          display: flex !important;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .topbar .logo {
+          flex: 0 0 auto;
+        }
+
+        .topbar .logo img {
+          width: 135px !important;
+          max-width: 135px;
+          height: auto;
+        }
+
+        .topbar-links {
+          order: 3;
+          width: 100%;
+          overflow-x: auto;
+          justify-content: flex-start;
+          gap: 22px;
+          padding: 5px 0;
+          scrollbar-width: none;
+        }
+
+        .topbar-links::-webkit-scrollbar {
+          display: none;
+        }
+
+        .topbar-links a {
+          flex: 0 0 auto;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+
+        .topbar-user {
+          margin-left: auto;
+        }
+
+        /* -------------------------------------------------
+               PAGE
+            -------------------------------------------------- */
+        .page-content {
+          width: 100%;
+          max-width: 100%;
+          padding: 20px 15px !important;
+        }
+
+        .pagehead h1 {
+          font-size: 25px !important;
+        }
+
+        .pagehead p {
+          font-size: 13px;
+        }
+
+        /* -------------------------------------------------
+               SEARCH
+            -------------------------------------------------- */
+        .searchrow {
+          display: grid;
+          grid-template-columns: 1fr;
+          width: 100%;
+          gap: 8px;
+        }
+
+        .sfield,
+        .sfield.grow {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .searchbtn {
+          width: 100%;
+          min-height: 42px;
+        }
+
+        /* -------------------------------------------------
+               CAROUSEL
+            -------------------------------------------------- */
+        .cardrow-wrap {
+          width: 100%;
+          padding-left: 32px;
+          padding-right: 32px;
+          margin-top: 15px;
+        }
+
+        .cardrow {
+          gap: 12px;
+          padding-bottom: 8px;
+          scroll-snap-type: x mandatory;
+        }
+
+        .rcard {
+          flex: 0 0 calc(100vw - 94px);
+          width: calc(100vw - 94px);
+          min-width: calc(100vw - 94px);
+          scroll-snap-align: center;
+        }
+
+        /* -------------------------------------------------
+               CAROUSEL BUTTONS
+            -------------------------------------------------- */
+        .scrollbtn {
+          width: 34px;
+          height: 34px;
+        }
+
+        .scrollbtn.left {
+          left: 0;
+        }
+
+        .scrollbtn.right {
+          right: 0;
+        }
+
+        /* -------------------------------------------------
+               TRUST
+            -------------------------------------------------- */
+        .trust {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 15px;
+        }
+
+        .trust-item {
+          width: 100%;
+        }
+
+        /* -------------------------------------------------
+               DETAIL
+            -------------------------------------------------- */
+        .drow {
+          display: block !important;
+        }
+
+        .heroimg {
+          width: 100%;
+        }
+
+        .avail-card {
+          width: 100%;
+          margin-top: 15px;
+        }
+
+        .idblock {
+          width: 100%;
+        }
+
+        .tabbar {
+          width: 100%;
+          overflow-x: auto;
+          display: flex;
+          scrollbar-width: none;
+        }
+
+        .tabbar::-webkit-scrollbar {
+          display: none;
+        }
+
+        .tabbtn {
+          flex: 0 0 auto;
+          white-space: nowrap;
+        }
+
+        .ov3 {
+          grid-template-columns: 1fr !important;
+        }
+
+        .loc-grid2 {
+          grid-template-columns: 1fr !important;
+        }
+
+        .amgrid {
+          grid-template-columns: 1fr !important;
+        }
+
+        .revgrid {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* =====================================================
+           VERY SMALL PHONES
+        ====================================================== */
+      @media (max-width: 420px) {
+        .sidebar .nav-item {
+          font-size: 10px;
+          padding: 7px 8px;
+        }
+
+        .topbar .logo img {
+          width: 120px !important;
+        }
+
+        .pagehead h1 {
+          font-size: 22px !important;
+        }
+
+        .rcard {
+          flex-basis: calc(100vw - 76px);
+          width: calc(100vw - 76px);
+          min-width: calc(100vw - 76px);
+        }
+
+        .cardrow-wrap {
+          padding-left: 28px;
+          padding-right: 28px;
+        }
+      }
+  

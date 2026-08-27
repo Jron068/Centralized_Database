@@ -32,9 +32,10 @@ from routes.registration import *
 from routes.otp import *
 from routes.login import *
 from routes.customer_landingpage import *
-from routes.admin_dashboard import *
+from routes.admins.admin_dashboard import *
 from routes.caretaker import *
 from routes.resorts import *
+
 
 
 

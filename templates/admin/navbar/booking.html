@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — Booking</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/admin_style/admin.css')}}">
+</head>
+<body>
+
+<!--
+  NOTES FOR THIS PAGE (booking.html)
+  --------------------------------------------------
+  Top-nav-only page (no matching sidebar item — sidebar falls back
+  to no active state, or you can map it to 'Reservation' if you'd
+  rather treat them as the same feature).
+
+  All pages share styles.css — do not fork styles per page.
+  Sidebar / top nav links are plain <a href="..."> pointing at
+  the sibling .html files, so this works as static prototype
+  files opened directly in a browser, or dropped into a real
+  app's templates folder later.
+-->
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link active" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
+
+      </div>
+      <div class="profile"><span class="avatar"></span> Owner One</div>
+    </div>
+
+    <div class="content">
+      <h1 class="page-title">Booking</h1>
+      <p class="page-sub">Create and manage a new guest booking</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>New Booking</h3>
+          <div class="form-row"><label>Guest Name</label><input placeholder="e.g. Juan Dela Cruz"></div>
+          <div class="form-row"><label>Resort</label><select><option>Sunscape Resort</option><option>Triple Z Resort</option></select></div>
+          <div class="form-cols">
+            <div class="form-row"><label>Check-in</label><input type="date"></div>
+            <div class="form-row"><label>Check-out</label><input type="date"></div>
+          </div>
+          <div class="form-row"><label>Number of Guests</label><input type="number" value="2"></div>
+          <button class="btn btn-primary">Create Booking</button>
+        </div>
+        <div class="card">
+          <h3>Upcoming Bookings</h3>
+          <table>
+            <thead><tr><th>Guest</th><th>Resort</th><th>Dates</th></tr></thead>
+            <tbody>
+              <tr><td>Maria Santos</td><td>Sunscape</td><td>Aug 29-31</td></tr>
+              <tr><td>Carlo Reyes</td><td>Triple Z</td><td>Sep 2-3</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

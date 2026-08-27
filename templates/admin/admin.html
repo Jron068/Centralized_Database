@@ -2,105 +2,274 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pansol Resorts — Dashboard</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  .stat-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px;}
+  .stat-box{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px;}
+  .stat-box .stat-label{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:8px;}
+  .stat-box .stat-value{font-size:26px; font-weight:800; color:var(--text);}
+  .chart-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:22px;}
+  .chart-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px;}
+  .chart-card h3{margin:0 0 14px 0; font-size:14.5px; color:var(--text); font-weight:700;}
+  .chart-canvas-wrap{position:relative; height:200px;}
+  .donut-wrap{display:flex; align-items:center; gap:20px;}
+  .donut-canvas-wrap{position:relative; width:170px; height:170px; flex-shrink:0;}
+  .legend{display:flex; flex-direction:column; gap:10px; font-size:13px;}
+  .legend-item{display:flex; align-items:center; gap:8px;}
+  .legend-dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+  .legend-label{color:var(--text); min-width:60px;}
+  .legend-pct{color:var(--muted); margin-left:auto; padding-left:16px;}
+</style>
 </head>
 <body>
 
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="brand-icon">P</span>
-      PANSOL RESORTS
-    </div>
-    <nav class="nav">
-      <a class="active" href="#">Dashboard</a>
-      <a href="#">Reservation</a>
-      <a href="#">Calendar</a>
-      <a href="#">Properties</a>
-      <a href="#">Payments</a>
-      <a href="#">Guests</a>
-      <a href="#">Reviews</a>
-      <a href="#">Reports</a>
-      <a href="#">Settings</a>
-    </nav>
-    <a class="logout" href="{{ url_for('login') }}">&#8592; Log Out</a>
-  </aside>
+<!--
+  NOTES FOR THIS PAGE (admin/admin.html)
+  --------------------------------------------------
+  Rendered by admin_dashboard() in routes/admins/admin_dashboard.py,
+  scoped to session['owner_id']. All | default(...) filters below exist
+  because /dashboard used to render this template with zero context —
+  now /dashboard, /admin_dashboard, and /owner-dashboard all point to
+  the same real function, so these defaults are just a safety net.
 
+  "Bookings by Status" charts reservation_status, since your schema
+  has no Direct/Website/OTA/Agent "source" column. Add one to
+  `reservations` (ALTER TABLE reservations ADD COLUMN source ENUM(...))
+  and update the query if you want the original category breakdown.
+
+  Revenue Trend = sum of Verified payments/day, last 30 days.
+  Occupancy Rate = % of this owner's rooms occupied/day, last 8 days,
+  computed in Python from reservations.check_in/check_out.
+-->
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link active" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+
+  <!-- MAIN -->
   <div class="main">
-    <div class="topbar">
-      <nav>
-        <span class="active">Dashboard</span>
-        <span>Booking</span>
-        <span>Properties</span>
-        <span>Reports</span>
-        <span>Messages</span>
-      </nav>
-      <div class="profile">
-        <div class="avatar"></div>
-        {{ username }}
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link active" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
+      <div class="profile"><span class="avatar"></span> {{ username | default('Owner') }}</div>
     </div>
 
     <div class="content">
-      <h1>Dashboard Overview</h1>
-      <div class="subtitle">Welcome back! Here's what happening with your resorts today</div>
+      <h1 class="page-title">Dashboard Overview</h1>
+      <p class="page-sub">Welcome back! Here's what happening with your resorts today</p>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-              {% for category, message in messages %}
-                  <div class="flash-message {{ category }}">
-                      {{ message }}
-                  </div>
+      <!-- STAT CARDS -->
+      <div class="stat-cards">
+        <div class="stat-box">
+          <div class="stat-label">Total Bookings</div>
+          <div class="stat-value">{{ total_bookings | default(0) }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">&#8369;{{ total_revenue | default('0.00') }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Pending Payment</div>
+          <div class="stat-value">{{ pending_payment | default(0) }}</div>
+        </div>
+      </div>
+
+      <!-- REVENUE TREND + BOOKINGS BY STATUS -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Revenue Trend</h3>
+          <div class="chart-canvas-wrap">
+            {% if revenue_values %}
+            <canvas id="revenueTrendChart"></canvas>
+            {% else %}
+            <p style="color:var(--muted); font-size:13px;">No verified payments in the last 30 days.</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Bookings by Status</h3>
+          <div class="donut-wrap">
+            <div class="donut-canvas-wrap">
+              {% if source_values %}
+              <canvas id="bookingsSourceChart"></canvas>
+              {% else %}
+              <p style="color:var(--muted); font-size:13px;">No bookings yet.</p>
+              {% endif %}
+            </div>
+            <div class="legend" id="sourceLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP PROPERTIES + OCCUPANCY -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Top Performing Properties</h3>
+          <table>
+            <thead><tr><th>Property</th><th>Bookings</th><th>Revenue</th></tr></thead>
+            <tbody>
+              {% for p in top_properties | default([]) %}
+              <tr><td>{{ p.name }}</td><td>{{ p.bookings }}</td><td>&#8369;{{ "%.2f"|format(p.revenue) }}</td></tr>
+              {% else %}
+              <tr class="empty-row"><td colspan="3">No properties yet.</td></tr>
               {% endfor %}
-          {% endif %}
-      {% endwith %}
+            </tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <h3>Occupancy Rate</h3>
+          <div class="chart-canvas-wrap">
+            {% if occupancy_values %}
+            <canvas id="occupancyChart"></canvas>
+            {% else %}
+            <p style="color:var(--muted); font-size:13px;">No rooms configured yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
 
-      <!-- MY RESORTS -->
       <div class="card">
-        <div class="card-title">My Resorts</div>
+        <h3>My Resorts</h3>
         <table>
-          <tr><th>Resort</th><th>Status</th></tr>
-          {% for resort in resorts %}
-          <tr>
-            <td>{{ resort.resort_name }}</td>
-            <td>{{ resort.status }}</td>
-          </tr>
-          {% else %}
-          <tr><td colspan="2">You have no resorts on file.</td></tr>
-          {% endfor %}
+          <thead><tr><th>Resort</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for r in resorts | default([]) %}
+            <tr>
+              <td>{{ r.resort_name }}</td>
+              <td><span class="pill {{ 'pill-active' if r.status == 'Active' else 'pill-cancelled' }}">{{ r.status }}</span></td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="2">No resorts yet.</td></tr>
+            {% endfor %}
+          </tbody>
         </table>
       </div>
 
-      <!-- PENDING CARETAKER APPLICATIONS -->
       <div class="card">
-        <div class="card-title">Pending Caretaker Applications</div>
+        <h3>Pending Caretaker Applications</h3>
         <table>
-          <tr>
-            <th>Applicant</th>
-            <th>Resort</th>
-            <th>Applied On</th>
-            <th>Action</th>
-          </tr>
-          {% for c in pending_caretakers %}
-          <tr>
-            <td>{{ c.fullname }}</td>
-            <td>{{ c.resort_name }}</td>
-            <td>{{ c.created_at }}</td>
-            <td>
-              <a href="{{ url_for('approve_caretaker', account_id=c.account_id) }}"
-                 style="color: green; margin-right: 10px;">Approve</a>
-              <a href="{{ url_for('reject_caretaker', account_id=c.account_id) }}"
-                 style="color: red;">Reject</a>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4">No pending applications.</td></tr>
-          {% endfor %}
+          <thead><tr><th>Applicant</th><th>Resort</th><th>Applied On</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for c in pending_caretakers | default([]) %}
+            <tr>
+              <td>{{ c.fullname }}</td>
+              <td>{{ c.resort_name }}</td>
+              <td>{{ c.created_at.strftime('%b %d, %Y') }}</td>
+              <td><span class="btn btn-outline btn-sm">Review</span></td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="4">No pending applications.</td></tr>
+            {% endfor %}
+          </tbody>
         </table>
       </div>
-
     </div>
   </div>
+</div>
+
+<script id="dashboard-data" type="application/json">
+{
+  "revenueLabels": {{ revenue_labels | default([]) | tojson }},
+  "revenueValues": {{ revenue_values | default([]) | tojson }},
+  "sourceLabels": {{ source_labels | default([]) | tojson }},
+  "sourceValues": {{ source_values | default([]) | tojson }},
+  "occupancyLabels": {{ occupancy_labels | default([]) | tojson }},
+  "occupancyValues": {{ occupancy_values | default([]) | tojson }}
+}
+</script>
+<script>
+  const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
+  const revenueLabels = dashboardData.revenueLabels;
+  const revenueValues = dashboardData.revenueValues;
+  const sourceLabels = dashboardData.sourceLabels;
+  const sourceValues = dashboardData.sourceValues;
+  const occupancyLabels = dashboardData.occupancyLabels;
+  const occupancyValues = dashboardData.occupancyValues;
+
+  if (revenueValues.length) {
+    new Chart(document.getElementById('revenueTrendChart'), {
+      type: 'line',
+      data: {
+        labels: revenueLabels,
+        datasets: [{
+          data: revenueValues,
+          borderColor: '#1e8a5f',
+          backgroundColor: 'rgba(30,138,95,0.12)',
+          fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: '#eef1ef' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+
+  if (sourceValues.length) {
+    const colors = ['#1e8a5f', '#e0a730', '#3fa9a0', '#5aa9e6', '#c0392b'];
+    new Chart(document.getElementById('bookingsSourceChart'), {
+      type: 'doughnut',
+      data: { labels: sourceLabels, datasets: [{ data: sourceValues, backgroundColor: colors, borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+    });
+
+    const total = sourceValues.reduce((a, b) => a + b, 0);
+    const legendEl = document.getElementById('sourceLegend');
+    sourceLabels.forEach((label, i) => {
+      const pct = total ? Math.round((sourceValues[i] / total) * 100) : 0;
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `<span class="legend-dot" style="background:${colors[i % colors.length]};"></span><span class="legend-label">${label}</span><span class="legend-pct">${pct}%</span>`;
+      legendEl.appendChild(item);
+    });
+  }
+
+  if (occupancyValues.length) {
+    new Chart(document.getElementById('occupancyChart'), {
+      type: 'line',
+      data: {
+        labels: occupancyLabels,
+        datasets: [{
+          data: occupancyValues,
+          borderColor: '#5aa9e6',
+          backgroundColor: 'rgba(90,169,230,0.2)',
+          fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#eef1ef' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
