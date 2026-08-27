@@ -1,0 +1,296 @@
+/* =========================================================
+   PANSOL RESORTS — SHARED STYLESHEET
+   Used by every admin page (dashboard, reservation, calendar,
+   properties, payments, guests, reviews, reports, settings,
+   booking, messages).
+
+   NOTE: keep this file identical across all pages. If you need
+   a page-specific tweak, add a small <style> block inside that
+   page's own HTML file rather than editing this shared file,
+   so all pages stay visually consistent.
+========================================================= */
+
+:root{
+  --forest:#123524;       /* sidebar background */
+  --forest-dark:#0d2a1b;  /* active sidebar item / hover */
+  --forest-light:#1b4a32; /* sidebar hover */
+  --accent:#2f7a4f;
+  --bg:#f3f4f6;           /* page background */
+  --card:#ffffff;
+  --text:#1f2a24;
+  --muted:#6b7a72;
+  --border:#e6e9e7;
+  --active-bg:#e8f0eb;
+  --good:#1f7a3d;
+  --warn:#b7791f;
+  --bad:#c0392b;
+  --pending:#a06a1f;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.app{display:flex; min-height:100vh;}
+
+/* ---------- SIDEBAR ----------
+   NOTE: mark the current page's link with class="side-link active"
+   in that page's HTML file (do this by hand per file since these
+   are now static pages, not JS-routed). */
+.sidebar{
+  width:220px;
+  background:var(--forest);
+  color:#dce9e1;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  padding:0 0 20px 0;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:22px 20px;
+  font-weight:700;
+  letter-spacing:.3px;
+  color:#fff;
+  font-size:15px;
+}
+.brand-mark{
+  width:28px;height:28px;border-radius:50%;
+  background:#fff;color:var(--forest);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;
+}
+.side-nav{flex:1; display:flex; flex-direction:column; margin-top:6px;}
+.side-link{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 20px;
+  color:#c7d9cd;
+  text-decoration:none;
+  font-size:14px;
+  border-left:3px solid transparent;
+  cursor:pointer;
+}
+.side-link:hover{background:var(--forest-light); color:#fff;}
+.side-link.active{
+  background:var(--forest-dark);
+  color:#fff;
+  border-left:3px solid #ffffff;
+  font-weight:600;
+}
+.icon{width:16px; text-align:center; opacity:.9;}
+.logout{
+  margin:10px 20px 0 20px;
+  color:#dce9e1;
+  text-decoration:none;
+  font-size:14px;
+  cursor:pointer;
+}
+
+/* ---------- TOP NAV ----------
+   NOTE: same idea — mark the matching .topnav-link as "active"
+   by hand in each page. */
+.main{flex:1; display:flex; flex-direction:column; min-width:0;}
+.topnav{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  height:58px;
+  flex-shrink:0;
+}
+.topnav-links{display:flex; gap:28px; height:100%;}
+.topnav-link{
+  display:flex;
+  align-items:center;
+  height:100%;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:14.5px;
+  font-weight:500;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+}
+.topnav-link.active{color:var(--forest); border-bottom:2px solid var(--forest); font-weight:700;}
+.topnav-link:hover{color:var(--forest);}
+.profile{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; color:var(--text);}
+.avatar{width:30px;height:30px;border-radius:50%;background:#d7e6dc;}
+
+/* ---------- CONTENT SHELL ---------- */
+.content{padding:28px 32px; flex:1; overflow-y:auto;}
+.page-title{font-size:24px; font-weight:800; color:var(--forest); margin:0 0 4px 0;}
+.page-sub{color:var(--muted); font-size:14.5px; margin:0 0 22px 0;}
+
+.card{
+  background:var(--card);
+  border-radius:10px;
+  border:1px solid var(--border);
+  padding:20px 22px;
+  margin-bottom:22px;
+  box-shadow:0 1px 2px rgba(0,0,0,.02);
+}
+.card h3{margin:0 0 14px 0; font-size:15.5px; color:var(--forest); font-weight:700;}
+.card-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+
+/* ---------- TABLES ---------- */
+table{width:100%; border-collapse:collapse; font-size:14px;}
+thead th{
+  text-align:left;
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+  padding:8px 6px;
+  border-bottom:1px solid var(--border);
+}
+tbody td{padding:12px 6px; border-bottom:1px solid var(--border); color:var(--text);}
+tbody tr:last-child td{border-bottom:none;}
+.empty-row td{color:var(--muted); font-style:italic;}
+
+/* ---------- STATUS PILLS ---------- */
+.pill{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:12.5px;
+  font-weight:600;
+}
+.pill-active{background:#e5f4ea; color:var(--good);}
+.pill-pending{background:#fbeed9; color:var(--pending);}
+.pill-cancelled{background:#fbe4e1; color:var(--bad);}
+.pill-confirmed{background:#e5f4ea; color:var(--good);}
+.pill-maintenance{background:#fdf3d8; color:var(--warn);}
+.pill-unread{background:#e6effb; color:#1d5ba6;}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  border:none;
+  padding:7px 14px;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-primary{background:var(--forest); color:#fff;}
+.btn-primary:hover{background:var(--forest-dark);}
+.btn-outline{background:#fff; border:1px solid var(--border); color:var(--text);}
+.btn-outline:hover{border-color:var(--forest); color:var(--forest);}
+.btn-danger-outline{background:#fff; border:1px solid #f1c6c0; color:var(--bad);}
+.btn-sm{padding:5px 10px; font-size:12.5px;}
+.action-group{display:flex; gap:8px;}
+
+/* ---------- GRIDS / STAT CARDS ---------- */
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
+
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+}
+.stat-label{font-size:13px; color:var(--muted); font-weight:600; margin-bottom:6px;}
+.stat-value{font-size:26px; font-weight:800; color:var(--forest);}
+.stat-sub{font-size:12.5px; color:var(--muted); margin-top:4px;}
+
+/* ---------- TOOLBAR / INPUTS ---------- */
+.toolbar{display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap;}
+.search-input, .select-input{
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:13.5px;
+  color:var(--text);
+  background:#fff;
+}
+.search-input{flex:1; min-width:200px;}
+.spacer{flex:1;}
+
+/* ---------- PROPERTIES ---------- */
+.property-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.property-img{
+  height:130px;
+  background:linear-gradient(135deg,#cfe6d8,#a9d0b8);
+  display:flex; align-items:center; justify-content:center;
+  color:#3a5c48; font-size:13px; font-weight:600;
+}
+.property-body{padding:16px;}
+.property-body h4{margin:0 0 4px 0; font-size:15px; color:var(--forest);}
+.property-body p{margin:0 0 10px 0; font-size:13px; color:var(--muted);}
+.property-meta{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:12px;}
+
+/* ---------- MESSAGES ---------- */
+.messages-layout{display:grid; grid-template-columns:280px 1fr; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; min-height:420px;}
+.thread-list{border-right:1px solid var(--border);}
+.thread-item{padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer;}
+.thread-item:hover{background:#f7f9f8;}
+.thread-item.active{background:var(--active-bg);}
+.thread-name{font-weight:700; font-size:13.5px; color:var(--text); display:flex; justify-content:space-between;}
+.thread-preview{font-size:12.5px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.thread-time{font-size:11px; color:var(--muted);}
+.conversation{display:flex; flex-direction:column; padding:20px;}
+.conv-header{font-weight:700; color:var(--forest); margin-bottom:14px; font-size:15px; border-bottom:1px solid var(--border); padding-bottom:12px;}
+.bubble{max-width:70%; padding:10px 14px; border-radius:10px; font-size:13.5px; margin-bottom:10px;}
+.bubble-them{background:#f0f2f1; align-self:flex-start;}
+.bubble-me{background:var(--forest); color:#fff; align-self:flex-end;}
+.conv-body{flex:1; display:flex; flex-direction:column;}
+.conv-input{display:flex; gap:8px; margin-top:14px;}
+.conv-input input{flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:20px; font-size:13.5px;}
+
+/* ---------- SETTINGS ---------- */
+.settings-nav{display:flex; flex-direction:column; gap:2px;}
+.settings-nav a{padding:10px 14px; border-radius:6px; color:var(--text); text-decoration:none; font-size:13.5px; cursor:pointer;}
+.settings-nav a.active, .settings-nav a:hover{background:var(--active-bg); color:var(--forest); font-weight:600;}
+.form-row{margin-bottom:16px;}
+.form-row label{display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;}
+.form-row input, .form-row select{width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:6px; font-size:13.5px;}
+.form-cols{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+
+/* ---------- REVIEWS ---------- */
+.review-card{border-bottom:1px solid var(--border); padding:16px 0;}
+.review-card:last-child{border-bottom:none;}
+.review-top{display:flex; justify-content:space-between; margin-bottom:6px;}
+.stars{color:#e0a730; font-size:13px;}
+.review-guest{font-weight:700; font-size:13.5px;}
+.review-resort{color:var(--muted); font-size:12.5px;}
+.review-text{font-size:13.5px; color:var(--text); line-height:1.5;}
+
+/* ---------- CALENDAR ---------- */
+.calendar-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+.cal-head{font-size:12px; font-weight:700; color:var(--muted); text-align:center; padding-bottom:6px;}
+.cal-cell{
+  border:1px solid var(--border);
+  border-radius:6px;
+  min-height:78px;
+  padding:6px;
+  font-size:12px;
+  color:var(--muted);
+  position:relative;
+}
+.cal-cell.muted{opacity:.4;}
+.cal-date{font-weight:700; color:var(--text); font-size:12px;}
+.cal-event{
+  margin-top:4px;
+  background:var(--active-bg);
+  color:var(--forest);
+  border-radius:4px;
+  padding:2px 5px;
+  font-size:10.5px;
+  font-weight:600;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.cal-event.alt{background:#fdf3d8; color:var(--warn);}

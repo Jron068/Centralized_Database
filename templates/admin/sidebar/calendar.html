@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — Booking Calendar</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/admin_style/admin.css')}}">
+</head>
+<body>
+
+<!--
+  NOTES FOR THIS PAGE (calendar.html)
+  --------------------------------------------------
+  Calendar grid is static markup (7 columns) for the prototype.
+  Swap in real date generation + event data on the backend.
+
+  All pages share styles.css — do not fork styles per page.
+  Sidebar / top nav links are plain <a href="..."> pointing at
+  the sibling .html files, so this works as static prototype
+  files opened directly in a browser, or dropped into a real
+  app's templates folder later.
+-->
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link active" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
+      </div>
+      <div class="profile"><span class="avatar"></span> Owner One</div>
+    </div>
+
+    <div class="content">
+      <h1 class="page-title">Booking Calendar</h1>
+      <p class="page-sub">Occupancy overview for all resorts this month</p>
+
+      <div class="card">
+        <div class="card-row">
+          <h3 style="margin:0;">August 2026</h3>
+          <div class="action-group">
+            <button class="btn btn-outline btn-sm">&larr; Prev</button>
+            <button class="btn btn-outline btn-sm">Next &rarr;</button>
+          </div>
+        </div>
+        <div class="calendar-grid">
+          <div class="cal-head">Sun</div><div class="cal-head">Mon</div><div class="cal-head">Tue</div><div class="cal-head">Wed</div><div class="cal-head">Thu</div><div class="cal-head">Fri</div><div class="cal-head">Sat</div>
+          <div class="cal-cell muted"><div class="cal-date">26</div></div>
+          <div class="cal-cell"><div class="cal-date">27</div><div class="cal-event">Sunscape - full</div></div>
+          <div class="cal-cell"><div class="cal-date">28</div></div>
+          <div class="cal-cell"><div class="cal-date">29</div><div class="cal-event">M. Santos in</div></div>
+          <div class="cal-cell"><div class="cal-date">30</div></div>
+          <div class="cal-cell"><div class="cal-date">31</div><div class="cal-event">M. Santos out</div></div>
+          <div class="cal-cell"><div class="cal-date">1</div></div>
+          <div class="cal-cell"><div class="cal-date">2</div><div class="cal-event alt">C. Reyes pending</div></div>
+          <div class="cal-cell"><div class="cal-date">3</div></div>
+          <div class="cal-cell"><div class="cal-date">4</div></div>
+          <div class="cal-cell"><div class="cal-date">5</div><div class="cal-event">A. Cruz in</div></div>
+          <div class="cal-cell"><div class="cal-date">6</div></div>
+          <div class="cal-cell"><div class="cal-date">7</div><div class="cal-event">A. Cruz out</div></div>
+          <div class="cal-cell"><div class="cal-date">8</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

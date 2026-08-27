@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — Properties</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/admin_style/admin.css')}}">
+</head>
+<body>
+
+<!--
+  NOTES FOR THIS PAGE (properties.html)
+  --------------------------------------------------
+  Shared by BOTH sidebar 'Properties' and top nav 'Properties' —
+  both are marked active on this one file.
+
+  All pages share styles.css — do not fork styles per page.
+  Sidebar / top nav links are plain <a href="..."> pointing at
+  the sibling .html files, so this works as static prototype
+  files opened directly in a browser, or dropped into a real
+  app's templates folder later.
+-->
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link active" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{url_for('dashboard')}}">Dashboard</a>
+        <a class="topnav-link" href="{{url_for('booking')}}">Booking</a>
+        <a class="topnav-link active" href="{{url_for('properties')}}">Properties</a>
+        <a class="topnav-link" href="{{url_for('reports')}}">Reports</a>
+      </div>
+      <div class="profile"><span class="avatar"></span> Owner One</div>
+    </div>
+
+    <div class="content">
+      <h1 class="page-title">Properties</h1>
+      <p class="page-sub">Manage details, pricing, and availability for each resort</p>
+
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search properties">
+        <button class="btn btn-primary">+ Add Property</button>
+      </div>
+
+      <div class="grid-3">
+        <div class="property-card">
+          <div class="property-img">Sunscape Resort</div>
+          <div class="property-body">
+            <h4>Sunscape Resort</h4>
+            <p>Pansol, Calamba &middot; 12 rooms</p>
+            <div class="property-meta"><span>&#8369;3,500 / night</span><span class="pill pill-active">Active</span></div>
+            <div class="action-group"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-outline btn-sm">View</button></div>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img">Triple Z Resort</div>
+          <div class="property-body">
+            <h4>Triple Z Resort</h4>
+            <p>Pansol, Calamba &middot; 8 rooms</p>
+            <div class="property-meta"><span>&#8369;2,800 / night</span><span class="pill pill-active">Active</span></div>
+            <div class="action-group"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-outline btn-sm">View</button></div>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img">Palm Grove Villas</div>
+          <div class="property-body">
+            <h4>Palm Grove Villas</h4>
+            <p>Pansol, Calamba &middot; 5 rooms</p>
+            <div class="property-meta"><span>&#8369;4,200 / night</span><span class="pill pill-maintenance">Maintenance</span></div>
+            <div class="action-group"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-outline btn-sm">View</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

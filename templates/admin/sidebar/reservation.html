@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — Reservations</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+</head>
+<body>
+
+<!--
+  NOTES FOR THIS PAGE (reservation.html)
+  --------------------------------------------------
+  Sidebar-only page (no matching top nav item).
+  'New Reservation' button and row 'View' links are placeholders —
+  wire them to your actual booking detail route.
+
+  All pages share styles.css — do not fork styles per page.
+  Sidebar / top nav links are plain <a href="..."> pointing at
+  the sibling .html files, so this works as static prototype
+  files opened directly in a browser, or dropped into a real
+  app's templates folder later.
+-->
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
+      </div>
+      <div class="profile"><span class="avatar"></span> Owner One</div>
+    </div>
+
+    <div class="content">
+      <h1 class="page-title">Reservations</h1>
+      <p class="page-sub">Manage upcoming, ongoing, and past bookings across your resorts</p>
+
+      <div class="toolbar">
+        <input class="search-input" placeholder="Search by guest name or booking ID">
+        <select class="select-input"><option>All Resorts</option><option>Sunscape Resort</option><option>Triple Z Resort</option></select>
+        <select class="select-input"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select>
+        <button class="btn btn-primary">+ New Reservation</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead><tr><th>Booking ID</th><th>Guest</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>#RSV-1042</td><td>Maria Santos</td><td>Sunscape Resort</td><td>Aug 29, 2026</td><td>Aug 31, 2026</td><td><span class="pill pill-confirmed">Confirmed</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
+            <tr><td>#RSV-1041</td><td>Carlo Reyes</td><td>Triple Z Resort</td><td>Sep 2, 2026</td><td>Sep 3, 2026</td><td><span class="pill pill-pending">Pending</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
+            <tr><td>#RSV-1040</td><td>Angela Cruz</td><td>Sunscape Resort</td><td>Sep 5, 2026</td><td>Sep 7, 2026</td><td><span class="pill pill-cancelled">Cancelled</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
