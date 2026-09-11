@@ -1,5 +1,5 @@
 from config import get_connection
-from flask import render_template, session
+from flask import jsonify, render_template, session
 from app import app
 
 @app.route("/resorts")
@@ -29,7 +29,6 @@ def resorts():
     return render_template(
         "customer/resorts.html", username=fullname, resort_rows=resort_rows
     )
-
 
 @app.route('/LuckyMielsResort')
 def LuckyMielsResort():

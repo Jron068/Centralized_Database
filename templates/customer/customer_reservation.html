@@ -21,7 +21,7 @@
 
     <nav class="nav">
 
-      <a href="{{ url_for('customer_landingpage') }}" class="nav-item">
+      <a href="{{ url_for('customer_reservation') }}" class="nav-item">
         <i class="fa-solid fa-grip"></i> DASHBOARD
       </a>
 
@@ -98,6 +98,13 @@
       <h1>My Reservation</h1>
       <p class="subtitle">All of your bookings across every partner resort, in one place.</p>
 
+      {% for notification in notifications %}
+        <div class="alert alert-success" style="margin-top:12px;">
+          <strong>{{ notification.title }}</strong><br>
+          {{ notification.message }}
+        </div>
+      {% endfor %}
+
       <div class="panel" style="margin-top:20px;">
         <h3>Booking History</h3>
         <p class="subtitle" style="margin-bottom:16px;">{{ reservations|length }} total booking{{ '' if reservations|length == 1 else 's' }}</p>
@@ -107,7 +114,6 @@
             <thead>
               <tr>
                 <th>Resort</th>
-                <th>Room</th>
                 <th>Check-in</th>
                 <th>Check-out</th>
                 <th>Guests</th>
@@ -119,7 +125,6 @@
               {% for r in reservations %}
               <tr>
                 <td><strong>{{ r.resort_name }}</strong></td>
-                <td>{{ r.room_name }}</td>
                 <td>{{ r.check_in.strftime('%b %d, %Y') if r.check_in else '—' }}</td>
                 <td>{{ r.check_out.strftime('%b %d, %Y') if r.check_out else '—' }}</td>
                 <td>{{ r.guests }}</td>
@@ -127,7 +132,7 @@
                 <td><span class="badge {{ r.reservation_status|lower }}">{{ r.reservation_status }}</span></td>
               </tr>
               {% else %}
-              <tr><td colspan="7"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
+              <tr><td colspan="6"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
               {% endfor %}
             </tbody>
           </table>

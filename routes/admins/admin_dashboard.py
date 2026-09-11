@@ -2,7 +2,6 @@ from flask import render_template, session, redirect, url_for
 from app import app
 from config import get_connection
 from models.decorators import role_required
-from datetime import date, timedelta
 
 @app.route("/admin_dashboard", endpoint="admin_dashboard")
 @app.route("/owner-dashboard", endpoint="owner_dashboard")
@@ -54,7 +53,6 @@ def admin_dashboard():
         pending_payment = 0
         revenue_labels, revenue_values = [], []
         source_labels, source_values = [], []
-        occupancy_labels, occupancy_values = [], []
         top_properties = []
 
         if resort_ids:
@@ -122,31 +120,6 @@ def admin_dashboard():
             source_labels = [row["reservation_status"] for row in source_rows]
             source_values = [row["cnt"] for row in source_rows]
 
-            # Occupancy Rate (last 8 days)
-            cursor.execute(
-                f"SELECT COUNT(*) AS total_rooms FROM rooms WHERE resort_id IN ({placeholders})",
-                resort_ids
-            )
-            total_rooms = cursor.fetchone()["total_rooms"] or 0
-
-            if total_rooms > 0:
-                cursor.execute(
-                    f"""
-                    SELECT check_in, check_out FROM reservations
-                    WHERE resort_id IN ({placeholders})
-                      AND reservation_status IN ('Confirmed','Completed')
-                      AND check_out >= (CURDATE() - INTERVAL 8 DAY)
-                    """,
-                    resort_ids
-                )
-                stays = cursor.fetchall()
-                today = date.today()
-                for i in range(7, -1, -1):
-                    day = today - timedelta(days=i)
-                    occupied = sum(1 for s in stays if s["check_in"] <= day < s["check_out"])
-                    occupancy_labels.append(day.strftime("%b %d"))
-                    occupancy_values.append(round((occupied / total_rooms) * 100, 1))
-
             # Top Performing Properties
             cursor.execute(
                 f"""
@@ -177,8 +150,6 @@ def admin_dashboard():
             revenue_values=revenue_values,
             source_labels=source_labels,
             source_values=source_values,
-            occupancy_labels=occupancy_labels,
-            occupancy_values=occupancy_values,
             top_properties=top_properties,
         )
     finally:
@@ -200,9 +171,6 @@ def properties():
 def reports():
     return render_template("admin/navbar/reports.html")
 
-@app.route("/reservation")
-def reservation():
-    return render_template("admin/sidebar/reservation.html")
 
 
 #this is route for SIDEBARS

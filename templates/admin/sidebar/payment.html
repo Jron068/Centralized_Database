@@ -68,10 +68,27 @@
         <table>
           <thead><tr><th>Transaction ID</th><th>Guest</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>#TXN-8821</td><td>Maria Santos</td><td>&#8369;7,000</td><td>GCash</td><td>Aug 25, 2026</td><td><span class="pill pill-confirmed">Paid</span></td></tr>
-            <tr><td>#TXN-8820</td><td>Carlo Reyes</td><td>&#8369;2,800</td><td>Bank Transfer</td><td>Aug 24, 2026</td><td><span class="pill pill-pending">Pending</span></td></tr>
-            <tr><td>#TXN-8819</td><td>Angela Cruz</td><td>&#8369;8,400</td><td>Credit Card</td><td>Aug 22, 2026</td><td><span class="pill pill-confirmed">Paid</span></td></tr>
-          </tbody>
+  {% for p in payments %}
+  <tr>
+    <td>#PAY-{{ p.payment_id }}</td>
+    <td>{{ p.guest_name }}</td>
+    <td>₱{{ "%.2f"|format(p.amount_paid) }}</td>
+    <td>{{ p.reference_number }}</td>
+    <td>{{ p.payment_date }}</td>
+    <td>
+      {% if p.payment_status == 'Verified' %}
+        <span class="pill pill-confirmed">Verified</span>
+      {% elif p.payment_status == 'Rejected' %}
+        <span class="pill pill-cancelled">Rejected</span>
+      {% else %}
+        <span class="pill pill-pending">Pending</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" style="text-align:center;">No payments yet.</td></tr>
+  {% endfor %}
+</tbody>
         </table>
       </div>
     </div>
