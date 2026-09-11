@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservation review</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar">
+      <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+      <div class="side-nav">
+        <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      </div>
+      <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    </div>
+    <div class="main">
+      <div class="content">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('reservation') }}">&larr; Back to reservations</a>
+        <h1 class="page-title" style="margin-top:20px;">Reservation #RSV-{{ reservation.reservation_id }}</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}<p class="page-sub">{{ message }}</p>{% endfor %}
+        {% endwith %}
+        <div class="card" style="margin-top:20px; padding:24px;">
+          <p><strong>Guest:</strong> {{ reservation.guest_name }}</p>
+          <p><strong>Email:</strong> {{ reservation.guest_email }}</p>
+          <p><strong>Phone:</strong> {{ reservation.guest_phone or 'Not provided' }}</p>
+          <p><strong>Resort:</strong> {{ reservation.resort_name }}</p>
+          <p><strong>Stay:</strong> {{ reservation.check_in }} to {{ reservation.check_out }} ({{ reservation.guests }} guests)</p>
+          <p><strong>Total:</strong> &#8369;{{ "%.2f"|format(reservation.total_amount) }}</p>
+          <p><strong>Reservation status:</strong> {{ reservation.reservation_status }}</p>
+          <p><strong>Payment status:</strong> {{ reservation.payment_status or 'No payment submitted' }}</p>
+          <hr style="margin:22px 0; border:0; border-top:1px solid #ddd;">
+          <h3>Payment proof</h3>
+          {% if reservation.proof_of_payment %}
+            <p><img src="{{ url_for('static', filename=reservation.proof_of_payment) }}" alt="Payment proof" style="max-width:100%; max-height:560px; border:1px solid #ddd; border-radius:8px;"></p>
+            <a class="btn btn-outline btn-sm" target="_blank" href="{{ url_for('static', filename=reservation.proof_of_payment) }}">Open full image</a>
+          {% else %}
+            <p class="page-sub">The customer has not submitted a payment screenshot.</p>
+          {% endif %}
+          {% if reservation.payment_status == 'Pending' %}
+            <form action="{{ url_for('review_reservation', reservation_id=reservation.reservation_id) }}" method="post" style="display:inline-block; margin-top:20px;">
+              <button class="btn btn-primary" name="action" value="approve" type="submit">Approve</button>
+              <button class="btn btn-outline" name="action" value="reject" type="submit" style="margin-left:8px;">Reject</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

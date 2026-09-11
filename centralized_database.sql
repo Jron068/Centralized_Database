@@ -244,20 +244,21 @@ CREATE TABLE `reservations` (
   `reservation_id` int NOT NULL AUTO_INCREMENT,
   `customer_id` int NOT NULL,
   `resort_id` int NOT NULL,
-  `room_id` int NOT NULL,
   `check_in` date DEFAULT NULL,
   `check_out` date DEFAULT NULL,
   `guests` int DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
   `reservation_status` enum('Pending','Confirmed','Cancelled','Completed','Rejected') DEFAULT 'Pending',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `guest_name` varchar(150) DEFAULT NULL,
+  `guest_phone` varchar(20) DEFAULT NULL,
+  `pax` int DEFAULT NULL,
+  `gas_stove` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`reservation_id`),
   KEY `customer_id` (`customer_id`),
   KEY `resort_id` (`resort_id`),
-  KEY `room_id` (`room_id`),
   CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`),
-  CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`resort_id`) REFERENCES `resorts` (`resort_id`),
-  CONSTRAINT `reservations_ibfk_3` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`room_id`)
+  CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`resort_id`) REFERENCES `resorts` (`resort_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

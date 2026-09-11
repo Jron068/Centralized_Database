@@ -68,11 +68,22 @@
         <table>
           <thead><tr><th>Booking ID</th><th>Guest</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>
-            <tr><td>#RSV-1042</td><td>Maria Santos</td><td>Sunscape Resort</td><td>Aug 29, 2026</td><td>Aug 31, 2026</td><td><span class="pill pill-confirmed">Confirmed</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
-            <tr><td>#RSV-1041</td><td>Carlo Reyes</td><td>Triple Z Resort</td><td>Sep 2, 2026</td><td>Sep 3, 2026</td><td><span class="pill pill-pending">Pending</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
-            <tr><td>#RSV-1040</td><td>Angela Cruz</td><td>Sunscape Resort</td><td>Sep 5, 2026</td><td>Sep 7, 2026</td><td><span class="pill pill-cancelled">Cancelled</span></td><td><span class="btn btn-outline btn-sm">View</span></td></tr>
+            {% for r in reservations %}
+            <tr>
+              <td> #RSV-{{ r.reservation_id }}</td>
+              <td>{{ r.guest_name }}</td>
+              <td>{{ r.resort_name }}</td>
+              <td>{{ r.check_in }}</td>
+              <td>{{ r.check_out }}</td>
+              <td><span class="pill pill-{{ r.reservation_status.lower() }}">{{ r.reservation_status }}</span></td>
+              <td><a class="btn btn-outline btn-sm" href="{{ url_for('reservation_detail', reservation_id=r.reservation_id) }}">View</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7">No reservations found.</td></tr>
+            {% endfor %}
           </tbody>
         </table>
+
       </div>
     </div>
   </div>

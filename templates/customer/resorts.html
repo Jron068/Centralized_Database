@@ -9,17 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/resorts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}"> {% block extra_head %}{% endblock %}
-    <!-- =========================================================
-         RESPONSIVE OVERRIDES
-         These only control responsiveness/carousel behavior.
-    ========================================================== -->
-    
   </head>
   <body>
     <div class="app">
-      <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
       <aside class="sidebar">
         <div class="brand">
           <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width:220px;height:auto;">
@@ -51,13 +43,7 @@
                 opacity:.9;
            "> &#8592; Log Out </a>
       </aside>
-      <!-- =====================================================
-         MAIN
-    ====================================================== -->
       <div class="main">
-        <!-- =================================================
-             TOP NAV
-        ================================================== -->
         <header class="topbar">
           <div class="logo">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
@@ -76,17 +62,11 @@
             </span>
           </div>
         </header> {% block content %}
-        <!-- =================================================
-             PAGE CONTENT
-        ================================================== -->
         <div class="page-content">
           <div class="pagehead">
             <h1> Explore Resorts </h1>
             <p> Find the perfect resort for your next getaway </p>
           </div>
-          <!-- =================================================
-                 SEARCH
-            ================================================== -->
           <div class="searchrow">
             <div class="sfield grow">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,28 +106,19 @@
                 <path d="M21 21l-4.3-4.3" />
               </svg> Search </button>
           </div>
-          <!-- =================================================
-                 RESORT CAROUSEL
-            ================================================== -->
           <div class="cardrow-wrap">
-            <!-- LEFT ARROW -->
             <button class="scrollbtn left" id="scrollLeftBtn" type="button" aria-label="Previous resorts">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
                 <path d="M15 6l-6 6 6 6" />
               </svg>
             </button>
-            <!-- RESORT CARDS -->
             <div class="cardrow" id="cardRow"></div>
-            <!-- RIGHT ARROW -->
             <button class="scrollbtn right" id="scrollRightBtn" type="button" aria-label="Next resorts">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
                 <path d="M9 6l6 6-6 6" />
               </svg>
             </button>
           </div>
-          <!-- =================================================
-                 TRUST
-            ================================================== -->
           <div class="trust">
             <div class="trust-item">
               <div class="trust-ic">
@@ -196,9 +167,6 @@
               </div>
             </div>
           </div>
-          <!-- =================================================
-                 DETAIL PANEL
-            ================================================== -->
           <div class="detail" id="detailPanel">
             <div class="drow">
               <div>
@@ -254,9 +222,6 @@
                 <button class="checkbtn"> Check Availability </button>
               </div>
             </div>
-            <!-- =================================================
-                     RESORT INFORMATION
-                ================================================== -->
             <div class="idblock">
               <div class="idtop">
                 <h2 id="d-name"></h2>
@@ -268,9 +233,6 @@
               <div class="amheading"> Amenities </div>
               <div class="amrow2" id="d-amrow"></div>
             </div>
-            <!-- =================================================
-                     TABS
-                ================================================== -->
             <div class="tabbar" id="tabbar">
               <button class="tabbtn active" data-tab="overview" onclick="showTab('overview')"> Overview </button>
               <button class="tabbtn" data-tab="amenities" onclick="showTab('amenities')"> Amenities </button>
@@ -279,9 +241,6 @@
               <button class="tabbtn" data-tab="reviews" onclick="showTab('reviews')"> Reviews <span id="tab-revcount"></span>
               </button>
             </div>
-            <!-- =================================================
-                     OVERVIEW
-                ================================================== -->
             <div class="tabpane active" id="tab-overview">
               <div class="ov3">
                 <div>
@@ -293,31 +252,22 @@
                 <div>
                   <h4> Resort Gallery </h4>
                   <div class="gal6" id="ov-gallery"></div>
-                  <button class="ghostbtn" onclick="showTab('overview')"> View All Photos </button>
+                  <button class="ghostbtn" onclick="openGallery()"> View All Photos </button>
                 </div>
                 <div>
                   <h4> Resort Location </h4>
                   <div class="minimap" id="ov-map"></div>
-                  <button class="ghostbtn" onclick="showTab('location')"> Get Directions </button>
+                  <button class="ghostbtn" onclick="openDirections()"> Get Directions </button>
                 </div>
               </div>
             </div>
-            <!-- =================================================
-                     AMENITIES
-                ================================================== -->
             <div class="tabpane" id="tab-amenities">
               <div class="amgrid" id="am-grid"></div>
             </div>
-            <!-- =================================================
-                     DATES
-                ================================================== -->
             <div class="tabpane" id="tab-dates">
               <div class="strip" id="dayStrip"></div>
               <div id="rangeList"></div>
             </div>
-            <!-- =================================================
-                     LOCATION
-                ================================================== -->
             <div class="tabpane" id="tab-location">
               <div class="loc-grid2">
                 <div class="bigmap" id="bigMap"></div>
@@ -325,7 +275,7 @@
                   <div class="addrcard">
                     <h4> Address </h4>
                     <p id="loc-addr"></p>
-                    <button class="dirbtn">
+                    <button class="dirbtn" onclick="openDirections()">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 11l18-8-8 18-2-8-8-2z" />
                       </svg> Get Directions </button>
@@ -337,9 +287,6 @@
                 </div>
               </div>
             </div>
-            <!-- =================================================
-                     REVIEWS
-                ================================================== -->
             <div class="tabpane" id="tab-reviews">
               <div class="rev-summary">
                 <div class="rev-score">
@@ -351,9 +298,6 @@
               </div>
             </div>
           </div>
-          <!-- =================================================
-                 REVIEWS SECTION
-            ================================================== -->
           <div class="revsection">
             <div class="revsection-head">
               <h3> What Guests Are Saying </h3>
@@ -366,1314 +310,673 @@
       </div>
     </div>
 
-    
-    <script>
-      /* ============================================================
-   ICONS
-============================================================ */
-      const ic = {
-        pool: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="1.8">
-																<path d="M2 18c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/>
-																<path d="M4 13V6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v5"/>
-															</svg>
-    `,
-        wifi: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M5 12.5a11 11 0 0114 0M8.5 16a6 6 0 017 0"/>
-																<circle cx="12"
-                    cy="19"
-                    r="1"/>
-															</svg>
-    `,
-        park: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<rect x="4"
-                  y="4"
-                  width="16"
-                  height="16"
-                  rx="2"/>
-																<path d="M9 16V8h3.5a2.5 2.5 0 010 5H9"/>
-															</svg>
-    `,
-        kitchen: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M4 3v7M4 3l1.5 1.5M4 3l-1.5 1.5M4 10v11M20 3s-3 1-3 6v12"/>
-															</svg>
-    `,
-        mic: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<rect x="9"
-                  y="2"
-                  width="6"
-                  height="12"
-                  rx="3"/>
-																<path d="M5 11a7 7 0 0014 0M12 18v4"/>
-															</svg>
-    `,
-        bbq: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<circle cx="12"
-                    cy="14"
-                    r="7"/>
-																<path d="M8 6c0-2 1.5-3 1-4M12 5c0-2 1.5-3 1-4M16 6c0-2 1.5-3 1-4"/>
-															</svg>
-    `,
-        slide: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M4 20c8-2 6-16 14-16M4 20h6M14 12l6 8"/>
-															</svg>
-    `,
-        hall: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M3 21V9l9-6 9 6v12"/>
-																<path d="M9 21v-6h6v6"/>
-															</svg>
-    `,
-        restaurant: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M6 2v9a2 2 0 002 2v9M6 2v6M9 2v6M6 8h3M18 2v20M18 2c-2 0-3 2-3 5s1 5 3 5"/>
-															</svg>
-    `,
-        cottage: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M3 11l9-7 9 7"/>
-																<path d="M5 10v10h14V10"/>
-																<path d="M10 20v-6h4v6"/>
-															</svg>
-    `,
-        store: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M3 9l1-5h16l1 5M4 9v11h16V9M4 9h16"/>
-															</svg>
-    `,
-        river: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M3 6c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/>
-																<path d="M3 12c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/>
-																<path d="M3 18c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/>
-															</svg>
-    `,
-        clock: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="1.8">
-																<circle cx="12"
-                    cy="12"
-                    r="9"/>
-																<path d="M12 7v5l3 3"/>
-															</svg>
-    `,
-        moon: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="1.8">
-																<path d="M21 12.5A8.5 8.5 0 1111.5 3 6.8 6.8 0 0021 12.5z"/>
-															</svg>
-    `,
-        calendar: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<rect x="3"
-                  y="5"
-                  width="18"
-                  height="16"
-                  rx="2"/>
-																<path d="M8 3v4M16 3v4M3 10h18"/>
-															</svg>
-    `,
-        pin: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-																<path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/>
-																<circle cx="12"
-                    cy="9"
-                    r="2.4"/>
-															</svg>
-    `,
-        star: `
-        
-															<svg viewBox="0 0 24 24"
-             fill="currentColor">
-																<path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z"/>
-															</svg>
-    `
-      };
-      /* ============================================================
-         STARS
-      ============================================================ */
-      function stars(n) {
-        let s = '';
-        for (let i = 0; i < 5; i++) {
-          s += `
-            
-															<span style="opacity:${i < Math.round(n) ? 1 : 0.28}">
-                ${ic.star}
-            
-															</span>
-        `;
-        }
-        return s;
+<script>
+
+  /* ============================================================
+     BOOKING FLOW: calendar -> rules/form -> payment -> screenshot
+  ============================================================ */
+  let bookingState = {};
+
+  document.querySelector('.checkbtn').addEventListener('click', async function () {
+      const r = resorts.find(x => x.id === currentId);
+      if (!r) return;
+      bookingState = { resort: r };
+
+      let bookedDates = new Set();
+      try {
+          const res = await fetch(`/resort_availability/${r.id}`);
+          const data = await res.json();
+          bookedDates = new Set(data.booked_dates || []);
+      } catch (err) {
+          bookedDates = new Set();
       }
-      /* ============================================================
-         SCENE
-      ============================================================ */
-      function scene(variant, angle) {
-        const w = 800;
-        const h = 500;
-        const shift = Math.sin(angle * Math.PI / 180) * 40;
-        const sunX = 620 - (angle % 360) / 360 * 500;
-        const palette = {
-          villa: {
-            water: '#1E8F5B',
-            water2: '#176F45',
-            roof: '#0B4A30',
-            accent: '#E0A233'
-          },
-          family: {
-            water: '#2E9E63',
-            water2: '#1E7A4C',
-            roof: '#123B27',
-            accent: '#E7B24B'
-          },
-          cottage: {
-            water: '#238F5F',
-            water2: '#186B47',
-            roof: '#5A3A1E',
-            accent: '#E0A233'
-          },
-          waterpark: {
-            water: '#1C8FA0',
-            water2: '#146676',
-            roof: '#0B4A30',
-            accent: '#E5B23A'
-          }
-        } [variant] || {
-          water: '#1E8F5B',
-          water2: '#176F45',
-          roof: '#0B4A30',
-          accent: '#E0A233'
-        };
-        let extra = '';
-        if (variant === 'villa') {
-          extra = `
-            
-															<rect x="${520 + shift * .4}"
-                  y="${h - 230}"
-                  width="150"
-                  height="90"
-                  rx="6"
-                  fill="${palette.roof}"/>
-															<polygon points="
-                ${505 + shift * .4},${h - 230}
-                ${595 + shift * .4},${h - 280}
-                ${685 + shift * .4},${h - 230}"
-                fill="${palette.roof}"/>
-        `;
-        } else if (variant === 'family') {
-          extra = `
-            
-															<rect x="${90 + shift * .4}"
-                  y="${h - 200}"
-                  width="120"
-                  height="70"
-                  rx="6"
-                  fill="${palette.roof}"/>
-															<polygon points="
-                ${80 + shift * .4},${h - 200}
-                ${150 + shift * .4},${h - 240}
-                ${220 + shift * .4},${h - 200}"
-                fill="${palette.roof}"/>
-															<rect x="${420 + shift * .4}"
-                  y="${h - 180}"
-                  width="90"
-                  height="50"
-                  rx="6"
-                  fill="${palette.roof}"/>
-        `;
-        } else if (variant === 'cottage') {
-          extra = `
-            
-															<rect x="${150 + shift * .4}"
-                  y="${h - 190}"
-                  width="100"
-                  height="60"
-                  rx="4"
-                  fill="${palette.roof}"/>
-															<polygon points="
-                ${140 + shift * .4},${h - 190}
-                ${200 + shift * .4},${h - 225}
-                ${260 + shift * .4},${h - 190}"
-                fill="#3E2712"/>
-															<rect x="${520 + shift * .4}"
-                  y="${h - 170}"
-                  width="90"
-                  height="40"
-                  rx="4"
-                  fill="${palette.roof}"/>
-															<polygon points="
-                ${510 + shift * .4},${h - 170}
-                ${565 + shift * .4},${h - 200}
-                ${620 + shift * .4},${h - 170}"
-                fill="#3E2712"/>
-        `;
-        } else if (variant === 'waterpark') {
-          extra = `
-            
-															<path d="
-                M${120 + shift * .4} ${h - 120}
-                C${220 + shift * .4} ${h - 280},
-                 ${320 + shift * .4} ${h - 260},
-                 ${300 + shift * .4} ${h - 120}"
-                fill="none"
-                stroke="${palette.accent}"
-                stroke-width="14"
-                stroke-linecap="round"/>
-															<rect x="${540 + shift * .4}"
-                  y="${h - 260}"
-                  width="18"
-                  height="140"
-                  fill="${palette.roof}"/>
-        `;
-        }
-        return `
+      bookingState.bookedDates = bookedDates;
 
-        
-															<svg viewBox="0 0 ${w} ${h}"
-             preserveAspectRatio="xMidYMax slice"
-																xmlns="http://www.w3.org/2000/svg">
-																<rect width="${w}"
-                  height="${h}"
-                  fill="#EAF4EE"/>
-																<circle cx="${sunX}"
-                    cy="${h * .28}"
-                    r="46"
-                    fill="${palette.accent}"
-                    opacity="0.85"/>
-																<path d="
-                M0 ${h - 260 + shift * .15}
-                Q${w * .25} ${h - 300 + shift * .15}
-                 ${w * .5} ${h - 260 + shift * .15}
-                T${w} ${h - 260 + shift * .15}
-                V${h}
-                H0 Z"
-                fill="#BFD9C9"
-                opacity="0.6"/>
+      openBookingModal();
+  });
 
-            ${extra}
+  function openBookingModal() {
+      const overlay = document.createElement('div');
+      overlay.id = 'bookingOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:999;';
+      overlay.innerHTML = `
+          <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:92%;max-height:88vh;overflow-y:auto;">
+              <div id="bookingModalBody"></div>
+          </div>
+      `;
+      document.body.appendChild(overlay);
+      renderCalendarStep();
+  }
 
-            
-																<path d="
-                M0 ${h - 150}
-                Q${w * .2} ${h - 190 + shift}
-                 ${w * .4} ${h - 150}
-                T${w * .8} ${h - 150}
-                T${w * 1.2} ${h - 150}
-                V${h}
-                H0 Z"
-                fill="${palette.water2}"/>
-																<path d="
-                M0 ${h - 110}
-                Q${w * .22} ${h - 145 + shift * .6}
-                 ${w * .44} ${h - 110}
-                T${w * .88} ${h - 110}
-                T${w * 1.3} ${h - 110}
-                V${h}
-                H0 Z"
-                fill="${palette.water}"/>
-															</svg>
-    `;
+  function closeBookingModal() {
+      const el = document.getElementById('bookingOverlay');
+      if (el) el.remove();
+  }
+
+  function renderCalendarStep() {
+      const body = document.getElementById('bookingModalBody');
+      const r = bookingState.resort;
+      const minimumDate = new Date();
+      minimumDate.setHours(0, 0, 0, 0);
+      minimumDate.setDate(minimumDate.getDate() + 3);
+      const view = bookingState.calView || new Date(minimumDate.getFullYear(), minimumDate.getMonth(), 1);
+      bookingState.calView = view;
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const y = view.getFullYear(), m = view.getMonth();
+      const firstDow = new Date(y, m, 1).getDay();
+      const days = new Date(y, m + 1, 0).getDate();
+
+      let cells = '';
+      for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+      for (let d = 1; d <= days; d++) {
+          const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const cellDate = new Date(y, m, d);
+          const isTooSoon = cellDate < minimumDate;
+          const isBooked = bookingState.bookedDates.has(dateStr);
+          const unavailable = isTooSoon || isBooked;
+          cells += `<div class="cal-cell ${isTooSoon ? 'too-soon' : (isBooked ? 'booked' : 'avail')}" data-date="${dateStr}" style="text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:${unavailable ? 'not-allowed' : 'pointer'};background:${isTooSoon ? '#eeeeee' : (isBooked ? '#fbe4e4' : '#e4f5e9')};color:${isTooSoon ? '#999999' : (isBooked ? '#9a2f2f' : '#1e7a45')};">${d}</div>`;
       }
-      /* ============================================================
-         DATABASE DATA FROM FLASK
-      ============================================================ */
-    const dbResorts = {{ resort_rows | tojson }};
-      /* ============================================================
-         DEFAULT RESORT INFORMATION
-      ============================================================ */
-      const resortDefaults = {
-        "Lucky Miels Resort": {
-          variant: "villa",
-          price: 1200,
-          rating: 4.6,
-          reviews: 128,
-          satisfaction: 92,
-          tags: ["Family Friendly", "Pet Friendly", "Great for Groups"],
-          amenities: [{
-            n: "Swimming Pool",
-            icon: "pool"
-          }, {
-            n: "Free WiFi",
-            icon: "wifi"
-          }, {
-            n: "Parking",
-            icon: "park"
-          }, {
-            n: "Karaoke",
-            icon: "mic"
-          }],
-          amenitiesFull: [{
-            n: "Private hot spring pool",
-            d: "In every villa",
-            icon: "pool"
-          }, {
-            n: "Free WiFi",
-            d: "Common areas & villas",
-            icon: "wifi"
-          }, {
-            n: "Covered parking",
-            d: "12 slots",
-            icon: "park"
-          }, {
-            n: "Karaoke rooms",
-            d: "Hourly rental",
-            icon: "mic"
-          }]
-        },
-        "Magic Kingdom Resort": {
-          variant: "waterpark",
-          price: 1500,
-          rating: 4.5,
-          reviews: 95,
-          satisfaction: 90,
-          tags: ["Waterpark", "Family Friendly", "Great for Groups"],
-          amenities: [{
-            n: "Waterpark",
-            icon: "slide"
-          }, {
-            n: "Lazy River",
-            icon: "river"
-          }, {
-            n: "Parking",
-            icon: "park"
-          }, {
-            n: "Function Hall",
-            icon: "hall"
-          }, {
-            n: "Restaurant",
-            icon: "restaurant"
-          }, {
-            n: "Pool",
-            icon: "pool"
-          }],
-          amenitiesFull: [{
-            n: "Waterpark & slides",
-            d: "3 slides, lifeguard on duty",
-            icon: "slide"
-          }, {
-            n: "Lazy river",
-            d: "350m loop",
-            icon: "river"
-          }, {
-            n: "Hot spring pools",
-            d: "Separate from waterpark",
-            icon: "pool"
-          }, {
-            n: "Restaurant",
-            d: "Filipino & grill menu",
-            icon: "restaurant"
-          }, {
-            n: "Function hall",
-            d: "Seats up to 120",
-            icon: "hall"
-          }, {
-            n: "Open parking",
-            d: "30 slots",
-            icon: "park"
-          }]
-        },
-        "Sunscape Resort": {
-          variant: "family",
-          price: 1300,
-          rating: 4.7,
-          reviews: 142,
-          satisfaction: 87,
-          tags: ["Family Friendly", "Great for Groups"],
-          amenities: [{
-            n: "3 Pools",
-            icon: "pool"
-          }, {
-            n: "Karaoke",
-            icon: "mic"
-          }, {
-            n: "Parking",
-            icon: "park"
-          }, {
-            n: "Function Hall",
-            icon: "hall"
-          }, {
-            n: "Cottage",
-            icon: "cottage"
-          }, {
-            n: "WiFi",
-            icon: "wifi"
-          }],
-          amenitiesFull: [{
-            n: "3 shared hot spring pools",
-            d: "Adult, family, kiddie",
-            icon: "pool"
-          }, {
-            n: "Function hall",
-            d: "Air-conditioned, 80 pax",
-            icon: "hall"
-          }, {
-            n: "Karaoke rooms",
-            d: "2 available, hourly",
-            icon: "mic"
-          }, {
-            n: "Open parking",
-            d: "20 slots",
-            icon: "park"
-          }, {
-            n: "Cottages",
-            d: "8 nipa cottages",
-            icon: "cottage"
-          }, {
-            n: "Free WiFi",
-            d: "Common areas",
-            icon: "wifi"
-          }]
-        },
-        "Triple Z Resort": {
-          variant: "cottage",
-          price: 1100,
-          rating: 4.4,
-          reviews: 76,
-          satisfaction: 79,
-          tags: ["Budget Friendly", "Pet Friendly"],
-          amenities: [{
-            n: "Pool",
-            icon: "pool"
-          }, {
-            n: "Cottage",
-            icon: "cottage"
-          }, {
-            n: "Parking",
-            icon: "park"
-          }, {
-            n: "Store",
-            icon: "store"
-          }, {
-            n: "Karaoke",
-            icon: "mic"
-          }, {
-            n: "BBQ Pit",
-            icon: "bbq"
-          }],
-          amenitiesFull: [{
-            n: "Shared hot spring pool",
-            d: "Open 6am–10pm",
-            icon: "pool"
-          }, {
-            n: "Nipa cottages",
-            d: "6 units",
-            icon: "cottage"
-          }, {
-            n: "Open parking",
-            d: "8 slots",
-            icon: "park"
-          }, {
-            n: "Sari-sari store",
-            d: "On-site",
-            icon: "store"
-          }, {
-            n: "Videoke rental",
-            d: "Per hour",
-            icon: "mic"
-          }, {
-            n: "BBQ pit",
-            d: "Shared, first-come",
-            icon: "bbq"
-          }]
-        }
-      };
-      /* ============================================================
-         CONVERT DATABASE ROWS TO JAVASCRIPT OBJECTS
-      ============================================================ */
-      const resorts = dbResorts.map((dbResort) => {
-        const defaults = resortDefaults[dbResort.resort_name] || {};
-        return {
-          id: String(dbResort.resort_id),
-          name: dbResort.resort_name,
-          location: dbResort.address || "",
-          address: dbResort.address || "",
-          desc: dbResort.description || "",
-          logo: dbResort.logo || "",
-          email: dbResort.email || "",
-          phone: dbResort.phone || "",
-          variant: defaults.variant || "villa",
-          price: defaults.price || 0,
-          rating: defaults.rating || 0,
-          reviews: defaults.reviews || 0,
-          satisfaction: defaults.satisfaction || 0,
-          tags: defaults.tags || [],
-          amenities: defaults.amenities || [],
-          amenitiesFull: defaults.amenitiesFull || [],
-          dayPattern: [],
-          ranges: [],
-          ratingBreak: [0, 0, 0, 0, 0],
-          revList: [],
-          nearby: []
-        };
+
+      body.innerHTML = `
+          <h3 style="margin:0 0 12px;">${r.name} — pick a date</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <button id="calPrev">‹</button>
+              <span>${monthNames[m]} ${y}</span>
+              <button id="calNext">›</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">${cells}</div>
+          <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:#666;">
+              <div><span style="display:inline-block;width:10px;height:10px;background:#e4f5e9;border-radius:2px;margin-right:4px;"></span>Available</div>
+              <div><span style="display:inline-block;width:10px;height:10px;background:#fbe4e4;border-radius:2px;margin-right:4px;"></span>Booked</div>
+          </div>
+          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice.</p>
+          <div id="calMsg" style="display:none;margin-top:12px;padding:10px;background:#fbe4e4;color:#9a2f2f;border-radius:8px;font-size:13px;"></div>
+          <button onclick="closeBookingModal()" style="margin-top:16px;width:100%;">Cancel</button>
+      `;
+
+      document.getElementById('calPrev').onclick = () => { view.setMonth(view.getMonth()-1); renderCalendarStep(); };
+      document.getElementById('calNext').onclick = () => { view.setMonth(view.getMonth()+1); renderCalendarStep(); };
+      const isMinimumMonth = view.getFullYear() === minimumDate.getFullYear() && view.getMonth() === minimumDate.getMonth();
+      document.getElementById('calPrev').disabled = isMinimumMonth;
+
+      body.querySelectorAll('.cal-cell').forEach(cell => {
+          cell.addEventListener('click', () => {
+              const dateStr = cell.dataset.date;
+              if (cell.classList.contains('too-soon')) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'Reservations must be made at least 3 days in advance.';
+              } else if (cell.classList.contains('booked')) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'SORRY, BUT THIS DATE IS NOT AVAILABLE.';
+              } else {
+                  bookingState.checkIn = dateStr;
+                  const d = new Date(dateStr);
+                  d.setDate(d.getDate() + 1);
+                  bookingState.checkOut = d.toISOString().split('T')[0];
+                  renderFormStep();
+              }
+          });
       });
-      let currentId = resorts.length ? resorts[0].id : null;
-      let favs = new Set();
-      /* ============================================================
-         RENDER RESORT CARDS
-      ============================================================ */
-      function renderCards() {
-        const cardRow = document.getElementById('cardRow');
-        if (!resorts.length) {
-          cardRow.innerHTML = `
-            
-															<div style="
-                width:100%;
-                padding:30px;
-                text-align:center;
-            ">
-                No active resorts found.
-            </div>
-        `;
-          return;
-        }
-        cardRow.innerHTML = resorts.map(r => `
+  }
 
-        
-															<div class="rcard ${r.id === currentId ? 'selected' : ''}"
-             onclick="selectResort('${r.id}')">
-																<div class="thumb">
+  function renderFormStep() {
+      const body = document.getElementById('bookingModalBody');
+      body.innerHTML = `
+          <h3 style="margin:0 0 10px;">Booking details</h3>
+          <p style="font-weight:600;margin:0 0 6px;font-size:14px;">Rules and regulations</p>
+          <ul style="font-size:13px;color:#555;padding-left:18px;line-height:1.6;">
+              <li>No outside food and drinks unless stated in the package.</li>
+              <li>Reservation is non-transferable without prior notice.</li>
+              <li>Full payment must be verified before the stay is confirmed.</li>
+              <li>Guests are responsible for damages to resort property.</li>
+          </ul>
+          <label>Full name</label>
+          <input type="text" id="bfName" style="width:100%;margin:4px 0 10px;">
+          <label>Phone number</label>
+          <input type="text" id="bfPhone" style="width:100%;margin:4px 0 10px;">
+          <label>Number of pax</label>
+          <input type="number" id="bfPax" min="1" style="width:100%;margin:4px 0 10px;">
+          <label style="display:flex;align-items:center;gap:8px;margin:8px 0;">
+              <input type="checkbox" id="bfGas" style="width:auto;"> Avail gas stove rental (+₱150)
+          </label>
+          <div id="bfErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
+          <button id="bfNext" style="width:100%;">Continue to payment</button>
+          <button onclick="closeBookingModal()" style="width:100%;margin-top:6px;">Cancel</button>
+      `;
 
-                ${scene(r.variant, 20)}
+      document.getElementById('bfNext').onclick = () => {
+          const name = document.getElementById('bfName').value.trim();
+          const phone = document.getElementById('bfPhone').value.trim();
+          const pax = document.getElementById('bfPax').value.trim();
+          const err = document.getElementById('bfErr');
+          if (!name || !phone || !pax) {
+              err.textContent = 'Fill in your name, phone number, and pax.';
+              err.style.display = 'block';
+              return;
+          }
+          bookingState.guestName = name;
+          bookingState.guestPhone = phone;
+          bookingState.pax = pax;
+          bookingState.gasStove = document.getElementById('bfGas').checked;
+          submitReservation();
+      };
+  }
 
+  async function submitReservation() {
+      const r = bookingState.resort;
+      const nights = Math.max(1, Math.round((new Date(bookingState.checkOut) - new Date(bookingState.checkIn)) / 86400000));
+      let total = r.price * nights;
+      if (bookingState.gasStove) total += 150;
 
-                
-																	<button class="heart ${favs.has(r.id) ? 'active' : ''}"
-                        onclick="event.stopPropagation(); toggleFav('${r.id}')">
-																		<svg viewBox="0 0 24 24"
-                         fill="${favs.has(r.id) ? 'currentColor' : 'none'}"
-                         stroke="currentColor"
-                         stroke-width="2">
-																			<path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z"/>
-																		</svg>
-																	</button>
-																</div>
-																<div class="body">
-																	<div class="rc-top">
-																		<b>
-                        ${r.name}
-                    </b>
-																		<div class="rc-rate">
+      const fd = new FormData();
+      fd.append('resort_id', r.id);
+      fd.append('check_in', bookingState.checkIn);
+      fd.append('check_out', bookingState.checkOut);
+      fd.append('guest_name', bookingState.guestName);
+      fd.append('guest_phone', bookingState.guestPhone);
+      fd.append('pax', bookingState.pax);
+      fd.append('gas_stove', bookingState.gasStove);
+      fd.append('total_amount', total);
 
-                        ${ic.star}
+      try {
+          const res = await fetch('/book_resort', { method: 'POST', body: fd });
+          const data = await res.json();
 
-                        ${r.rating}
+          if (data.success) {
+              bookingState.reservationId = data.reservation_id;
+              renderPaymentStep(total);
+          } else if (res.status === 401) {
+              window.location.href = '/login';
+          } else {
+              alert(data.message || 'Booking failed.');
+          }
+      } catch (err) {
+          alert('Something went wrong. Please try again.');
+      }
+  }
 
-                        
-																			<span>
-                            (${r.reviews})
-                        </span>
-																		</div>
-																	</div>
-																	<div class="rc-loc">
+  function renderPaymentStep(total) {
+      const body = document.getElementById('bookingModalBody');
+      body.innerHTML = `
+          <h3 style="margin:0 0 10px;">Payment — ₱${total.toLocaleString()}</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+              <button class="payMethod" data-m="Bank transfer" style="height:60px;">Bank transfer</button>
+              <button class="payMethod" data-m="E-wallet" style="height:60px;">E-wallet</button>
+          </div>
+          <div id="proofSection" style="display:none;">
+              <p style="font-size:13px;color:#555;">Upload a screenshot of your successful payment.</p>
+              <input type="file" id="proofFile" accept="image/*" style="width:100%;margin-bottom:8px;">
+              <div id="proofErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
+              <button id="submitProof" style="width:100%;">Submit for review</button>
+          </div>
+      `;
+      let method = null;
+      body.querySelectorAll('.payMethod').forEach(b => {
+          b.addEventListener('click', () => {
+              method = b.dataset.m;
+              document.getElementById('proofSection').style.display = 'block';
+          });
+      });
+      document.getElementById('submitProof').onclick = async () => {
+          const fileInput = document.getElementById('proofFile');
+          const err = document.getElementById('proofErr');
+          if (!fileInput.files.length || !method) {
+              err.textContent = 'Choose a payment method and upload your screenshot.';
+              err.style.display = 'block';
+              return;
+          }
+          const fd = new FormData();
+          fd.append('reservation_id', bookingState.reservationId);
+          fd.append('payment_method', method);
+          fd.append('amount_paid', total);
+          fd.append('proof', fileInput.files[0]);
 
-                    ${ic.pin}
+          try {
+              const res = await fetch('/submit_payment', { method: 'POST', body: fd });
+              const data = await res.json();
+              if (data.success) {
+                  document.getElementById('bookingModalBody').innerHTML = `
+                      <h3>Booking sent for review</h3>
+                      <p style="font-size:13px;color:#555;">The admin will confirm once your payment screenshot is checked.</p>
+                      <button onclick="closeBookingModal(); window.location.href='/customer_reservation'" style="width:100%;margin-top:10px;">Go to my reservations</button>
+                  `;
+              } else {
+                  err.textContent = data.message || 'Upload failed.';
+                  err.style.display = 'block';
+              }
+          } catch (e) {
+              err.textContent = 'Something went wrong. Please try again.';
+              err.style.display = 'block';
+          }
+      };
+  }
 
-                    ${r.location}
+  /* ============================================================
+     ICONS
+  ============================================================ */
+  const ic = {
+    pool: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 18c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/><path d="M4 13V6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v5"/></svg>`,
+    wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a11 11 0 0114 0M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19" r="1"/></svg>`,
+    park: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 16V8h3.5a2.5 2.5 0 010 5H9"/></svg>`,
+    kitchen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v7M4 3l1.5 1.5M4 3l-1.5 1.5M4 10v11M20 3s-3 1-3 6v12"/></svg>`,
+    mic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4"/></svg>`,
+    bbq: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8 6c0-2 1.5-3 1-4M12 5c0-2 1.5-3 1-4M16 6c0-2 1.5-3 1-4"/></svg>`,
+    slide: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20c8-2 6-16 14-16M4 20h6M14 12l6 8"/></svg>`,
+    hall: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg>`,
+    restaurant: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v9a2 2 0 002 2v9M6 2v6M9 2v6M6 8h3M18 2v20M18 2c-2 0-3 2-3 5s1 5 3 5"/></svg>`,
+    cottage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>`,
+    store: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v11h16V9M4 9h16"/></svg>`,
+    river: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/><path d="M3 12c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/><path d="M3 18c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/></svg>`,
+    clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+    moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3 6.8 6.8 0 0021 12.5z"/></svg>`,
+    calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>`,
+    pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>`,
+    star: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z"/></svg>`
+  };
 
-                </div>
-																	<div class="rc-hours">
-																		<div>
+  function stars(n) {
+    let s = '';
+    for (let i = 0; i < 5; i++) {
+      s += `<span style="opacity:${i < Math.round(n) ? 1 : 0.28}">${ic.star}</span>`;
+    }
+    return s;
+  }
 
-                        ${ic.clock}
+  function scene(variant, angle) {
+    const w = 800;
+    const h = 500;
+    const shift = Math.sin(angle * Math.PI / 180) * 40;
+    const sunX = 620 - (angle % 360) / 360 * 500;
+    const palette = {
+      villa: { water: '#1E8F5B', water2: '#176F45', roof: '#0B4A30', accent: '#E0A233' },
+      family: { water: '#2E9E63', water2: '#1E7A4C', roof: '#123B27', accent: '#E7B24B' },
+      cottage: { water: '#238F5F', water2: '#186B47', roof: '#5A3A1E', accent: '#E0A233' },
+      waterpark: { water: '#1C8FA0', water2: '#146676', roof: '#0B4A30', accent: '#E5B23A' }
+    }[variant] || { water: '#1E8F5B', water2: '#176F45', roof: '#0B4A30', accent: '#E0A233' };
+    let extra = '';
+    if (variant === 'villa') {
+      extra = `<rect x="${520 + shift * .4}" y="${h - 230}" width="150" height="90" rx="6" fill="${palette.roof}"/><polygon points="${505 + shift * .4},${h - 230} ${595 + shift * .4},${h - 280} ${685 + shift * .4},${h - 230}" fill="${palette.roof}"/>`;
+    } else if (variant === 'family') {
+      extra = `<rect x="${90 + shift * .4}" y="${h - 200}" width="120" height="70" rx="6" fill="${palette.roof}"/><polygon points="${80 + shift * .4},${h - 200} ${150 + shift * .4},${h - 240} ${220 + shift * .4},${h - 200}" fill="${palette.roof}"/><rect x="${420 + shift * .4}" y="${h - 180}" width="90" height="50" rx="6" fill="${palette.roof}"/>`;
+    } else if (variant === 'cottage') {
+      extra = `<rect x="${150 + shift * .4}" y="${h - 190}" width="100" height="60" rx="4" fill="${palette.roof}"/><polygon points="${140 + shift * .4},${h - 190} ${200 + shift * .4},${h - 225} ${260 + shift * .4},${h - 190}" fill="#3E2712"/><rect x="${520 + shift * .4}" y="${h - 170}" width="90" height="40" rx="4" fill="${palette.roof}"/><polygon points="${510 + shift * .4},${h - 170} ${565 + shift * .4},${h - 200} ${620 + shift * .4},${h - 170}" fill="#3E2712"/>`;
+    } else if (variant === 'waterpark') {
+      extra = `<path d="M${120 + shift * .4} ${h - 120} C${220 + shift * .4} ${h - 280}, ${320 + shift * .4} ${h - 260}, ${300 + shift * .4} ${h - 120}" fill="none" stroke="${palette.accent}" stroke-width="14" stroke-linecap="round"/><rect x="${540 + shift * .4}" y="${h - 260}" width="18" height="140" fill="${palette.roof}"/>`;
+    }
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg"><rect width="${w}" height="${h}" fill="#EAF4EE"/><circle cx="${sunX}" cy="${h * .28}" r="46" fill="${palette.accent}" opacity="0.85"/><path d="M0 ${h - 260 + shift * .15} Q${w * .25} ${h - 300 + shift * .15} ${w * .5} ${h - 260 + shift * .15} T${w} ${h - 260 + shift * .15} V${h} H0 Z" fill="#BFD9C9" opacity="0.6"/>${extra}<path d="M0 ${h - 150} Q${w * .2} ${h - 190 + shift} ${w * .4} ${h - 150} T${w * .8} ${h - 150} T${w * 1.2} ${h - 150} V${h} H0 Z" fill="${palette.water2}"/><path d="M0 ${h - 110} Q${w * .22} ${h - 145 + shift * .6} ${w * .44} ${h - 110} T${w * .88} ${h - 110} T${w * 1.3} ${h - 110} V${h} H0 Z" fill="${palette.water}"/></svg>`;
+  }
 
-                        Day Tour
+  const dbResorts = {{ resort_rows | tojson }};
 
-                        
-																			<b>
-                            8:00 AM - 5:00 PM
-                        </b>
-																		</div>
-																		<div>
+  const resortDefaults = {
+    "GALLELY RESORT": {
+      address: "Barangay Bucal, Calamba City, Laguna",
+      variant: "villa", price: 1500, rating: 4.5, reviews: 0, satisfaction: 0,
+      tags: ["Family Friendly"], amenities: [], amenitiesFull: []
+    },
+    "Lucky Miels Resort": {
+      variant: "villa", price: 1200, rating: 4.6, reviews: 128, satisfaction: 92,
+      tags: ["Family Friendly", "Pet Friendly", "Great for Groups"],
+      amenities: [{n:"Swimming Pool",icon:"pool"},{n:"Free WiFi",icon:"wifi"},{n:"Parking",icon:"park"},{n:"Karaoke",icon:"mic"}],
+      amenitiesFull: [{n:"Private hot spring pool",d:"In every villa",icon:"pool"},{n:"Free WiFi",d:"Common areas & villas",icon:"wifi"},{n:"Covered parking",d:"12 slots",icon:"park"},{n:"Karaoke rooms",d:"Hourly rental",icon:"mic"}]
+    },
+    "Magic Kingdom Resort": {
+      variant: "waterpark", price: 1500, rating: 4.5, reviews: 95, satisfaction: 90,
+      tags: ["Waterpark", "Family Friendly", "Great for Groups"],
+      amenities: [{n:"Waterpark",icon:"slide"},{n:"Lazy River",icon:"river"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Restaurant",icon:"restaurant"},{n:"Pool",icon:"pool"}],
+      amenitiesFull: [{n:"Waterpark & slides",d:"3 slides, lifeguard on duty",icon:"slide"},{n:"Lazy river",d:"350m loop",icon:"river"},{n:"Hot spring pools",d:"Separate from waterpark",icon:"pool"},{n:"Restaurant",d:"Filipino & grill menu",icon:"restaurant"},{n:"Function hall",d:"Seats up to 120",icon:"hall"},{n:"Open parking",d:"30 slots",icon:"park"}]
+    },
+    "Sunscape Resort": {
+      variant: "family", price: 1300, rating: 4.7, reviews: 142, satisfaction: 87,
+      tags: ["Family Friendly", "Great for Groups"],
+      amenities: [{n:"3 Pools",icon:"pool"},{n:"Karaoke",icon:"mic"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Cottage",icon:"cottage"},{n:"WiFi",icon:"wifi"}],
+      amenitiesFull: [{n:"3 shared hot spring pools",d:"Adult, family, kiddie",icon:"pool"},{n:"Function hall",d:"Air-conditioned, 80 pax",icon:"hall"},{n:"Karaoke rooms",d:"2 available, hourly",icon:"mic"},{n:"Open parking",d:"20 slots",icon:"park"},{n:"Cottages",d:"8 nipa cottages",icon:"cottage"},{n:"Free WiFi",d:"Common areas",icon:"wifi"}]
+    },
+    "Triple Z Resort": {
+      variant: "cottage", price: 1100, rating: 4.4, reviews: 76, satisfaction: 79,
+      tags: ["Budget Friendly", "Pet Friendly"],
+      amenities: [{n:"Pool",icon:"pool"},{n:"Cottage",icon:"cottage"},{n:"Parking",icon:"park"},{n:"Store",icon:"store"},{n:"Karaoke",icon:"mic"},{n:"BBQ Pit",icon:"bbq"}],
+      amenitiesFull: [{n:"Shared hot spring pool",d:"Open 6am–10pm",icon:"pool"},{n:"Nipa cottages",d:"6 units",icon:"cottage"},{n:"Open parking",d:"8 slots",icon:"park"},{n:"Sari-sari store",d:"On-site",icon:"store"},{n:"Videoke rental",d:"Per hour",icon:"mic"},{n:"BBQ pit",d:"Shared, first-come",icon:"bbq"}]
+    }
+  };
 
-                        ${ic.moon}
+  const resorts = dbResorts.map((dbResort) => {
+    const defaults = resortDefaults[dbResort.resort_name] || {};
+    return {
+      id: String(dbResort.resort_id),
+      name: dbResort.resort_name,
+      location: dbResort.address || defaults.address || "Calamba City, Laguna",
+      address: dbResort.address || defaults.address || "Address to be confirmed",
+      desc: dbResort.description || "",
+      logo: dbResort.logo || "",
+      email: dbResort.email || "",
+      phone: dbResort.phone || "",
+      variant: defaults.variant || "villa",
+      price: defaults.price || 0,
+      rating: defaults.rating || 0,
+      reviews: defaults.reviews || 0,
+      satisfaction: defaults.satisfaction || 0,
+      tags: defaults.tags || [],
+      amenities: defaults.amenities || [],
+      amenitiesFull: defaults.amenitiesFull || [],
+      dayPattern: [],
+      ranges: [],
+      ratingBreak: [0, 0, 0, 0, 0],
+      revList: [],
+      nearby: []
+    };
+  });
+  let currentId = resorts.length ? resorts[0].id : null;
+  let favs = new Set();
 
-                        Overnight
-
-                        
-																			<b>
-                            2:00 PM - 11:00 AM
-                        </b>
-																		</div>
-																	</div>
-																	<div class="rc-price">
-
-                    ₱${r.price.toLocaleString()}
-
-                    
-																		<span>
-                        / Day Tour
-                    </span>
-																	</div>
-																	<button class="rc-btn"
-                        onclick="event.stopPropagation(); selectResort('${r.id}')">
-
-                    View Details
-
-                </button>
-																</div>
-															</div>
-
+  function renderCards() {
+    const cardRow = document.getElementById('cardRow');
+    if (!resorts.length) {
+      cardRow.innerHTML = `<div style="width:100%;padding:30px;text-align:center;">No active resorts found.</div>`;
+      return;
+    }
+    cardRow.innerHTML = resorts.map(r => `
+      <div class="rcard ${r.id === currentId ? 'selected' : ''}" onclick="selectResort('${r.id}')">
+        <div class="thumb">
+          ${scene(r.variant, 20)}
+          <button class="heart ${favs.has(r.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav('${r.id}')">
+            <svg viewBox="0 0 24 24" fill="${favs.has(r.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="body">
+          <div class="rc-top">
+            <b>${r.name}</b>
+            <div class="rc-rate">${ic.star} ${r.rating} <span>(${r.reviews})</span></div>
+          </div>
+          <div class="rc-loc">${ic.pin} ${r.location}</div>
+          <div class="rc-hours">
+            <div>${ic.clock} Day Tour <b>8:00 AM - 5:00 PM</b></div>
+            <div>${ic.moon} Overnight <b>2:00 PM - 11:00 AM</b></div>
+          </div>
+          <div class="rc-price">₱${r.price.toLocaleString()} <span>/ Day Tour</span></div>
+          <button class="rc-btn" onclick="event.stopPropagation(); selectResort('${r.id}')">View Details</button>
+        </div>
+      </div>
     `).join('');
-        updateCarouselButtons();
-      }
-      /* ============================================================
-         FAVORITES
-      ============================================================ */
-      function toggleFav(id, fromHero = false) {
-        if (favs.has(id)) {
-          favs.delete(id);
-        } else {
-          favs.add(id);
-        }
-        renderCards();
-        if (currentId === id) {
-          document.getElementById('heroHeart').classList.toggle('active', favs.has(id));
-        }
-      }
-      /* ============================================================
-         SELECT RESORT
-      ============================================================ */
-      function selectResort(id) {
-        currentId = id;
-        renderCards();
-        renderDetail();
-        document.getElementById('detailPanel').scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-      /* ============================================================
-         DETAIL
-      ============================================================ */
-      function renderDetail() {
-        if (!currentId) {
-          return;
-        }
-        const r = resorts.find(x => x.id === currentId);
-        if (!r) {
-          return;
-        }
-        document.getElementById('heroImg').querySelector('svg')?.remove();
-        document.getElementById('heroImg').insertAdjacentHTML('afterbegin', scene(r.variant, 10));
-        document.getElementById('heroHeart').classList.toggle('active', favs.has(r.id));
-        document.getElementById('d-name').textContent = r.name;
-        document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
-        document.getElementById('d-rate').innerHTML = `${ic.star} ${r.rating} 
-															<span>(${r.reviews} reviews)</span>`;
-        document.getElementById('d-tags').innerHTML = r.tags.map(t => `
-															<span class="tag">${t}</span>`).join('');
-        document.getElementById('d-desc').textContent = r.desc;
-        document.getElementById('d-amrow').innerHTML = r.amenities.map(a => `
+    updateCarouselButtons();
+  }
 
-            
-															<div class="amitem">
-																<div class="ic">
-                    ${ic[a.icon] || ''}
-                </div>
-																<span>
-                    ${a.n}
-                </span>
-															</div>
+  function toggleFav(id, fromHero = false) {
+    if (favs.has(id)) { favs.delete(id); } else { favs.add(id); }
+    renderCards();
+    if (currentId === id) {
+      document.getElementById('heroHeart').classList.toggle('active', favs.has(id));
+    }
+  }
 
-        `).join('');
-        document.getElementById('ov-desc').textContent = r.desc;
-        document.getElementById('ov-hours').innerHTML = `
+  function selectResort(id) {
+    currentId = id;
+    renderCards();
+    renderDetail();
+    document.getElementById('detailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
-            
-															<div>
-                ${ic.clock}
-                Day Tour &nbsp;
-                
-																<b>8:00 AM - 5:00 PM</b>
-															</div>
-															<div>
-                ${ic.moon}
-                Overnight &nbsp;
-                
-																<b>2:00 PM - 11:00 AM</b>
-															</div>
-
-        `;
-        document.getElementById('ov-gallery').innerHTML = [30, 90, 150, 210, 270, 330].map(a => `
-															<div>${scene(r.variant, a)}</div>`).join('');
-        document.getElementById('ov-map').innerHTML = miniMap(r);
-        document.getElementById('am-grid').innerHTML = r.amenitiesFull.map(a => `
-
-            
-															<div class="amcard">
-																<div class="ic">
-                    ${ic[a.icon] || ''}
-                </div>
-																<div>
-																	<b>
-                        ${a.n}
-                    </b>
-																	<span>
-                        ${a.d}
-                    </span>
-																</div>
-															</div>
-
-        `).join('');
-        const dows = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-        const startDate = new Date(2026, 4, 28);
-        document.getElementById('dayStrip').innerHTML = r.dayPattern.map((open, i) => {
-          const d = new Date(startDate);
-          d.setDate(startDate.getDate() + i);
-          return `
-
-                
-															<div class="daychip ${open ? 'open' : 'full'}">
-																<span class="dow">
-                        ${dows[i % 7]}
-                    </span>
-																<span class="num">
-                        ${d.getDate()}
-                    </span>
-																<span class="tag2">
-                        ${open ? 'Open' : 'Full'}
-                    </span>
-															</div>
-
-            `;
-        }).join('');
-        document.getElementById('rangeList').innerHTML = r.ranges.map(rg => `
-
-            
-															<div class="rangeitem">
-																<div class="l">
-
-                    ${ic.calendar}
-
-                    ${rg.label}
-
-                </div>
-																<div class="r">
-																	<span class="nights">
-
-                        ${rg.nights}
-
-                        night${rg.nights > 1 ? 's' : ''}
-
-                    </span>
-																	<button class="pickbtn">
-                        Select
-                    </button>
-																</div>
-															</div>
-
-        `).join('');
-        document.getElementById('loc-addr').textContent = r.address;
-        document.getElementById('nearby').innerHTML = r.nearby.map(n => `
-
-            
-															<div class="nearitem">
-
-                ${n[0]}
-
-                
-																<span>
-                    ${n[1]}
-                </span>
-															</div>
-
-        `).join('');
-        document.getElementById('bigMap').innerHTML = bigMap(r);
-        document.getElementById('rv-avg').textContent = Number(r.rating).toFixed(1);
-        document.getElementById('rv-stars').innerHTML = stars(r.rating);
-        document.getElementById('rv-count').textContent = `Based on ${r.reviews} verified stays`;
-        document.getElementById('rv-bars').innerHTML = r.ratingBreak.map((pct, i) => `
-
-            
-															<div class="barrow">
-																<span class="lbl">
-                    ${5 - i} star
-                </span>
-																<div class="track">
-																	<div class="fill"
-                         style="width:${pct}%"></div>
-																</div>
-																<span class="pct">
-                    ${pct}%
-                </span>
-															</div>
-
-        `).join('');
-        document.getElementById('tab-revcount').textContent = `(${r.reviews})`;
-        document.getElementById('revGrid').innerHTML = r.revList.map(rv => `
-
-            
-															<div class="revcard2">
-																<div class="rev-head2">
-																	<div class="rev-ava2">
-
-                        ${rv.n
-                            .split(' ')
-                            .map(x => x[0])
-                            .join('')}
-
-                    </div>
-																	<div>
-																		<b>
-                            ${rv.n}
-                        </b>
-																		<span>
-                            ${rv.d}
-                        </span>
-																	</div>
-																</div>
-																<div class="rev-rating">
-																	<div class="stars">
-                        ${stars(rv.r)}
-                    </div>
-																	<b>
-                        ${rv.r.toFixed(1)}
-                    </b>
-																</div>
-																<p>
-                    ${rv.t}
-                </p>
-																<div class="revphotos">
-
-                    ${[5, 55, 105]
-                        .map(a =>
-                            `
-																	<div>${scene(r.variant, a)}</div>`
-                        )
-                        .join('')}
-
-                
-																</div>
-															</div>
-
-        `).join('');
-        document.getElementById('viewAllRevBtn').textContent = `View All ${r.reviews} Reviews`;
-        showTab('overview');
-      }
-      /* ============================================================
-         MINI MAP
-      ============================================================ */
-      function miniMap(r) {
-        return `
-
-        
-															<svg viewBox="0 0 300 150"
-																xmlns="http://www.w3.org/2000/svg">
-																<rect width="300"
-                  height="150"
-                  fill="#DCF2E4"/>
-																<path d="M0 40 H300 M0 90 H300"
-                  stroke="#BFE0CC"
-                  stroke-width="4"/>
-																<path d="M60 0 V150 M220 0 V150"
-                  stroke="#BFE0CC"
-                  stroke-width="4"/>
-																<circle cx="150"
-                    cy="75"
-                    r="7"
-                    fill="#0B4A30"/>
-																<path d="M150 75 v-18 l7 -4 z"
-                  fill="#0B4A30"/>
-															</svg>
-
+  function renderDetail() {
+    if (!currentId) return;
+    const r = resorts.find(x => x.id === currentId);
+    if (!r) return;
+    document.getElementById('heroImg').querySelector('svg')?.remove();
+    document.getElementById('heroImg').insertAdjacentHTML('afterbegin', scene(r.variant, 10));
+    document.getElementById('heroHeart').classList.toggle('active', favs.has(r.id));
+    document.getElementById('d-name').textContent = r.name;
+    document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
+    document.getElementById('d-rate').innerHTML = `${ic.star} ${r.rating} <span>(${r.reviews} reviews)</span>`;
+    document.getElementById('d-tags').innerHTML = r.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    document.getElementById('d-desc').textContent = r.desc;
+    document.getElementById('d-amrow').innerHTML = r.amenities.map(a => `
+      <div class="amitem"><div class="ic">${ic[a.icon] || ''}</div><span>${a.n}</span></div>
+    `).join('');
+    document.getElementById('ov-desc').textContent = r.desc;
+    document.getElementById('ov-hours').innerHTML = `
+      <div>${ic.clock} Day Tour &nbsp; <b>8:00 AM - 5:00 PM</b></div>
+      <div>${ic.moon} Overnight &nbsp; <b>2:00 PM - 11:00 AM</b></div>
     `;
-      }
-      /* ============================================================
-         BIG MAP
-      ============================================================ */
-      function bigMap(r) {
-        return `
+    document.getElementById('ov-gallery').innerHTML = [30, 90, 150, 210, 270, 330].map(a => `<div>${scene(r.variant, a)}</div>`).join('');
+    document.getElementById('ov-map').innerHTML = miniMap(r);
+    document.getElementById('am-grid').innerHTML = r.amenitiesFull.map(a => `
+      <div class="amcard"><div class="ic">${ic[a.icon] || ''}</div><div><b>${a.n}</b><span>${a.d}</span></div></div>
+    `).join('');
+    document.getElementById('dayStrip').innerHTML = '<p style="color:#6b7674;">Loading availability…</p>';
+    document.getElementById('rangeList').innerHTML = '';
+    loadAvailabilityDates(r);
+    document.getElementById('loc-addr').textContent = r.address;
+    document.getElementById('nearby').innerHTML = r.nearby.map(n => `<div class="nearitem">${n[0]} <span>${n[1]}</span></div>`).join('');
+    document.getElementById('bigMap').innerHTML = bigMap(r);
+    document.getElementById('rv-avg').textContent = Number(r.rating).toFixed(1);
+    document.getElementById('rv-stars').innerHTML = stars(r.rating);
+    document.getElementById('rv-count').textContent = `Based on ${r.reviews} verified stays`;
+    document.getElementById('rv-bars').innerHTML = r.ratingBreak.map((pct, i) => `
+      <div class="barrow"><span class="lbl">${5 - i} star</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>
+    `).join('');
+    document.getElementById('tab-revcount').textContent = `(${r.reviews})`;
+    document.getElementById('revGrid').innerHTML = r.revList.map(rv => `
+      <div class="revcard2">
+        <div class="rev-head2"><div class="rev-ava2">${rv.n.split(' ').map(x => x[0]).join('')}</div><div><b>${rv.n}</b><span>${rv.d}</span></div></div>
+        <div class="rev-rating"><div class="stars">${stars(rv.r)}</div><b>${rv.r.toFixed(1)}</b></div>
+        <p>${rv.t}</p>
+        <div class="revphotos">${[5, 55, 105].map(a => `<div>${scene(r.variant, a)}</div>`).join('')}</div>
+      </div>
+    `).join('');
+    document.getElementById('viewAllRevBtn').textContent = `View All ${r.reviews} Reviews`;
+    showTab('overview');
+  }
 
-        
-															<svg viewBox="0 0 500 260"
-																xmlns="http://www.w3.org/2000/svg">
-																<rect width="500"
-                  height="260"
-                  fill="#DCF2E4"/>
-																<path d="M0 60 H500
-                     M0 130 H500
-                     M0 200 H500"
-                  stroke="#BFE0CC"
-                  stroke-width="6"/>
-																<path d="M90 0 V260
-                     M260 0 V260
-                     M410 0 V260"
-                  stroke="#BFE0CC"
-                  stroke-width="6"/>
-																<path d="
-                M0 40
-                C150 100,320 20,500 100"
-                stroke="#E0A233"
-                stroke-width="5"
-                fill="none"
-                opacity="0.7"/>
-																<circle cx="250"
-                    cy="130"
-                    r="9"
-                    fill="#0B4A30"/>
-																<circle cx="250"
-                    cy="130"
-                    r="16"
-                    fill="none"
-                    stroke="#0B4A30"
-                    stroke-width="2"
-                    opacity="0.4"/>
-																<path d="M250 130 v-26 l10 -6 z"
-                  fill="#0B4A30"/>
-																<text x="264"
-                  y="108"
-                  font-family="Manrope"
-                  font-size="12"
-                  font-weight="700"
-                  fill="#0B4A30">
+  async function loadAvailabilityDates(resort) {
+    let bookedDates = new Set();
+    try {
+      const response = await fetch(`/resort_availability/${resort.id}`);
+      const data = await response.json();
+      bookedDates = new Set(data.booked_dates || []);
+    } catch (error) {
+      // Keep the calendar usable if the availability request is temporarily unavailable.
+    }
+    if (currentId !== resort.id) return;
 
-                ${r.name}
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const dates = Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return date;
+    });
+    const format = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    document.getElementById('dayStrip').innerHTML = `
+      <div style="display:flex;gap:16px;margin:0 0 14px;font-size:13px;">
+        <span><i style="display:inline-block;width:12px;height:12px;background:#fff;border:1px solid #bbb;border-radius:2px;"></i> Vacant</span>
+        <span><i style="display:inline-block;width:12px;height:12px;background:#d9534f;border-radius:2px;"></i> Booked</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7, minmax(56px, 1fr));gap:8px;">
+        ${dates.map(date => {
+          const booked = bookedDates.has(format(date));
+          return `<div title="${date.toLocaleDateString()} — ${booked ? 'Booked' : 'Vacant'}" style="padding:10px 4px;text-align:center;border:1px solid ${booked ? '#d9534f' : '#d8d8d8'};border-radius:6px;background:${booked ? '#d9534f' : '#fff'};color:${booked ? '#fff' : '#263238'};">
+            <strong>${date.getDate()}</strong><br><small>${date.toLocaleDateString(undefined, { month: 'short' })}</small>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
 
-            </text>
-															</svg>
+  function openGallery() {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort) return;
+    const angles = [30, 90, 150, 210, 270, 330];
+    let index = 0;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `<div style="width:min(900px,100%);position:relative;color:#fff;text-align:center;"><button aria-label="Close gallery" style="position:absolute;right:0;top:-42px;font-size:28px;background:none;border:0;color:#fff;cursor:pointer;">&times;</button><h3>${resort.name} Gallery</h3><div id="galleryImage" style="background:#fff;border-radius:10px;overflow:hidden;"></div><div style="margin-top:14px;"><button id="galleryPrev">&larr; Previous</button> <span id="galleryCount"></span> <button id="galleryNext">Next &rarr;</button></div></div>`;
+    const render = () => {
+      overlay.querySelector('#galleryImage').innerHTML = scene(resort.variant, angles[index]);
+      overlay.querySelector('#galleryCount').textContent = `${index + 1} / ${angles.length}`;
+    };
+    overlay.querySelector('[aria-label="Close gallery"]').onclick = () => overlay.remove();
+    overlay.querySelector('#galleryPrev').onclick = () => { index = (index + angles.length - 1) % angles.length; render(); };
+    overlay.querySelector('#galleryNext').onclick = () => { index = (index + 1) % angles.length; render(); };
+    overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+    render();
+  }
 
-    `;
-      }
-      /* ============================================================
-         TABS
-      ============================================================ */
-      function showTab(tab) {
-        document.querySelectorAll('.tabbtn').forEach(b => {
-          b.classList.toggle('active', b.dataset.tab === tab);
-        });
-        document.querySelectorAll('.tabpane').forEach(p => {
-          p.classList.toggle('active', p.id === 'tab-' + tab);
-        });
-      }
-      /* ============================================================
-         RESORT CAROUSEL
-         ARROWS + SWIPE + MOUSE DRAG
-      ============================================================ */
-      const cardRow = document.getElementById('cardRow');
-      const leftBtn = document.getElementById('scrollLeftBtn');
-      const rightBtn = document.getElementById('scrollRightBtn');
-      /* ------------------------------------------------------------
-         Calculate scroll amount
-      ------------------------------------------------------------ */
-      function getScrollAmount() {
-        const card = cardRow.querySelector('.rcard');
-        if (!card) {
-          return 300;
-        }
-        const gap = 16;
-        return card.offsetWidth + gap;
-      }
-      /* ------------------------------------------------------------
-         LEFT
-      ------------------------------------------------------------ */
-      leftBtn.addEventListener('click',
-        () => {
-          cardRow.scrollBy({
-            left: -getScrollAmount(),
-            behavior: 'smooth'
-          });
-        });
-      /* ------------------------------------------------------------
-         RIGHT
-      ------------------------------------------------------------ */
-      rightBtn.addEventListener('click',
-        () => {
-          cardRow.scrollBy({
-            left: getScrollAmount(),
-            behavior: 'smooth'
-          });
-        });
-      /* ------------------------------------------------------------
-         UPDATE ARROW STATE
-      ------------------------------------------------------------ */
-      function updateCarouselButtons() {
-        if (!cardRow) {
-          return;
-        }
-        const maxScroll = cardRow.scrollWidth - cardRow.clientWidth;
-        if (cardRow.scrollLeft <= 5) {
-          leftBtn.classList.add('hidden');
-        } else {
-          leftBtn.classList.remove('hidden');
-        }
-        if (cardRow.scrollLeft >= maxScroll - 5) {
-          rightBtn.classList.add('hidden');
-        } else {
-          rightBtn.classList.remove('hidden');
-        }
-      }
-      cardRow.addEventListener('scroll', updateCarouselButtons);
-      /* ------------------------------------------------------------
-         MOUSE DRAG
-         Desktop users can drag the cards.
-      ------------------------------------------------------------ */
-      let isDraggingCards = false;
-      let cardStartX = 0;
-      let cardScrollLeft = 0;
-      cardRow.addEventListener('mousedown', e => {
-        isDraggingCards = true;
-        cardRow.classList.add('dragging');
-        cardStartX = e.pageX - cardRow.offsetLeft;
-        cardScrollLeft = cardRow.scrollLeft;
-      });
-      cardRow.addEventListener('mouseleave',
-        () => {
-          isDraggingCards = false;
-          cardRow.classList.remove('dragging');
-        });
-      cardRow.addEventListener('mouseup',
-        () => {
-          isDraggingCards = false;
-          cardRow.classList.remove('dragging');
-        });
-      cardRow.addEventListener('mousemove', e => {
-        if (!isDraggingCards) {
-          return;
-        }
+  function openDirections() {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort) return;
+    const destination = resort.address === 'Address to be confirmed' ? `${resort.name}, Calamba City, Laguna` : resort.address;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`, '_blank', 'noopener');
+  }
+
+  function miniMap(r) {
+    return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="150" fill="#DCF2E4"/><path d="M0 40 H300 M0 90 H300" stroke="#BFE0CC" stroke-width="4"/><path d="M60 0 V150 M220 0 V150" stroke="#BFE0CC" stroke-width="4"/><circle cx="150" cy="75" r="7" fill="#0B4A30"/><path d="M150 75 v-18 l7 -4 z" fill="#0B4A30"/></svg>`;
+  }
+
+  function bigMap(r) {
+    return `<svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="260" fill="#DCF2E4"/><path d="M0 60 H500 M0 130 H500 M0 200 H500" stroke="#BFE0CC" stroke-width="6"/><path d="M90 0 V260 M260 0 V260 M410 0 V260" stroke="#BFE0CC" stroke-width="6"/><path d="M0 40 C150 100,320 20,500 100" stroke="#E0A233" stroke-width="5" fill="none" opacity="0.7"/><circle cx="250" cy="130" r="9" fill="#0B4A30"/><circle cx="250" cy="130" r="16" fill="none" stroke="#0B4A30" stroke-width="2" opacity="0.4"/><path d="M250 130 v-26 l10 -6 z" fill="#0B4A30"/><text x="264" y="108" font-family="Manrope" font-size="12" font-weight="700" fill="#0B4A30">${r.name}</text></svg>`;
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tabpane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+  }
+
+  const cardRow = document.getElementById('cardRow');
+  const leftBtn = document.getElementById('scrollLeftBtn');
+  const rightBtn = document.getElementById('scrollRightBtn');
+
+  function getScrollAmount() {
+    const card = cardRow.querySelector('.rcard');
+    if (!card) return 300;
+    return card.offsetWidth + 16;
+  }
+  leftBtn.addEventListener('click', () => cardRow.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' }));
+  rightBtn.addEventListener('click', () => cardRow.scrollBy({ left: getScrollAmount(), behavior: 'smooth' }));
+
+  function updateCarouselButtons() {
+    if (!cardRow) return;
+    const maxScroll = cardRow.scrollWidth - cardRow.clientWidth;
+    leftBtn.classList.toggle('hidden', cardRow.scrollLeft <= 5);
+    rightBtn.classList.toggle('hidden', cardRow.scrollLeft >= maxScroll - 5);
+  }
+  cardRow.addEventListener('scroll', updateCarouselButtons);
+
+  let isDraggingCards = false, cardStartX = 0, cardScrollLeft = 0;
+  cardRow.addEventListener('mousedown', e => {
+    isDraggingCards = true;
+    cardRow.classList.add('dragging');
+    cardStartX = e.pageX - cardRow.offsetLeft;
+    cardScrollLeft = cardRow.scrollLeft;
+  });
+  cardRow.addEventListener('mouseleave', () => { isDraggingCards = false; cardRow.classList.remove('dragging'); });
+  cardRow.addEventListener('mouseup', () => { isDraggingCards = false; cardRow.classList.remove('dragging'); });
+  cardRow.addEventListener('mousemove', e => {
+    if (!isDraggingCards) return;
+    e.preventDefault();
+    const x = e.pageX - cardRow.offsetLeft;
+    const walk = (x - cardStartX) * 1.5;
+    cardRow.scrollLeft = cardScrollLeft - walk;
+  });
+  cardRow.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      if (cardRow.scrollWidth > cardRow.clientWidth) {
         e.preventDefault();
-        const x = e.pageX - cardRow.offsetLeft;
-        const walk = (x - cardStartX) * 1.5;
-        cardRow.scrollLeft = cardScrollLeft - walk;
-      });
-      /* ------------------------------------------------------------
-         MOUSE WHEEL
-         Horizontal scrolling for desktop/trackpad.
-      ------------------------------------------------------------ */
-      cardRow.addEventListener('wheel', e => {
-        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-          if (cardRow.scrollWidth > cardRow.clientWidth) {
-            e.preventDefault();
-            cardRow.scrollLeft += e.deltaY;
-          }
-        }
-      }, {
-        passive: false
-      });
-      /* ============================================================
-         CHECK-IN / CHECK-OUT DATE PICKER
-      ============================================================ */
-      const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-      const stayDates = {
-        ci: new Date(2026, 4, 28),
-        co: new Date(2026, 4, 29)
-      };
-      const dpView = {
-        ci: new Date(2026, 4, 1),
-        co: new Date(2026, 4, 1)
-      };
-      let activeDatePicker = null;
-
-      function fmtDate(d) {
-        return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+        cardRow.scrollLeft += e.deltaY;
       }
+    }
+  }, { passive: false });
 
-      function sameDay(a, b) {
-        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-      }
+  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const stayDates = { ci: new Date(2026, 4, 28), co: new Date(2026, 4, 29) };
+  const dpView = { ci: new Date(2026, 4, 1), co: new Date(2026, 4, 1) };
+  let activeDatePicker = null;
 
-      function openDatePicker(which, evt) {
-        evt.stopPropagation();
-        if (activeDatePicker === which) {
-          closeDatePicker();
-          return;
-        }
-        closeDatePicker();
-        activeDatePicker = which;
-        dpView[which] = new Date(stayDates[which].getFullYear(), stayDates[which].getMonth(), 1);
-        document.getElementById(which + '-pop').classList.add('open');
-        renderDatePicker(which);
-      }
+  function fmtDate(d) { return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 
-      function closeDatePicker() {
-        if (!activeDatePicker) {
-          return;
-        }
-        document.getElementById(activeDatePicker + '-pop').classList.remove('open');
-        activeDatePicker = null;
-      }
-      document.addEventListener('click', (e) => {
-        if (!activeDatePicker) {
-          return;
-        }
-        const pop = document.getElementById(activeDatePicker + '-pop');
-        if (pop && !pop.contains(e.target)) {
-          closeDatePicker();
-        }
-      });
-
-      function shiftDpMonth(which, dir, evt) {
-        evt.stopPropagation();
-        dpView[which].setMonth(dpView[which].getMonth() + dir);
-        renderDatePicker(which);
-      }
-
-      function renderDatePicker(which) {
-        const pop = document.getElementById(which + '-pop');
-        const view = dpView[which];
-        const year = view.getFullYear();
-        const month = view.getMonth();
-        const firstDow = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const minDate = which === 'co' ? stayDates.ci : today;
-        let cells = '';
-        for (let i = 0; i < firstDow; i++) {
-          cells += `
-															<div class="dp-day muted"></div>`;
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-          const cellDate = new Date(year, month, day);
-          const isDisabled = cellDate < minDate;
-          const isSelected = sameDay(cellDate, stayDates[which]);
-          const isToday = sameDay(cellDate, today);
-          const classes = ['dp-day',
-            isDisabled ? 'disabled' : '',
-            isSelected ? 'selected' : '',
-            (isToday && !isSelected) ? 'today' : ''
-          ].filter(Boolean).join(' ');
-          cells += `
-            
-											                <div class="${classes}"
-                 ${isDisabled
-                    ? ''
-                    : `onclick="pickDate('${which}', ${year}, ${month}, ${day}, event)"`}>
-                ${day}
-            </div>
-        `;
-        }
-        pop.innerHTML = `
-
-        
-															<div class="dp-head">
-																<b>${MONTH_NAMES[month]} ${year}</b>
-																<div class="dp-nav">
-																	<button onclick="shiftDpMonth('${which}', -1, event)">‹</button>
-																	<button onclick="shiftDpMonth('${which}', 1, event)">›</button>
-																</div>
-															</div>
-															<div class="dp-grid">
-
-            ${DOW_NAMES.map(d => `
-																<div class="dp-dow">${d}</div>`).join('')}
-
-            ${cells}
-
-        
-															</div>
-
+  function openDatePicker(which, evt) {
+    evt.stopPropagation();
+    if (activeDatePicker === which) { closeDatePicker(); return; }
+    closeDatePicker();
+    activeDatePicker = which;
+    dpView[which] = new Date(stayDates[which].getFullYear(), stayDates[which].getMonth(), 1);
+    document.getElementById(which + '-pop').classList.add('open');
+    renderDatePicker(which);
+  }
+  function closeDatePicker() {
+    if (!activeDatePicker) return;
+    document.getElementById(activeDatePicker + '-pop').classList.remove('open');
+    activeDatePicker = null;
+  }
+  document.addEventListener('click', (e) => {
+    if (!activeDatePicker) return;
+    const pop = document.getElementById(activeDatePicker + '-pop');
+    if (pop && !pop.contains(e.target)) closeDatePicker();
+  });
+  function shiftDpMonth(which, dir, evt) {
+    evt.stopPropagation();
+    dpView[which].setMonth(dpView[which].getMonth() + dir);
+    renderDatePicker(which);
+  }
+  function renderDatePicker(which) {
+    const pop = document.getElementById(which + '-pop');
+    const view = dpView[which];
+    const year = view.getFullYear();
+    const month = view.getMonth();
+    const firstDow = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const minDate = which === 'co' ? stayDates.ci : today;
+    let cells = '';
+    for (let i = 0; i < firstDow; i++) cells += `<div class="dp-day muted"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDate = new Date(year, month, day);
+      const isDisabled = cellDate < minDate;
+      const isSelected = sameDay(cellDate, stayDates[which]);
+      const isToday = sameDay(cellDate, today);
+      const classes = ['dp-day', isDisabled ? 'disabled' : '', isSelected ? 'selected' : '', (isToday && !isSelected) ? 'today' : ''].filter(Boolean).join(' ');
+      cells += `<div class="${classes}" ${isDisabled ? '' : `onclick="pickDate('${which}', ${year}, ${month}, ${day}, event)"`}>${day}</div>`;
+    }
+    pop.innerHTML = `
+      <div class="dp-head"><b>${MONTH_NAMES[month]} ${year}</b><div class="dp-nav"><button onclick="shiftDpMonth('${which}', -1, event)">‹</button><button onclick="shiftDpMonth('${which}', 1, event)">›</button></div></div>
+      <div class="dp-grid">${DOW_NAMES.map(d => `<div class="dp-dow">${d}</div>`).join('')}${cells}</div>
     `;
-      }
+  }
+  function pickDate(which, year, month, day, evt) {
+    evt.stopPropagation();
+    const chosen = new Date(year, month, day);
+    stayDates[which] = chosen;
+    document.getElementById(which + '-date').textContent = fmtDate(chosen);
+    if (which === 'ci' && stayDates.co <= chosen) {
+      const nextDay = new Date(chosen);
+      nextDay.setDate(chosen.getDate() + 1);
+      stayDates.co = nextDay;
+      document.getElementById('co-date').textContent = fmtDate(nextDay);
+    }
+    closeDatePicker();
+  }
 
-      function pickDate(which, year, month, day, evt) {
-        evt.stopPropagation();
-        const chosen = new Date(year, month, day);
-        stayDates[which] = chosen;
-        document.getElementById(which + '-date').textContent = fmtDate(chosen);
-        if (which === 'ci' && stayDates.co <= chosen) {
-          const nextDay = new Date(chosen);
-          nextDay.setDate(chosen.getDate() + 1);
-          stayDates.co = nextDay;
-          document.getElementById('co-date').textContent = fmtDate(nextDay);
-        }
-        closeDatePicker();
-      }
-      /* ============================================================
-         SEARCH FILTER
-      ============================================================ */
-      const searchInput = document.querySelector('.searchrow input[type="text"]');
-      if (searchInput) {
-        searchInput.addEventListener('input', function() {
-          const keyword = this.value.toLowerCase().trim();
-          document.querySelectorAll('.rcard').forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(keyword) ? '' : 'none';
-          });
-          setTimeout(updateCarouselButtons, 50);
-        });
-      }
-      /* ============================================================
-         INITIALIZE
-      ============================================================ */
-      renderCards();
-      renderDetail();
-      updateCarouselButtons();
-      /* ============================================================
-         UPDATE CAROUSEL WHEN WINDOW RESIZES
-      ============================================================ */
-      window.addEventListener('resize',
-        () => {
-          updateCarouselButtons();
-        });
-    </script>
+  const searchInput = document.querySelector('.searchrow input[type="text"]');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const keyword = this.value.toLowerCase().trim();
+      document.querySelectorAll('.rcard').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(keyword) ? '' : 'none';
+      });
+      setTimeout(updateCarouselButtons, 50);
+    });
+  }
+
+  renderCards();
+  renderDetail();
+  updateCarouselButtons();
+  window.addEventListener('resize', () => updateCarouselButtons());
+</script>
   </body>
 </html>

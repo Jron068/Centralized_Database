@@ -41,8 +41,6 @@
   and update the query if you want the original category breakdown.
 
   Revenue Trend = sum of Verified payments/day, last 30 days.
-  Occupancy Rate = % of this owner's rooms occupied/day, last 8 days,
-  computed in Python from reservations.check_in/check_out.
 -->
 
 <div class="app">
@@ -138,16 +136,6 @@
             </tbody>
           </table>
         </div>
-        <div class="chart-card">
-          <h3>Occupancy Rate</h3>
-          <div class="chart-canvas-wrap">
-            {% if occupancy_values %}
-            <canvas id="occupancyChart"></canvas>
-            {% else %}
-            <p style="color:var(--muted); font-size:13px;">No rooms configured yet.</p>
-            {% endif %}
-          </div>
-        </div>
       </div>
 
       <div class="card">
@@ -194,9 +182,7 @@
   "revenueLabels": {{ revenue_labels | default([]) | tojson }},
   "revenueValues": {{ revenue_values | default([]) | tojson }},
   "sourceLabels": {{ source_labels | default([]) | tojson }},
-  "sourceValues": {{ source_values | default([]) | tojson }},
-  "occupancyLabels": {{ occupancy_labels | default([]) | tojson }},
-  "occupancyValues": {{ occupancy_values | default([]) | tojson }}
+  "sourceValues": {{ source_values | default([]) | tojson }}
 }
 </script>
 <script>
@@ -205,8 +191,6 @@
   const revenueValues = dashboardData.revenueValues;
   const sourceLabels = dashboardData.sourceLabels;
   const sourceValues = dashboardData.sourceValues;
-  const occupancyLabels = dashboardData.occupancyLabels;
-  const occupancyValues = dashboardData.occupancyValues;
 
   if (revenueValues.length) {
     new Chart(document.getElementById('revenueTrendChart'), {
@@ -247,28 +231,6 @@
     });
   }
 
-  if (occupancyValues.length) {
-    new Chart(document.getElementById('occupancyChart'), {
-      type: 'line',
-      data: {
-        labels: occupancyLabels,
-        datasets: [{
-          data: occupancyValues,
-          borderColor: '#5aa9e6',
-          backgroundColor: 'rgba(90,169,230,0.2)',
-          fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#eef1ef' } },
-          x: { grid: { display: false } }
-        }
-      }
-    });
-  }
 </script>
 
 </body>

@@ -81,7 +81,7 @@ def login():
         session["role"] = account["role"]
 
         if account["role"] == "customer":
-            return redirect(url_for("customer_landingpage"))
+            return redirect(url_for("customer_aboutpage"))
         elif account["role"] == "caretaker":
             return redirect(url_for("caretaker_dashboard"))
         elif account["role"] == "owner":

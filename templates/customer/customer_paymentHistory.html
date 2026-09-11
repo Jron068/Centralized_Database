@@ -18,7 +18,7 @@
     </div>
 
     <nav class="nav">
-      <a href="{{ url_for('customer_landingpage') }}" class="nav-item">
+      <a href="{{ url_for('customer_aboutpage') }}" class="nav-item">
         <i class="fa-solid fa-grip"></i> DASHBOARD
       </a>
 
@@ -114,7 +114,7 @@
                 <td><span class="badge {{ p.payment_status|lower }}">{{ p.payment_status }}</span></td>
                 <td>
                   {% if p.proof_of_payment %}
-                    <a href="{{ p.proof_of_payment }}" target="_blank" class="view-all">View</a>
+                    <a href="{{ url_for('static', filename=p.proof_of_payment) }}" target="_blank" class="view-all">View</a>
                   {% else %}—{% endif %}
                 </td>
               </tr>
