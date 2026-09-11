@@ -176,51 +176,11 @@
                       <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z" />
                     </svg>
                   </button>
+                  <button class="hero-book-btn checkbtn" type="button">Book Now</button>
                 </div>
                 <div class="thumbstrip" id="thumbStrip"></div>
               </div>
-              <div class="avail-card">
-                <h3> Check Availability </h3>
-                <div class="af" style="position:relative;">
-                  <label> Check-in </label>
-                  <div class="box" id="ci-box" onclick="openDatePicker('ci', event)">
-                    <span id="ci-date"> May 28, 2026 </span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="5" width="18" height="16" rx="2" />
-                      <path d="M8 3v4M16 3v4M3 10h18" />
-                    </svg>
-                  </div>
-                  <div class="datepop" id="ci-pop"></div>
-                </div>
-                <div class="af" style="position:relative;">
-                  <label> Check-out </label>
-                  <div class="box" id="co-box" onclick="openDatePicker('co', event)">
-                    <span id="co-date"> May 29, 2026 </span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="5" width="18" height="16" rx="2" />
-                      <path d="M8 3v4M16 3v4M3 10h18" />
-                    </svg>
-                  </div>
-                  <div class="datepop" id="co-pop"></div>
-                </div>
-                <div class="af">
-                  <label> Guests </label>
-                  <div class="box">
-                    <div class="sfield">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                      </svg>
-                      <select>
-                        <option> 2 Guests </option>
-                        <option> 4 Guests </option>
-                        <option> 6+ Guests </option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <button class="checkbtn"> Check Availability </button>
-              </div>
+              
             </div>
             <div class="idblock">
               <div class="idtop">
@@ -338,9 +298,9 @@
   function openBookingModal() {
       const overlay = document.createElement('div');
       overlay.id = 'bookingOverlay';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:999;';
+      overlay.className = 'booking-overlay';
       overlay.innerHTML = `
-          <div style="background:#fff;border-radius:12px;padding:24px;max-width:420px;width:92%;max-height:88vh;overflow-y:auto;">
+        <div class="booking-modal">
               <div id="bookingModalBody"></div>
           </div>
       `;
@@ -424,27 +384,86 @@
   function renderFormStep() {
       const body = document.getElementById('bookingModalBody');
       body.innerHTML = `
-          <h3 style="margin:0 0 10px;">Booking details</h3>
-          <p style="font-weight:600;margin:0 0 6px;font-size:14px;">Rules and regulations</p>
-          <ul style="font-size:13px;color:#555;padding-left:18px;line-height:1.6;">
-              <li>No outside food and drinks unless stated in the package.</li>
-              <li>Reservation is non-transferable without prior notice.</li>
-              <li>Full payment must be verified before the stay is confirmed.</li>
-              <li>Guests are responsible for damages to resort property.</li>
-          </ul>
-          <label>Full name</label>
-          <input type="text" id="bfName" style="width:100%;margin:4px 0 10px;">
-          <label>Phone number</label>
-          <input type="text" id="bfPhone" style="width:100%;margin:4px 0 10px;">
-          <label>Number of pax</label>
-          <input type="number" id="bfPax" min="1" style="width:100%;margin:4px 0 10px;">
-          <label style="display:flex;align-items:center;gap:8px;margin:8px 0;">
-              <input type="checkbox" id="bfGas" style="width:auto;"> Avail gas stove rental (+₱150)
-          </label>
-          <div id="bfErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
-          <button id="bfNext" style="width:100%;">Continue to payment</button>
-          <button onclick="closeBookingModal()" style="width:100%;margin-top:6px;">Cancel</button>
+        <div class="receipt-container">
+          <div class="receipt-header">
+            <h3>ACKNOWLEDGEMENT RECEIPT</h3>
+          </div>
+
+          <div class="receipt-row"><span class="receipt-label">Reservation Date</span><span class="receipt-dots">${bookingState.checkIn}</span></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfName">Name</label><input class="receipt-input" type="text" id="bfName" autocomplete="name"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfAddress">Address</label><input class="receipt-input" type="text" id="bfAddress" autocomplete="street-address"></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><label class="receipt-label" for="bfPhone">Contact No.</label><input class="receipt-input" type="tel" id="bfPhone" autocomplete="tel"></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${bookingState.checkOut}" readonly></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfPax">Total No. of Person</label><input class="receipt-input" type="number" id="bfPax" min="1"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfExtraPax">Extra No. of Pax</label><input class="receipt-input" type="number" id="bfExtraPax" min="0"></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">LPG (Optional)</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfGas" aria-label="LPG (Optional)"></span></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">Mineral Water (Optional)</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfWater" aria-label="Mineral Water (Optional)"></span></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><span class="receipt-label">Total Contract Amount (PHP)</span><input class="receipt-input" type="text" id="bfTotal" readonly></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Down payment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" min="0"></div>
+          <div class="receipt-row"><span class="receipt-label">Balance Amount (PHP)</span><input class="receipt-input" type="text" id="bfBalance" readonly></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><label class="receipt-label" for="bfMarketer">Marketer/ Contact no.</label><input class="receipt-input" type="text" id="bfMarketer"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfCaretaker">Caretaker/ Contact no.</label><input class="receipt-input" type="text" id="bfCaretaker"></div>
+
+          <div class="receipt-terms-title">Terms and Conditions:</div>
+          <ol class="receipt-terms">
+            <li>Pay your balance as you enter.</li>
+            <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
+            <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
+              <ol>
+                <li>If the accommodation date falls on weekdays or weekends, rebooking must fall on weekdays or weekends too.</li>
+                <li>The rebooking schedule must be the same as the prior booked schedule.</li>
+                <li>Additional charge of Php2,000.00 for weekdays/ Php5,000.00 for weekends upon rebooking.</li>
+              </ol>
+            </li>
+            <li>In presence of any illegal activities or transactions like: illegal drugs, illegal trading, prostitution, etc., the management serves all the rights to terminate the accommodation without prior notice.</li>
+            <li>The management will not be liable for any accidents, injuries or losses of belongings during accommodation.</li>
+            <li>The client will be held liable for any damages to the property during the accommodation.</li>
+            <li>When the number of person exceeds the agreed total number, additional Php200.00 per head will be charged.</li>
+            <li>Resort is pet-friendly but guest should be responsible on making sure that the pet has proper diaper and will not be allowed near the swimming pool area.</li>
+          </ol>
+
+          <div class="receipt-agreement">I, <span id="receiptClientName" class="receipt-agreement-line"></span> fully understand and agree with all the terms and conditions above.</div>
+
+          <div class="receipt-signatures">
+            <div><strong>Resort Management</strong><div class="receipt-signature-line"></div><small>Signature over Printed Name/ Date</small></div>
+            <div><strong>Client</strong><div class="receipt-signature-line"></div><small>Signature over Printed Name/ Date</small></div>
+          </div>
+
+          <div id="bfErr" class="receipt-error"></div>
+          <button id="bfNext" class="receipt-action">Continue to payment</button>
+          <button onclick="closeBookingModal()" class="receipt-action">Cancel</button>
+        </div>
       `;
+
+        const nights = Math.max(1, Math.round((new Date(bookingState.checkOut) - new Date(bookingState.checkIn)) / 86400000));
+        const baseTotal = bookingState.resort.price * nights;
+        const totalField = document.getElementById('bfTotal');
+        const balanceField = document.getElementById('bfBalance');
+        const downPaymentField = document.getElementById('bfDownPayment');
+          const gasField = document.getElementById('bfGas');
+          const updateAmounts = () => {
+            const total = baseTotal + (gasField.checked ? 150 : 0);
+          const downPayment = Number(downPaymentField.value) || 0;
+            totalField.value = total.toFixed(2);
+            balanceField.value = Math.max(0, total - downPayment).toFixed(2);
+          };
+          downPaymentField.addEventListener('input', updateAmounts);
+          gasField.addEventListener('change', updateAmounts);
+          updateAmounts();
+
+        document.getElementById('bfName').addEventListener('input', event => {
+          document.getElementById('receiptClientName').textContent = event.target.value;
+        });
 
       document.getElementById('bfNext').onclick = () => {
           const name = document.getElementById('bfName').value.trim();
@@ -460,6 +479,7 @@
           bookingState.guestPhone = phone;
           bookingState.pax = pax;
           bookingState.gasStove = document.getElementById('bfGas').checked;
+          bookingState.mineralWater = document.getElementById('bfWater').checked;
           submitReservation();
       };
   }

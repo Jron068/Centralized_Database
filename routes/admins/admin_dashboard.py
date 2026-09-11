@@ -21,11 +21,9 @@ def admin_dashboard():
         cursor.execute(
             """
             SELECT resort_id, resort_name, status
-            FROM resorts
-            WHERE owner_id = %s
+            FROM resorts         
             ORDER BY resort_name ASC
-            """,
-            (owner_id,)
+            """
         )
         my_resorts = cursor.fetchall()
         resort_ids = [r["resort_id"] for r in my_resorts]
