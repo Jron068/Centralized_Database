@@ -23,15 +23,15 @@
     </div>
 
     <nav class="nav">
-      <a href="#" class="nav-item active"><i class="fa-solid fa-grip"></i> Dashboard</a>
-      <a href="#" class="nav-item"><i class="fa-solid fa-arrows-rotate"></i> Updates</a>
-      <a href="#" class="nav-item"><i class="fa-solid fa-users"></i> Guests</a>
-      <a href="#" class="nav-item"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
-      <a href="#" class="nav-item"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</a>
-      <a href="#" class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</a>
+      <a href="{{ url_for('caretaker_dashboard') }}" class="nav-item active"><i class="fa-solid fa-grip"></i> Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}" class="nav-item"><i class="fa-solid fa-arrows-rotate"></i> Updates</a>
+      <a href="{{ url_for('caretaker_guests') }}" class="nav-item"><i class="fa-solid fa-users"></i> Guests</a>
+      <a href="{{ url_for('caretaker_inventory') }}" class="nav-item"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+      <a href="{{ url_for('caretaker_maintenance') }}" class="nav-item"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</a>
+      <a href="{{ url_for('caretaker_reports') }}" class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</a>
     </nav>
 
-    <a href="#" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+    <a href="{{ url_for('login') }}" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
 
   </aside>
 
@@ -47,16 +47,16 @@
       </div>
 
       <nav class="topbar-links">
-        <a href="#">Dashboard</a>
-        <a href="#">Updates</a>
-        <a href="#">Reports</a>
-        <a href="#">Messages</a>
+        <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+        <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+        <a href="{{ url_for('caretaker_messages') }}">Messages</a>
       </nav>
 
       <div class="topbar-user">
         <i class="fa-regular fa-bell"></i>
         <div class="avatar"></div>
-        <span>Castillo, Aron-John</span>
+        <span>{{ fullname }}</span>
       </div>
 
     </header>
@@ -65,7 +65,13 @@
     <main class="content">
 
       <h1>Dashboard Overview</h1>
-      <p class="subtitle">Welcome back! Here's what happening with your resorts today</p>
+      <p class="subtitle">Welcome back! Here is what is happening at your assigned resort today.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="panel" style="margin-bottom:16px;">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
 
       <!-- TOP GRID -->
       <section class="grid-2x2">
@@ -74,11 +80,12 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Resort Status</h3>
-            <span class="badge available">Available</span>
+            <span class="badge {{ 'available' if resort.status == 'Active' else 'pending' }}">{{ resort.status }}</span>
           </div>
-          <p class="resort-name">Lucky Miels</p>
+            <p class="resort-name">{{ resort.resort_name }}</p>
           <div class="resort-image"></div>
-          <button class="btn-primary">Update Availability</button>
+            <p>{{ resort.address or 'No address provided' }}</p>
+            <p>{{ resort.description or 'No resort description available.' }}</p>
         </div>
 
         <!-- Recent Updates -->
@@ -88,32 +95,18 @@
             <a href="#" class="view-all">View All</a>
           </div>
 
+          {% for notification in notifications %}
           <div class="update-row">
             <div class="update-thumb"></div>
             <div class="update-info">
-              <h4>Resort Photos Updated</h4>
-              <p>Photo recently updated to gallery</p>
+              <h4>{{ notification.title }}</h4>
+              <p>{{ notification.message }}</p>
             </div>
-            <span class="update-date">May 15, 2026</span>
+            <span class="update-date">{{ notification.created_at.strftime('%b %d, %Y') }}</span>
           </div>
-
-          <div class="update-row">
-            <div class="update-thumb"></div>
-            <div class="update-info">
-              <h4>Resort Photos Updated</h4>
-              <p>Photo recently updated to gallery</p>
-            </div>
-            <span class="update-date">May 15, 2026</span>
-          </div>
-
-          <div class="update-row">
-            <div class="update-thumb"></div>
-            <div class="update-info">
-              <h4>Resort Photos Updated</h4>
-              <p>Photo recently updated to gallery</p>
-            </div>
-            <span class="update-date">May 15, 2026</span>
-          </div>
+          {% else %}
+          <p>No recent updates.</p>
+          {% endfor %}
 
         </div>
 
@@ -124,32 +117,18 @@
             <a href="#" class="view-all">View All</a>
           </div>
 
+          {% for notification in notifications %}
           <div class="message-row">
             <div class="msg-avatar"></div>
             <div class="message-info">
-              <h4>Aron-John</h4>
-              <p>Great, thank you for the reply</p>
+              <h4>{{ notification.title }}</h4>
+              <p>{{ notification.message }}</p>
             </div>
-            <span class="msg-time">10:18 AM</span>
+            <span class="msg-time">{{ notification.created_at.strftime('%b %d') }}</span>
           </div>
-
-          <div class="message-row">
-            <div class="msg-avatar"></div>
-            <div class="message-info">
-              <h4>Owner</h4>
-              <p>Please log the maintenance report</p>
-            </div>
-            <span class="msg-time">11:35 AM</span>
-          </div>
-
-          <div class="message-row">
-            <div class="msg-avatar"></div>
-            <div class="message-info">
-              <h4>Bryan D.</h4>
-              <p>Guest checked in successfully</p>
-            </div>
-            <span class="msg-time">Yesterday</span>
-          </div>
+          {% else %}
+          <p>No messages or notifications.</p>
+          {% endfor %}
 
         </div>
 
@@ -158,14 +137,9 @@
           <div class="panel-head">
             <h3>Upload Resort Updates</h3>
           </div>
-          <p class="resort-name">Lucky Miels</p>
-
-          <div class="dropzone">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <p>Drag and drop photos here</p>
-            <span>Or click to browse</span>
-            <small>JPG, PNG up to 10MB</small>
-          </div>
+          <p class="resort-name">{{ resort.resort_name }}</p>
+          <p>{{ resort.description or 'No resort updates have been added yet.' }}</p>
+          <a class="btn-primary" href="{{ url_for('caretaker_updates') }}">View Resort Updates</a>
 
         </div>
 
@@ -181,32 +155,18 @@
             <a href="#" class="view-all">View All</a>
           </div>
 
+          {% for reservation in reservations %}
           <div class="reservation">
             <div class="reservation-thumb thumb-1"></div>
             <div class="reservation-info">
-              <h4>Sunscape Resort</h4>
-              <p>May 20 - May 22, 2026 &nbsp;&middot;&nbsp; 3 Guests</p>
+              <h4>{{ resort.resort_name }} · {{ reservation.guest_name or 'Guest' }}</h4>
+              <p>{{ reservation.check_in.strftime('%b %d') }} - {{ reservation.check_out.strftime('%b %d, %Y') }} &nbsp;&middot;&nbsp; {{ reservation.guests }} Guests</p>
             </div>
-            <span class="badge confirmed">Confirmed</span>
+            <span class="badge {{ 'confirmed' if reservation.reservation_status == 'Confirmed' else 'pending' }}">{{ reservation.reservation_status }}</span>
           </div>
-
-          <div class="reservation">
-            <div class="reservation-thumb thumb-2"></div>
-            <div class="reservation-info">
-              <h4>Sunscape Resort</h4>
-              <p>May 25 - May 27, 2026 &nbsp;&middot;&nbsp; 2 Guests</p>
-            </div>
-            <span class="badge pending">Pending</span>
-          </div>
-
-          <div class="reservation">
-            <div class="reservation-thumb thumb-3"></div>
-            <div class="reservation-info">
-              <h4>Lucky Miels</h4>
-              <p>May 29 - May 31, 2026 &nbsp;&middot;&nbsp; 4 Guests</p>
-            </div>
-            <span class="badge confirmed">Confirmed</span>
-          </div>
+          {% else %}
+          <p>No upcoming reservations.</p>
+          {% endfor %}
 
         </div>
 
@@ -215,54 +175,61 @@
           <div class="panel-head">
             <h3>Property Status</h3>
           </div>
-          <p class="panel-note">Update availability for each property</p>
-
+          <p class="panel-note">Current status of your assigned resort</p>
           <div class="property-row">
-            <span>Oceanview Villa</span>
+            <span>{{ resort.resort_name }}</span>
             <div class="status-toggle">
-              <span class="status-label off">Fully Reserved</span>
-              <label class="switch">
-                <input type="checkbox">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="property-row">
-            <span>Sunset Beach Resort</span>
-            <div class="status-toggle">
-              <span class="status-label on">Available</span>
-              <label class="switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="property-row">
-            <span>Mountain Lodge</span>
-            <div class="status-toggle">
-              <span class="status-label on">Available</span>
-              <label class="switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="property-row">
-            <span>Lucky Miels Villa</span>
-            <div class="status-toggle">
-              <span class="status-label on">Available</span>
-              <label class="switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
+              <span class="status-label {{ 'on' if resort.status == 'Active' else 'off' }}">{{ resort.status }}</span>
             </div>
           </div>
 
         </div>
 
+      </section>
+
+      <section class="panel" style="margin-top:24px;">
+        <div class="panel-head">
+          <h3>Customer Booking Requests</h3>
+          <span>{{ reservations|length }} shown</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; text-align:left;">
+            <thead>
+              <tr><th>Customer</th><th>Stay</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for reservation in reservations %}
+              <tr>
+                <td>{{ reservation.guest_name or 'Guest' }}<br><small>{{ reservation.guests }} guests</small></td>
+                <td>{{ reservation.check_in }} to {{ reservation.check_out }}</td>
+                <td>{{ reservation.payment_status }}{% if reservation.amount_paid %}<br>&#8369;{{ "%.2f"|format(reservation.amount_paid) }}{% endif %}</td>
+                <td>
+                  {% if reservation.proof_of_payment %}
+                  <a href="{{ url_for('static', filename=reservation.proof_of_payment) }}" target="_blank">
+                    <img src="{{ url_for('static', filename=reservation.proof_of_payment) }}" alt="Payment proof" style="width:72px;height:52px;object-fit:cover;border-radius:6px;">
+                  </a>
+                  {% else %}No proof{% endif %}
+                </td>
+                <td>{{ reservation.reservation_status }}</td>
+                <td>
+                  {% if reservation.reservation_status == 'Confirmed' %}
+                    <span class="badge confirmed">Approved</span>
+                  {% elif reservation.reservation_status == 'Pending' and reservation.payment_status == 'Pending' %}
+                    <form method="post" action="{{ url_for('caretaker_review_reservation', reservation_id=reservation.reservation_id) }}">
+                      <button class="btn-primary" name="action" value="approve" type="submit">Approve</button>
+                      <button class="btn-outline" name="action" value="reject" type="submit">Reject</button>
+                    </form>
+                  {% else %}
+                    <span>{{ reservation.reservation_status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6">No customer booking requests found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </section>
 
     </main>

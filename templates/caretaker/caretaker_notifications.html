@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notifications — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" style="color:var(--accent-green);">🔔</button>
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">{{ fullname }}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Notifications</h1>
+        <p>Stay up to date with alerts across your resort.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm">Mark all as read</button>
+      </div>
+    </div>
+
+    <div class="card notif-panel">
+      {% for notification in notifications %}
+      <div class="notif-item">
+        <div class="notif-icon info">&#8505;</div>
+        <div class="notif-text">
+          <div class="title">{{ notification.title }}</div>
+          <div class="desc">{{ notification.message }}</div>
+          <div class="time">{{ notification.created_at.strftime('%b %d, %Y %I:%M %p') }}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">You have no notifications right now.</div>
+      {% endfor %}
+
+      <!-- Example structure for when notifications exist -->
+      <!--
+      <div class="notif-item">
+        <div class="notif-icon warning">⚠</div>
+        <div class="notif-text">
+          <div class="title">Low stock alert: Bath Towels</div>
+          <div class="desc">Only 4 units remaining, below the reorder threshold.</div>
+          <div class="time">2 hours ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon success">✓</div>
+        <div class="notif-text">
+          <div class="title">Maintenance request completed</div>
+          <div class="desc">Air conditioning repair in Cottage 2 marked as done.</div>
+          <div class="time">Yesterday</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon info">ℹ</div>
+        <div class="notif-text">
+          <div class="title">New message from Head Office</div>
+          <div class="desc">Please confirm the weekend housekeeping schedule.</div>
+          <div class="time">2 days ago</div>
+        </div>
+      </div>
+      -->
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

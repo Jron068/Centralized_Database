@@ -12,6 +12,20 @@ def get_customer_row(cursor):
     )
     return cursor.fetchone()
 
+@app.route("/customer_landingpage")
+def customer_landingpage():
+    return render_template(
+        "customer/customer_landingpage.html",
+        username=session.get("fullname", "Guest"),
+    )
+
+@app.route("/customer_messages")
+def customer_messages():
+    return render_template(
+        "customer/customer_message.html",
+        username=session.get("fullname", "Guest"),
+    )
+
 
 @app.route("/customer_aboutpage")
 def customer_aboutpage():
@@ -118,7 +132,7 @@ def customer_deal():
 @app.route("/customer_favorites")
 def customer_favorites():
     fullname = session.get("fullname", "Guest")
-    return render_template("customer/customer_favorites.html", username=fullname)
+    return render_template("customer/customer_favorite.html", username=fullname)
 
 
 # ================= PROFILE SETTING =================

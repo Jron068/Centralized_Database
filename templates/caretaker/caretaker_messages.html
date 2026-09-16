@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Messages — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}" class="active"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}" class="active">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">Aron-John Castillo</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Messages</h1>
+        <p>Communicate with guests and the head office.</p>
+      </div>
+    </div>
+
+    <div class="messages-layout">
+      <!-- Thread list -->
+      <div class="thread-list">
+        <div class="empty-state" style="padding:20px 10px;">No messages or notifications yet. New conversations will appear here.</div>
+
+        <!-- Example structure for when data exists (hidden by default, shown for reference) -->
+        <!--
+        <div class="thread-item active">
+          <div class="avatar"></div>
+          <div class="list-item-body">
+            <div class="list-item-top">
+              <span class="sender">Head Office</span>
+              <span class="time">9:32 AM</span>
+            </div>
+            <div class="preview">Please confirm the weekend housekeeping schedule.</div>
+          </div>
+        </div>
+        -->
+      </div>
+
+      <!-- Chat panel -->
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="avatar" style="width:36px;height:36px;"></div>
+          <div>
+            <div class="name">No conversation selected</div>
+            <div class="status" style="color:var(--text-muted);">Select a message thread to start</div>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div class="empty-state" style="text-align:center; margin:auto;">No messages to show.</div>
+        </div>
+        <div class="chat-input">
+          <input type="text" placeholder="Type a message..." disabled>
+          <button disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

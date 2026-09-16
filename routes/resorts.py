@@ -6,10 +6,13 @@ from app import app
 def resorts():
 
     fullname = session.get("fullname", "Guest")
+    owner_id = session.get("owner_id")
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
-    
-    cursor.execute("""
+
+    owner_filter = "AND owner_id = %s" if owner_id else ""
+    query_params = (owner_id,) if owner_id else ()
+    cursor.execute(f"""
             SELECT
                 resort_id,
                 resort_name,
@@ -19,8 +22,10 @@ def resorts():
                 phone,
                 logo,
                 amenities,status
-                FROM resorts WHERE status = 'Active' ORDER BY resort_name
-                   """)
+                     FROM resorts
+                     WHERE status = 'Active' {owner_filter}
+                     ORDER BY resort_name
+                         """, query_params)
     
     resort_rows = cursor.fetchall()
     cursor.close()

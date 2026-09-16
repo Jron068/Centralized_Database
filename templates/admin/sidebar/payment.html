@@ -49,18 +49,27 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
       <h1 class="page-title">Payments</h1>
       <p class="page-sub">Track incoming payments and outstanding balances</p>
 
+      <form class="toolbar" method="get" action="{{ url_for('admin_payments') }}">
+        <label for="start_date">From</label>
+        <input class="search-input" id="start_date" name="start_date" type="date" value="{{ start_date }}">
+        <label for="end_date">To</label>
+        <input class="search-input" id="end_date" name="end_date" type="date" value="{{ end_date }}">
+        <button class="btn btn-primary" type="submit">Apply Dates</button>
+        <a class="btn btn-outline" href="{{ url_for('admin_payments') }}">Current Month</a>
+      </form>
+
       <div class="grid-4" style="margin-bottom:22px;">
-        <div class="stat-card"><div class="stat-label">Total Collected</div><div class="stat-value">&#8369;186,400</div><div class="stat-sub">This month</div></div>
-        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value">&#8369;12,600</div><div class="stat-sub">3 bookings</div></div>
-        <div class="stat-card"><div class="stat-label">Refunded</div><div class="stat-value">&#8369;2,800</div><div class="stat-sub">1 booking</div></div>
-        <div class="stat-card"><div class="stat-label">Payout Due</div><div class="stat-value">&#8369;40,000</div><div class="stat-sub">Next: Sep 1, 2026</div></div>
+        <div class="stat-card"><div class="stat-label">Total Collected</div><div class="stat-value">&#8369;{{ "%.2f"|format(summary.collected or 0) }}</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value">&#8369;{{ "%.2f"|format(summary.pending or 0) }}</div><div class="stat-sub">{{ summary.pending_count or 0 }} payments</div></div>
+        <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value">&#8369;{{ "%.2f"|format(summary.rejected or 0) }}</div><div class="stat-sub">{{ summary.rejected_count or 0 }} payments</div></div>
+        <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-value">{{ summary.verified_count or 0 }}</div><div class="stat-sub">Transactions this month</div></div>
       </div>
 
       <div class="card">

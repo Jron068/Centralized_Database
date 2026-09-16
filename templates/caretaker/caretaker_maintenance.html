@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Maintenance — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}" class="active"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">Aron-John Castillo</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Maintenance</h1>
+        <p>Log and track maintenance requests for Lucky Miels Resort.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('newTicketModal').classList.add('open')">+ New Request</button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Open Requests</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed (30d)</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Urgent</div>
+        <div class="stat-value">0</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">🔍 <input type="text" placeholder="Search maintenance request..."></div>
+      <select class="select-filter">
+        <option>All Priority</option>
+        <option>Urgent</option>
+        <option>High</option>
+        <option>Normal</option>
+        <option>Low</option>
+      </select>
+      <select class="select-filter">
+        <option>All Status</option>
+        <option>Open</option>
+        <option>In Progress</option>
+        <option>Completed</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Maintenance Requests</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Issue</th>
+              <th>Location</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Reported</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" class="empty-state">No maintenance requests logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newTicketModal">
+  <div class="modal">
+    <h3>New Maintenance Request</h3>
+    <div class="form-group">
+      <label>Issue Title</label>
+      <input type="text" placeholder="e.g. Air conditioning not cooling">
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" placeholder="e.g. Cottage 2">
+    </div>
+    <div class="form-group">
+      <label>Priority</label>
+      <select>
+        <option>Low</option>
+        <option>Normal</option>
+        <option>High</option>
+        <option>Urgent</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea rows="4" placeholder="Describe the issue..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('newTicketModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

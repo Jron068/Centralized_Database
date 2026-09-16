@@ -419,6 +419,50 @@ form{
     border-right-color:#3E9722;
 }
 
+.password-checklist{
+    margin:-4px 0 25px;
+    padding:14px 18px;
+    border:1px solid #e5e5e5;
+    border-radius:12px;
+    background:#fafafa;
+}
+
+.password-checklist-title{
+    margin-bottom:8px;
+    color:#444;
+    font-size:13px;
+    font-weight:600;
+}
+
+.password-checklist ul{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:6px 20px;
+    list-style:none;
+}
+
+.password-checklist li{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#999;
+    font-size:12px;
+    transition:color .2s ease;
+}
+
+.password-checklist li i{
+    color:#c8c8c8;
+    font-size:13px;
+}
+
+.password-checklist li.valid{
+    color:#3E9722;
+}
+
+.password-checklist li.valid i{
+    color:#3E9722;
+}
+
 .btn:active{
     transform:scale(.98);
 }
@@ -454,6 +498,14 @@ form{
 
 .left-panel::-webkit-scrollbar-track{
     background:transparent;
+}
+
+@media(max-width:576px){
+
+.password-checklist ul{
+    grid-template-columns:1fr;
+}
+
 }
 
 /* INPUT ICON SUPPORT */

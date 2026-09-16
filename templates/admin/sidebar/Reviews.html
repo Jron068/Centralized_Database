@@ -49,35 +49,39 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
       <h1 class="page-title">Reviews</h1>
       <p class="page-sub">See what guests are saying about your resorts</p>
 
+      <form class="toolbar" method="get" action="{{ url_for('reviews') }}">
+        <label for="reviewMonth">Month</label>
+        <input class="search-input" id="reviewMonth" name="month" type="month" value="{{ selected_month }}">
+        <label for="reviewResort">Resort</label>
+        <select class="select-input" id="reviewResort" name="resort_id">
+          <option value="">All resorts</option>
+          {% for resort in review_resorts %}
+          <option value="{{ resort.resort_id }}" {{ 'selected' if selected_resort == resort.resort_id else '' }}>{{ resort.resort_name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Apply Filters</button>
+        <a class="btn btn-outline" href="{{ url_for('reviews') }}">Current Month</a>
+      </form>
+
       <div class="card">
+        {% for review in reviews %}
         <div class="review-card">
           <div class="review-top">
-            <div><span class="review-guest">Maria Santos</span> &middot; <span class="review-resort">Sunscape Resort</span></div>
-            <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+            <div><span class="review-guest">{{ review.guest_name }}</span> &middot; <span class="review-resort">{{ review.resort_name }}</span></div>
+            <span class="stars">{% for star in range(1, 6) %}{{ '&#9733;' if star <= (review.rating or 0) else '&#9734;' }}{% endfor %}</span>
           </div>
-          <div class="review-text">Clean pools and the staff were very accommodating. Will definitely book again with the family.</div>
+          <div class="review-text">{{ review.comment or 'No comment provided.' }}</div>
         </div>
-        <div class="review-card">
-          <div class="review-top">
-            <div><span class="review-guest">Carlo Reyes</span> &middot; <span class="review-resort">Triple Z Resort</span></div>
-            <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</span>
-          </div>
-          <div class="review-text">Good value for money, though check-in took a bit longer than expected.</div>
-        </div>
-        <div class="review-card">
-          <div class="review-top">
-            <div><span class="review-guest">Angela Cruz</span> &middot; <span class="review-resort">Sunscape Resort</span></div>
-            <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-          </div>
-          <div class="review-text">Beautiful place for a weekend getaway. The hot spring pools were the highlight.</div>
-        </div>
+        {% else %}
+        <div class="empty-row">No reviews yet.</div>
+        {% endfor %}
       </div>
     </div>
   </div>

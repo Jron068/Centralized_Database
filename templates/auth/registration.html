@@ -122,18 +122,22 @@
 
                 <label>Select Resort Applying For</label>
 
-                <select name="resort_id">
+                <select name="resort_id" id="resortId">
 
                     
 
 
                     {% for resort in resorts %}
 
-                    <option value="{{ resort.resort_id }}">
-                        {{ resort.resort_name }}
+                    <option value="{{ resort.resort_id }}" {% if resort.has_caretaker %}disabled{% endif %}>
+                        {{ resort.resort_name }}{% if resort.has_caretaker %} - caretaker already assigned{% endif %}
                     </option>
 
                     {% endfor %}
+
+                    {% if not resorts %}
+                    <option value="">No admin properties available</option>
+                    {% endif %}
 
                 </select>
 
@@ -189,6 +193,39 @@
                     </div>
 
                 </div>
+
+            </div>
+
+            <div class="password-checklist" aria-live="polite">
+
+                <p class="password-checklist-title">Password requirements</p>
+
+                <ul>
+                    <li data-rule="length">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>At least 8 characters</span>
+                    </li>
+                    <li data-rule="lowercase">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>At least one lowercase letter</span>
+                    </li>
+                    <li data-rule="uppercase">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>At least one uppercase letter</span>
+                    </li>
+                    <li data-rule="number">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>At least one number</span>
+                    </li>
+                    <li data-rule="special">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>At least one special character</span>
+                    </li>
+                    <li data-rule="match">
+                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        <span>Passwords match</span>
+                    </li>
+                </ul>
 
             </div>
 
@@ -281,14 +318,20 @@
 const customer = document.querySelector('input[value="customer"]');
 const caretaker = document.querySelector('input[value="caretaker"]');
 const resortBox = document.getElementById("resortBox");
+const registrationForm = document.querySelector("form");
+const passwordInput = document.querySelector('input[name="password"]');
+const confirmPasswordInput = document.querySelector('input[name="confirm_password"]');
+const checklistItems = document.querySelectorAll(".password-checklist li");
 
 function toggleResort(){
 
     if(caretaker.checked){
         resortBox.style.display = "block";
+        document.getElementById("resortId").required = true;
     }
     else{
         resortBox.style.display = "none";
+        document.getElementById("resortId").required = false;
     }
 
 }
@@ -297,6 +340,39 @@ customer.addEventListener("change", toggleResort);
 caretaker.addEventListener("change", toggleResort);
 
 toggleResort();
+
+function updatePasswordChecklist(){
+
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    const rules = {
+        length: password.length >= 8,
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        number: /\d/.test(password),
+        special: /[^A-Za-z0-9]/.test(password),
+        match: password.length > 0 && password === confirmPassword
+    };
+
+    checklistItems.forEach((item) => {
+        const isValid = rules[item.dataset.rule];
+        const icon = item.querySelector("i");
+
+        item.classList.toggle("valid", isValid);
+        icon.className = isValid
+            ? "fa-solid fa-circle-check"
+            : "fa-solid fa-circle-xmark";
+    });
+
+    passwordInput.setCustomValidity(
+        Object.values(rules).every(Boolean) ? "" : "Please meet all password requirements."
+    );
+}
+
+passwordInput.addEventListener("input", updatePasswordChecklist);
+confirmPasswordInput.addEventListener("input", updatePasswordChecklist);
+registrationForm.addEventListener("submit", updatePasswordChecklist);
+updatePasswordChecklist();
 
 </script>
 
