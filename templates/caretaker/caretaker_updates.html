@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Updates — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}" class="active"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}" class="active">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">Aron-John Castillo</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Resort Updates</h1>
+        <p>All updates and notifications for {{ resort.resort_name }}.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('newUpdateModal').classList.add('open')">+ New Update</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">🔍 <input type="text" placeholder="Search updates..."></div>
+      <select class="select-filter">
+        <option>All Categories</option>
+        <option>Facility</option>
+        <option>Promotion</option>
+        <option>Notice</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Recent Updates</h2>
+      </div>
+      {% for update in updates %}
+      <div class="update-row">
+        <div class="update-thumb"></div>
+        <div class="update-info">
+          <h4>{{ update.title }}</h4>
+          <p>{{ update.message }}</p>
+        </div>
+        <span class="update-date">{{ update.created_at.strftime('%b %d, %Y') }}</span>
+      </div>
+      {% else %}
+      <div class="empty-state">No resort updates have been added yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="newUpdateModal">
+  <div class="modal">
+    <h3>New Resort Update</h3>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" placeholder="e.g. Pool maintenance this weekend">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select>
+        <option>Facility</option>
+        <option>Promotion</option>
+        <option>Notice</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Details</label>
+      <textarea rows="4" placeholder="Write update details..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Attachment (optional)</label>
+      <div class="dropzone"><strong>Click to upload</strong> or drag and drop an image</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('newUpdateModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary">Post Update</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

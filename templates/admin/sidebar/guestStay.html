@@ -48,7 +48,7 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
@@ -56,16 +56,23 @@
       <p class="page-sub">A directory of everyone who has booked with your resorts</p>
 
       <div class="toolbar">
-        <input class="search-input" placeholder="Search guests by name or email">
+        <input class="search-input" id="guestSearch" placeholder="Search guests by name or email">
       </div>
 
       <div class="card">
         <table>
           <thead><tr><th>Guest</th><th>Email</th><th>Total Stays</th><th>Last Visit</th></tr></thead>
           <tbody>
-            <tr><td>Maria Santos</td><td>maria.santos@email.com</td><td>4</td><td>Aug 29, 2026</td><td>
-            <tr><td>Carlo Reyes</td><td>carlo.reyes@email.com</td><td>1</td><td>Sep 2, 2026</td><td>
-            <tr><td>Angela Cruz</td><td>angela.cruz@email.com</td><td>2</td><td>Sep 5, 2026</td><td>
+            {% for guest in guests %}
+            <tr data-guest-search="{{ guest.guest_name|default('', true)|lower }} {{ guest.email|default('', true)|lower }}">
+              <td>{{ guest.guest_name }}</td>
+              <td>{{ guest.email }}</td>
+              <td>{{ guest.total_stays }}</td>
+              <td>{{ guest.last_visit.strftime('%b %d, %Y') if guest.last_visit else 'No visit yet' }}</td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="4">No guests found.</td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
@@ -73,5 +80,13 @@
   </div>
 </div>
 
+<script>
+  document.getElementById('guestSearch').addEventListener('input', (event) => {
+    const query = event.target.value.trim().toLowerCase();
+    document.querySelectorAll('[data-guest-search]').forEach((row) => {
+      row.hidden = !row.dataset.guestSearch.includes(query);
+    });
+  });
+</script>
 </body>
 </html>

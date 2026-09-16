@@ -11,8 +11,8 @@
 <!--
   NOTES FOR THIS PAGE (calendar.html)
   --------------------------------------------------
-  Calendar grid is static markup (7 columns) for the prototype.
-  Swap in real date generation + event data on the backend.
+  Calendar dates and reservation events are loaded from the database by
+  the calendar route and scoped to the signed-in owner.
 
   All pages share styles.css — do not fork styles per page.
   Sidebar / top nav links are plain <a href="..."> pointing at
@@ -49,7 +49,7 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
@@ -58,28 +58,25 @@
 
       <div class="card">
         <div class="card-row">
-          <h3 style="margin:0;">August 2026</h3>
+          <h3 style="margin:0;">{{ calendar_month }}</h3>
           <div class="action-group">
-            <button class="btn btn-outline btn-sm">&larr; Prev</button>
-            <button class="btn btn-outline btn-sm">Next &rarr;</button>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('calendar', year=previous_month.year, month=previous_month.month) }}">&larr; Prev</a>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('calendar', year=next_month.year, month=next_month.month) }}">Next &rarr;</a>
           </div>
         </div>
         <div class="calendar-grid">
           <div class="cal-head">Sun</div><div class="cal-head">Mon</div><div class="cal-head">Tue</div><div class="cal-head">Wed</div><div class="cal-head">Thu</div><div class="cal-head">Fri</div><div class="cal-head">Sat</div>
-          <div class="cal-cell muted"><div class="cal-date">26</div></div>
-          <div class="cal-cell"><div class="cal-date">27</div><div class="cal-event">Sunscape - full</div></div>
-          <div class="cal-cell"><div class="cal-date">28</div></div>
-          <div class="cal-cell"><div class="cal-date">29</div><div class="cal-event">M. Santos in</div></div>
-          <div class="cal-cell"><div class="cal-date">30</div></div>
-          <div class="cal-cell"><div class="cal-date">31</div><div class="cal-event">M. Santos out</div></div>
-          <div class="cal-cell"><div class="cal-date">1</div></div>
-          <div class="cal-cell"><div class="cal-date">2</div><div class="cal-event alt">C. Reyes pending</div></div>
-          <div class="cal-cell"><div class="cal-date">3</div></div>
-          <div class="cal-cell"><div class="cal-date">4</div></div>
-          <div class="cal-cell"><div class="cal-date">5</div><div class="cal-event">A. Cruz in</div></div>
-          <div class="cal-cell"><div class="cal-date">6</div></div>
-          <div class="cal-cell"><div class="cal-date">7</div><div class="cal-event">A. Cruz out</div></div>
-          <div class="cal-cell"><div class="cal-date">8</div></div>
+          {% for cell in calendar_days %}
+          {% set day_events = events_by_date.get(cell.day.isoformat(), []) %}
+          <div class="cal-cell {{ '' if cell.in_month else 'muted' }} {{ 'today' if cell.day == today else '' }} {{ 'reserved-day' if day_events else '' }}">
+            <div class="cal-date">{{ cell.day.day }}</div>
+            {% for event in day_events %}
+            <div class="cal-event reserved" title="{{ event.resort_name }} - {{ event.guest_name }} ({{ event.reservation_status }})">
+              {{ event.resort_name }} - {{ event.guest_name }}
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
         </div>
       </div>
     </div>

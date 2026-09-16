@@ -50,18 +50,32 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link active" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
       <h1 class="page-title">Reports</h1>
       <p class="page-sub">Performance summaries across your resorts</p>
 
+      <form class="toolbar" method="get" action="{{ url_for('reports') }}">
+        <label for="reportMonth">Month</label>
+        <input class="search-input" id="reportMonth" name="month" type="month" value="{{ selected_month }}">
+        <label for="reportResort">Resort</label>
+        <select class="select-input" id="reportResort" name="resort_id">
+          <option value="">All resorts</option>
+          {% for resort in report_resorts %}
+          <option value="{{ resort.resort_id }}" {{ 'selected' if selected_resort == resort.resort_id else '' }}>{{ resort.resort_name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Apply Filters</button>
+        <a class="btn btn-outline" href="{{ url_for('reports') }}">Current Month</a>
+      </form>
+
       <div class="grid-4" style="margin-bottom:22px;">
-        <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value">128</div><div class="stat-sub">This month</div></div>
-        <div class="stat-card"><div class="stat-label">Occupancy Rate</div><div class="stat-value">76%</div><div class="stat-sub">Across 2 resorts</div></div>
-        <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">&#8369;186,400</div><div class="stat-sub">This month</div></div>
-        <div class="stat-card"><div class="stat-label">Avg. Rating</div><div class="stat-value">4.6</div><div class="stat-sub">312 reviews</div></div>
+        <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value">{{ total_bookings }}</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card"><div class="stat-label">Occupancy Rate</div><div class="stat-value">{{ occupancy_rate }}%</div><div class="stat-sub">Across {{ total_resorts }} resorts</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">&#8369;{{ "%.2f"|format(revenue) }}</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card"><div class="stat-label">Avg. Rating</div><div class="stat-value">{{ "%.1f"|format(average_rating) }}</div><div class="stat-sub">{{ total_reviews }} reviews</div></div>
       </div>
 
       <div class="grid-2">
@@ -70,8 +84,11 @@
           <table>
             <thead><tr><th>Resort</th><th>Bookings</th><th>Revenue</th></tr></thead>
             <tbody>
-              <tr><td>Sunscape Resort</td><td>76</td><td>&#8369;112,000</td></tr>
-              <tr><td>Triple Z Resort</td><td>52</td><td>&#8369;74,400</td></tr>
+              {% for resort in revenue_by_resort %}
+              <tr><td>{{ resort.resort_name }}</td><td>{{ resort.bookings }}</td><td>&#8369;{{ "%.2f"|format(resort.revenue) }}</td></tr>
+              {% else %}
+              <tr class="empty-row"><td colspan="3">No report data yet.</td></tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>

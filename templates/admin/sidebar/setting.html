@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pansol Resorts — Settings</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+<style>
+  .settings-panel{display:none;}
+  .settings-panel.active{display:block;}
+  .settings-nav a{cursor:pointer;}
+  .settings-nav a.active{background:var(--active-bg); color:var(--forest); font-weight:600;}
+  .settings-list{display:grid; gap:10px;}
+  .settings-list-item{padding:12px 0; border-bottom:1px solid var(--border);}
+  .settings-list-item:last-child{border-bottom:none;}
+  .settings-muted{color:var(--muted); font-size:13px;}
+</style>
 </head>
 <body>
 
@@ -51,36 +61,95 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
     </div>
 
     <div class="content">
       <h1 class="page-title">Settings</h1>
       <p class="page-sub">Manage your account and resort preferences</p>
 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}" role="status">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
       <div class="grid-2">
         <div class="card">
           <div class="settings-nav">
-            <a class="active">Account</a>
-            <a>Resort Preferences</a>
-            <a>Notifications</a>
-            <a>Users &amp; Permissions</a>
-            <a>Billing</a>
+            <a class="active" data-settings-tab="account">Account</a>
+            <a data-settings-tab="resorts">Resort Preferences</a>
+            <a data-settings-tab="notifications">Notifications</a>
+            <a data-settings-tab="users">Users &amp; Permissions</a>
+            <a data-settings-tab="billing">Billing</a>
           </div>
         </div>
         <div class="card">
-          <h3>Account Details</h3>
-          <div class="form-cols">
-            <div class="form-row"><label>Full Name</label><input value="Owner One"></div>
-            <div class="form-row"><label>Email</label><input value="owner.one@pansolresorts.com"></div>
-          </div>
-          <div class="form-row"><label>Phone Number</label><input value="+63 917 000 0000"></div>
-          <button class="btn btn-primary">Save Changes</button>
+          <section class="settings-panel active" data-settings-panel="account">
+            <h3>Account Details</h3>
+            <form method="post" action="{{ url_for('settings') }}">
+              <div class="form-cols">
+                <div class="form-row"><label for="fullname">Full Name</label><input id="fullname" name="fullname" value="{{ account.fullname }}" required maxlength="150"></div>
+                <div class="form-row"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ account.email }}" required maxlength="150"></div>
+              </div>
+              <div class="form-row"><label for="phone">Phone Number</label><input id="phone" value="Not stored in the owner database profile" disabled></div>
+              <button class="btn btn-primary" type="submit">Save Changes</button>
+            </form>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="resorts">
+            <h3>Resort Preferences</h3>
+            <div class="settings-list">
+              {% for resort in owner_resorts %}
+              <div class="settings-list-item"><strong>{{ resort.resort_name }}</strong><br><span class="settings-muted">{{ resort.address or 'No address provided' }} · {{ resort.status }}</span></div>
+              {% else %}<p class="settings-muted">No properties found.</p>{% endfor %}
+            </div>
+            <a class="btn btn-primary" href="{{ url_for('properties') }}">Manage Properties</a>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="notifications">
+            <h3>Notifications</h3>
+            <div class="settings-list">
+              {% for notification in notifications %}
+              <div class="settings-list-item"><strong>{{ notification.title }}</strong><br><span class="settings-muted">{{ notification.message }} · {{ notification.created_at.strftime('%b %d, %Y') }}</span></div>
+              {% else %}<p class="settings-muted">No notifications yet.</p>{% endfor %}
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="users">
+            <h3>Users &amp; Permissions</h3>
+            <div class="settings-list">
+              {% for member in team_members %}
+              <div class="settings-list-item"><strong>{{ member.fullname }}</strong><br><span class="settings-muted">{{ member.email }} · {{ member.resort_name }} · {{ member.status }}</span></div>
+              {% else %}<p class="settings-muted">No caretaker users assigned.</p>{% endfor %}
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="billing">
+            <h3>Billing</h3>
+            <div class="settings-list">
+              <div class="settings-list-item"><strong>Verified payments</strong><br><span class="settings-muted">&#8369;{{ "%.2f"|format(billing.collected or 0) }}</span></div>
+              <div class="settings-list-item"><strong>Pending payments</strong><br><span class="settings-muted">&#8369;{{ "%.2f"|format(billing.pending or 0) }}</span></div>
+              <div class="settings-list-item"><strong>Total payment records</strong><br><span class="settings-muted">{{ billing.payment_count or 0 }}</span></div>
+            </div>
+            <a class="btn btn-primary" href="{{ url_for('admin_payments') }}">View Payments</a>
+          </section>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<script>
+  document.querySelectorAll('[data-settings-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const panelName = tab.dataset.settingsTab;
+      document.querySelectorAll('[data-settings-tab]').forEach((item) => item.classList.remove('active'));
+      document.querySelectorAll('[data-settings-panel]').forEach((panel) => panel.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector(`[data-settings-panel="${panelName}"]`).classList.add('active');
+    });
+  });
+</script>
 </body>
 </html>

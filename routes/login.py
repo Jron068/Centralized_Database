@@ -31,12 +31,16 @@ def login():
         )
         account = cursor.fetchone()
 
-        if not account or not check_password_hash(account["password"], password):
+        if not account:
             flash("Invalid email or password.", "error")
             return redirect(url_for("login"))
 
         if selected_role and account["role"] != selected_role:
             flash("Role mismatched. Please input your correct account type.", "warning")
+            return redirect(url_for("login"))
+
+        if not check_password_hash(account["password"], password):
+            flash("Invalid email or password.", "error")
             return redirect(url_for("login"))
 
         if account["account_status"] != "Active":
@@ -49,11 +53,14 @@ def login():
                 return redirect(url_for("login"))
 
             cursor.execute(
-                "SELECT resort_id FROM caretakers WHERE account_id = %s",
+                "SELECT resort_id, status FROM caretakers WHERE account_id = %s",
                 (account["account_id"],)
             )
             caretaker_row = cursor.fetchone()
-            session["resort_id"] = caretaker_row["resort_id"] if caretaker_row else None
+            if not caretaker_row or caretaker_row["status"] != "Active":
+                flash("Your caretaker assignment is not active.", "warning")
+                return redirect(url_for("login"))
+            session["resort_id"] = caretaker_row["resort_id"]
 
         elif account["role"] == "customer":
             if not account["is_verified"]:

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guests — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}" class="active"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">{{ fullname }}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Guests</h1>
+        <p>Manage guest reservations and check-in/check-out for Lucky Miels Resort.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('newGuestModal').classList.add('open')">+ Add Guest</button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Guests Today</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Checked In</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Checked Out</div>
+        <div class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Upcoming Reservations</div>
+        <div class="stat-value">0</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">🔍 <input type="text" placeholder="Search guest name or booking ID..."></div>
+      <select class="select-filter">
+        <option>All Status</option>
+        <option>Checked In</option>
+        <option>Checked Out</option>
+        <option>Reserved</option>
+        <option>Cancelled</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Guest List</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Booking ID</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Room / Unit</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for guest in guests %}
+            <tr>
+              <td>{{ guest.guest_name or 'Guest' }}</td>
+              <td>#RSV-{{ guest.reservation_id }}</td>
+              <td>{{ guest.check_in }}</td>
+              <td>{{ guest.check_out }}</td>
+              <td>{{ guest.guests }} guests</td>
+              <td>{{ guest.reservation_status }}</td>
+              <td></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="empty-state">No guest records found for your assigned resort.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newGuestModal">
+  <div class="modal">
+    <h3>Add Guest</h3>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" placeholder="Guest name">
+    </div>
+    <div class="form-group">
+      <label>Booking ID</label>
+      <input type="text" placeholder="e.g. LM-0231">
+    </div>
+    <div class="form-group">
+      <label>Room / Unit</label>
+      <input type="text" placeholder="e.g. Cottage 3">
+    </div>
+    <div class="form-group">
+      <label>Check-in Date</label>
+      <input type="date">
+    </div>
+    <div class="form-group">
+      <label>Check-out Date</label>
+      <input type="date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('newGuestModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary">Save Guest</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

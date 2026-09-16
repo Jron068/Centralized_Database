@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reports - Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand"><span class="leaf">&#127807;</span><div class="sidebar-brand-text"><div class="name">PANSOL RESORTS</div><div class="tagline">Centralized Reservation Hub</div></div></div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">&#10227;</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">&#128101;</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">&#128230;</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">&#128295;</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}" class="active"><span class="icon">&#128202;</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">&#9993;</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">&copy; 2026 Pansol Resorts</div>
+</aside>
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">&#127807;</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}" class="active">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right"><div class="user-chip"><div class="avatar"></div><span class="user-name">{{ fullname }}</span></div></div>
+  </header>
+  <div class="content">
+    <div class="page-header"><div><h1>Reports</h1><p>Monthly performance for {{ resort.resort_name }}.</p></div></div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-label">Bookings This Month</div><div class="stat-value">{{ bookings }}</div></div>
+      <div class="stat-card"><div class="stat-label">Verified Revenue</div><div class="stat-value">&#8369;{{ "%.2f"|format(revenue) }}</div></div>
+    </div>
+    <div class="card"><div class="empty-state">Reports are based on reservations and verified customer payments in the database.</div></div>
+  </div>
+</div>
+</body>
+</html>

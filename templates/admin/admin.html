@@ -165,10 +165,45 @@
               <td>{{ c.fullname }}</td>
               <td>{{ c.resort_name }}</td>
               <td>{{ c.created_at.strftime('%b %d, %Y') }}</td>
-              <td><span class="btn btn-outline btn-sm">Review</span></td>
+              <td>
+                <div class="action-group">
+                  <a class="btn btn-primary btn-sm"
+                     href="{{ url_for('approve_caretaker', account_id=c.account_id) }}"
+                     onclick="return confirm('Approve this caretaker application?');">Approve</a>
+                  <a class="btn btn-danger-outline btn-sm"
+                     href="{{ url_for('reject_caretaker', account_id=c.account_id) }}"
+                     onclick="return confirm('Deny this caretaker application?');">Deny</a>
+                </div>
+              </td>
             </tr>
             {% else %}
             <tr class="empty-row"><td colspan="4">No pending applications.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Assigned Caretakers</h3>
+        <table>
+          <thead><tr><th>Caretaker</th><th>Email</th><th>Resort</th><th>Status</th><th>Assigned On</th><th>Reset Password</th></tr></thead>
+          <tbody>
+            {% for c in assigned_caretakers | default([]) %}
+            <tr>
+              <td>{{ c.fullname }}</td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.resort_name }}</td>
+              <td><span class="pill {{ 'pill-active' if c.status == 'Active' else 'pill-cancelled' if c.status == 'Inactive' else 'pill-pending' }}">{{ c.status }}</span></td>
+              <td>{{ c.assigned_date.strftime('%b %d, %Y') if c.assigned_date else 'Not assigned' }}</td>
+              <td>
+                <form method="post" action="{{ url_for('reset_caretaker_password', account_id=c.account_id) }}" onsubmit="return confirm('Reset this caretaker password?');">
+                  <input name="new_password" type="password" minlength="8" placeholder="New password" required style="max-width:150px; padding:5px 8px; border:1px solid var(--border); border-radius:6px;">
+                  <button class="btn btn-outline btn-sm" type="submit">Reset</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr class="empty-row"><td colspan="6">No caretakers assigned yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>
