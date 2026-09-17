@@ -92,43 +92,52 @@
       <!-- STAT CARDS -->
       <section class="stats">
 
-        <div class="stat-card">
+        <button type="button" class="stat-card action-card" data-title="All Bookings" data-message="You clicked View All Bookings. You currently have {{ total_bookings }} booking record(s) in your account.">
           <div class="stat-top">
             <span class="stat-icon blue"><i class="fa-regular fa-calendar"></i></span>
             <span class="stat-label">Total Bookings</span>
           </div>
           <div class="stat-value">{{ total_bookings }}</div>
-          <a href="#" class="stat-link">View All Bookings</a>
-        </div>
+          <span class="stat-link">View All Bookings</span>
+        </button>
 
-        <div class="stat-card">
+        <button type="button" class="stat-card action-card" data-title="Upcoming Stays" data-message="You clicked View Upcoming. You currently have {{ upcoming_stays }} upcoming stay(s) scheduled.">
           <div class="stat-top">
             <span class="stat-icon orange"><i class="fa-regular fa-clock"></i></span>
             <span class="stat-label">Upcoming Stays</span>
           </div>
           <div class="stat-value">{{ upcoming_stays }}</div>
-          <a href="#" class="stat-link">View Upcoming</a>
-        </div>
+          <span class="stat-link">View Upcoming</span>
+        </button>
 
-        <div class="stat-card">
+        <button type="button" class="stat-card action-card" data-title="Completed Steps" data-message="You clicked View History. You have completed {{ completed_steps }} reservation step(s) so far.">
           <div class="stat-top">
             <span class="stat-icon green"><i class="fa-solid fa-circle-check"></i></span>
             <span class="stat-label">Completed Steps</span>
           </div>
           <div class="stat-value">{{ completed_steps }}</div>
-          <a href="#" class="stat-link">View History</a>
-        </div>
+          <span class="stat-link">View History</span>
+        </button>
 
-        <div class="stat-card">
+        <button type="button" class="stat-card action-card" data-title="Pending Payment" data-message="You clicked View Payment. You currently have {{ pending_payment }} pending payment item(s) that need attention.">
           <div class="stat-top">
             <span class="stat-icon gray"><i class="fa-regular fa-circle-question"></i></span>
             <span class="stat-label">Pending Payment</span>
           </div>
-          <div class="stat-value">{{pending_payment}}</div>
-          <a href="#" class="stat-link">View Payment</a>
-        </div>
+          <div class="stat-value">{{ pending_payment }}</div>
+          <span class="stat-link">View Payment</span>
+        </button>
         
       </section>
+
+      <div id="actionModal" class="action-modal" aria-hidden="true">
+        <div class="action-modal-content">
+          <button type="button" class="modal-close" aria-label="Close popup">&times;</button>
+          <div class="modal-badge">Dashboard Action</div>
+          <h3 id="modalTitle">Action</h3>
+          <p id="modalMessage">Details will appear here.</p>
+        </div>
+      </div>
 
       <!-- BOTTOM PANELS -->
       <section class="panels">
@@ -224,5 +233,36 @@
 
 </div>
 
+<script>
+  const modal = document.getElementById('actionModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const closeBtn = document.querySelector('.modal-close');
+
+  document.querySelectorAll('.action-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      modalTitle.textContent = card.dataset.title || 'Dashboard Action';
+      modalMessage.textContent = card.dataset.message || 'No details available.';
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+    });
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }
+</script>
 </body>
 </html>

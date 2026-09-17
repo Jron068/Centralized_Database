@@ -93,8 +93,6 @@ def verification():
     phone = request.form.get("phone")
     password = request.form.get("password")
     confirm_password = request.form.get("confirm_password")
-    resort_id = request.form.get("resort_id")
-
     if not fullname or not email or not phone:
         flash("Please complete all required fields.", "warning")
         return redirect(url_for("registration"))
@@ -135,101 +133,6 @@ def verification():
 
             session["otp_email"] = email
             return redirect(url_for("otp"))
-
-        elif role == "caretaker":
-            if not password or password != confirm_password:
-                flash("Passwords do not match or are missing.", "warning")
-                return redirect(url_for("registration"))
-
-            if not resort_id:
-                flash("Please select a resort.", "warning")
-                return redirect(url_for("registration"))
-
-            # Make sure the resort still exists and is still available
-            registration_owner_id = session.get("owner_id")
-            if not registration_owner_id:
-                cursor.execute(
-                    """
-                    SELECT o.owner_id
-                    FROM owners o
-                    JOIN accounts a ON a.account_id = o.account_id
-                    WHERE a.role = 'owner' AND a.account_status = 'Active'
-                    ORDER BY o.owner_id
-                    LIMIT 1
-                    """
-                )
-                admin_owner = cursor.fetchone()
-                registration_owner_id = admin_owner["owner_id"] if admin_owner else None
-
-            cursor.execute(
-                                """
-                                SELECT r.resort_id
-                                FROM resorts r
-                                JOIN owners o ON o.owner_id = r.owner_id
-                                JOIN accounts owner_account ON owner_account.account_id = o.account_id
-                                WHERE r.resort_id = %s
-                                    AND r.status = 'Active'
-                                    AND owner_account.role = 'owner'
-                                    AND owner_account.account_status = 'Active'
-                                    AND r.owner_id = %s
-                                """,
-                                (resort_id, registration_owner_id)
-            )
-            if not cursor.fetchone():
-                flash("Selected resort is no longer available.", "warning")
-                return redirect(url_for("registration"))
-
-            cursor.execute(
-                """
-                SELECT caretaker_id FROM caretakers
-                WHERE resort_id = %s AND status IN ('Active', 'Pending')
-                """,
-                (resort_id,)
-            )
-            if cursor.fetchone():
-                flash("This resort already has an active or pending caretaker.", "warning")
-                return redirect(url_for("registration"))
-
-            hashed_password = generate_password_hash(password)
-            cursor.execute(
-                """
-                INSERT INTO accounts
-                (fullname, email, password, role, account_status, is_verified, approval_status)
-                VALUES (%s, %s, %s, 'caretaker', 'Active', 0, 'Pending')
-                """,
-                (fullname, email, hashed_password)
-            )
-            account_id = cursor.lastrowid
-
-            # Status is 'Pending' until the owner/admin approves it
-            cursor.execute(
-                """
-                INSERT INTO caretakers (account_id, resort_id, assigned_date, status)
-                VALUES (%s, %s, %s, 'Pending')
-                """,
-                (account_id, resort_id, datetime.now())
-            )
-            conn.commit()
-
-            owner = get_owner_email_for_resort(resort_id, cursor)
-            cursor.execute("SELECT resort_name FROM resorts WHERE resort_id=%s", (resort_id,))
-            resort_row = cursor.fetchone()
-            resort_name = resort_row["resort_name"] if resort_row else "your resort"
-
-            if owner:
-                approve_link = url_for("approve_caretaker", account_id=account_id, _external=True)
-                send_email(
-                    to_email=owner["email"],
-                    subject=f"New Caretaker Application — {resort_name}",
-                    body_html=f"""
-                        <p>Hi {owner['fullname']},</p>
-                        <p><strong>{fullname}</strong> ({email}) applied as caretaker for <strong>{resort_name}</strong>.</p>
-                        <p><a href="{approve_link}">Approve Caretaker Application</a></p>
-                    """
-                )
-
-            flash("Caretaker application submitted. Awaiting owner approval.", "info")
-            return redirect(url_for("login"))
 
         flash("Invalid role selected.", "error")
         return redirect(url_for("registration"))
@@ -313,10 +216,126 @@ def caretaker_dashboard():
 def customer_dashboard():
     if session.get("role") != "customer":
         return redirect(url_for("login"))
-    return render_template(
-        "customer/customer_landingpage.html",
-        username=session.get("fullname", "Guest"),
-    )
+
+    account_id = session.get("account_id")
+    if not account_id:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT customer_id
+            FROM customers
+            WHERE account_id = %s
+            LIMIT 1
+            """,
+            (account_id,),
+        )
+        customer = cursor.fetchone()
+
+        if not customer:
+            return render_template(
+                "customer/customer_landingpage.html",
+                username=session.get("fullname", "Guest"),
+                total_bookings=0,
+                upcoming_stays=0,
+                completed_steps=0,
+                pending_payment=0,
+                upcoming_reservations=[],
+                recent_reservations=[],
+            )
+
+        customer_id = customer["customer_id"]
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total_bookings
+            FROM reservations
+            WHERE customer_id = %s
+            """,
+            (customer_id,),
+        )
+        total_bookings = cursor.fetchone()["total_bookings"] or 0
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS upcoming_stays
+            FROM reservations
+            WHERE customer_id = %s
+              AND check_in >= CURDATE()
+              AND reservation_status IN ('Pending', 'Confirmed', 'Approved')
+            """,
+            (customer_id,),
+        )
+        upcoming_stays = cursor.fetchone()["upcoming_stays"] or 0
+
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS completed_steps
+            FROM reservations
+            WHERE customer_id = %s
+              AND reservation_status = 'Completed'
+            """,
+            (customer_id,),
+        )
+        completed_steps = cursor.fetchone()["completed_steps"] or 0
+
+        cursor.execute(
+            """
+            SELECT COUNT(DISTINCT r.reservation_id) AS pending_payment
+            FROM reservations r
+            LEFT JOIN payments p ON p.reservation_id = r.reservation_id
+            WHERE r.customer_id = %s
+              AND (p.payment_status = 'Pending' OR p.payment_status IS NULL)
+            """,
+            (customer_id,),
+        )
+        pending_payment = cursor.fetchone()["pending_payment"] or 0
+
+        cursor.execute(
+            """
+            SELECT r.reservation_id, res.resort_name, r.check_in, r.check_out,
+                   r.guests, r.total_amount, r.reservation_status, r.created_at
+            FROM reservations r
+            JOIN resorts res ON res.resort_id = r.resort_id
+            WHERE r.customer_id = %s
+              AND r.check_in >= CURDATE()
+              AND r.reservation_status IN ('Pending', 'Confirmed', 'Approved')
+            ORDER BY r.check_in ASC
+            LIMIT 3
+            """,
+            (customer_id,),
+        )
+        upcoming_reservations = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT r.reservation_id, res.resort_name, r.reservation_status, r.created_at
+            FROM reservations r
+            JOIN resorts res ON res.resort_id = r.resort_id
+            WHERE r.customer_id = %s
+            ORDER BY r.created_at DESC
+            LIMIT 5
+            """,
+            (customer_id,),
+        )
+        recent_reservations = cursor.fetchall()
+
+        return render_template(
+            "customer/customer_landingpage.html",
+            username=session.get("fullname", "Guest"),
+            total_bookings=total_bookings,
+            upcoming_stays=upcoming_stays,
+            completed_steps=completed_steps,
+            pending_payment=pending_payment,
+            upcoming_reservations=upcoming_reservations,
+            recent_reservations=recent_reservations,
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 # NOTE: /owner-dashboard is now registered inside admin.py (admin_dashboard())
 # so that owners only see their own resorts/caretakers. Do not re-register

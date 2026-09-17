@@ -403,6 +403,100 @@ def reject_caretaker(account_id):
 
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/caretakers/<int:account_id>/update", methods=["POST"])
+@role_required("owner")
+def update_caretaker_account(account_id):
+    fullname = request.form.get("fullname", "").strip()
+    email = request.form.get("email", "").strip()
+    new_password = request.form.get("new_password", "").strip()
+
+    if not fullname or not email:
+        flash("Caretaker name and email are required.", "warning")
+        return redirect(url_for("admin_dashboard"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT a.account_id, a.email, a.fullname
+            FROM accounts a
+            JOIN caretakers c ON c.account_id = a.account_id
+            WHERE a.account_id = %s AND a.role = 'caretaker'
+            """,
+            (account_id,),
+        )
+        caretaker = cursor.fetchone()
+        if not caretaker:
+            flash("Caretaker account not found.", "danger")
+            return redirect(url_for("admin_dashboard"))
+
+        if email != caretaker["email"]:
+            cursor.execute("SELECT account_id FROM accounts WHERE email = %s AND account_id != %s", (email, account_id))
+            if cursor.fetchone():
+                flash("Another caretaker already uses this email.", "warning")
+                return redirect(url_for("admin_dashboard"))
+
+        if new_password and len(new_password) < 8:
+            flash("New password must be at least 8 characters.", "warning")
+            return redirect(url_for("admin_dashboard"))
+
+        if new_password:
+            cursor.execute(
+                "UPDATE accounts SET fullname = %s, email = %s, password = %s WHERE account_id = %s AND role = 'caretaker'",
+                (fullname, email, generate_password_hash(new_password), account_id),
+            )
+        else:
+            cursor.execute(
+                "UPDATE accounts SET fullname = %s, email = %s WHERE account_id = %s AND role = 'caretaker'",
+                (fullname, email, account_id),
+            )
+
+        conn.commit()
+        flash("Caretaker profile updated successfully.", "success")
+    except Exception:
+        conn.rollback()
+        flash("Caretaker profile could not be updated.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/caretakers/<int:account_id>/delete", methods=["POST"])
+@role_required("owner")
+def delete_caretaker_account(account_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT a.account_id
+            FROM accounts a
+            JOIN caretakers c ON c.account_id = a.account_id
+            WHERE a.account_id = %s AND a.role = 'caretaker'
+            """,
+            (account_id,),
+        )
+        if not cursor.fetchone():
+            flash("Caretaker account not found.", "danger")
+            return redirect(url_for("admin_dashboard"))
+
+        cursor.execute("DELETE FROM caretakers WHERE account_id = %s", (account_id,))
+        cursor.execute("DELETE FROM accounts WHERE account_id = %s AND role = 'caretaker'", (account_id,))
+        conn.commit()
+        flash("Caretaker deleted successfully.", "success")
+    except Exception:
+        conn.rollback()
+        flash("Caretaker could not be deleted.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/admin/caretakers/<int:account_id>/reset-password", methods=["POST"])
 @role_required("owner")
 def reset_caretaker_password(account_id):
