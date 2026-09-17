@@ -25,18 +25,18 @@
       </a>
 
       <p class="nav-label">My Bookings</p>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('customer_reservation') }}" class="nav-item">
         <i class="fa-regular fa-calendar-check"></i> My Reservation
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
         <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
       </a>
 
       <p class="nav-label">My Account</p>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('customer_profileSetting') }}" class="nav-item">
         <i class="fa-solid fa-gear"></i> Profile Setting
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
         <i class="fa-solid fa-lock"></i> Change Password
       </a>
 
@@ -44,7 +44,6 @@
       <a href="#" class="nav-item">
         <i class="fa-regular fa-circle-question"></i> Contact Support
       </a>
-
     </nav>
     <a class="logout" href="{{ url_for('login') }}" 
     style="margin-left:0px;

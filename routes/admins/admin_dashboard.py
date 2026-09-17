@@ -2,6 +2,7 @@ import calendar as calendar_lib
 from datetime import date, datetime, timedelta
 
 from flask import render_template, request, session, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
 from app import app
 from config import get_connection
 from models.decorators import role_required
@@ -17,8 +18,13 @@ def admin_dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+    selected_resort = request.args.get("resort_id", "").strip()
     try:
-        # Dashboard totals are shared across all owners.
+        selected_resort = int(selected_resort) if selected_resort else None
+    except ValueError:
+        selected_resort = None
+
+    try:
         cursor.execute(
             """
             SELECT resort_id, resort_name, status
@@ -29,25 +35,21 @@ def admin_dashboard():
         my_resorts = cursor.fetchall()
         resort_ids = [r["resort_id"] for r in my_resorts]
 
-        # Show all pending caretaker applications on the shared dashboard.
         cursor.execute(
             """
-            SELECT a.account_id, a.fullname, a.email, a.created_at,
-                   c.resort_id, r.resort_name
-            FROM accounts a
-            JOIN caretakers c ON c.account_id = a.account_id
-            JOIN resorts r ON r.resort_id = c.resort_id
-            WHERE a.role = 'caretaker'
-              AND a.approval_status = 'Pending'
-            ORDER BY a.created_at ASC
-                        """
+            SELECT resort_id, resort_name, status
+            FROM resorts
+            WHERE owner_id = %s
+            ORDER BY resort_name ASC
+            """,
+            (session.get("owner_id"),),
         )
-        pending_caretakers = cursor.fetchall()
+        owner_resorts = cursor.fetchall()
 
         cursor.execute(
             """
             SELECT a.account_id, a.fullname, a.email, c.status, c.assigned_date,
-                   r.resort_name
+                   r.resort_id, r.resort_name
             FROM caretakers c
             JOIN accounts a ON a.account_id = c.account_id
             JOIN resorts r ON r.resort_id = c.resort_id
@@ -55,6 +57,37 @@ def admin_dashboard():
             """
         )
         assigned_caretakers = cursor.fetchall()
+        taken_resort_ids = {row["resort_id"] for row in assigned_caretakers}
+
+        cursor.execute(
+            """
+            SELECT r.resort_id,
+                   r.resort_name,
+                   COUNT(DISTINCT res.reservation_id) AS total_bookings,
+                   COALESCE(SUM(CASE WHEN p.payment_status = 'Verified' THEN p.amount_paid ELSE 0 END), 0) AS total_revenue,
+                   COALESCE(SUM(CASE WHEN p.payment_status = 'Pending' THEN 1 ELSE 0 END), 0) AS pending_payments,
+                   COALESCE(MAX(a.fullname), 'Unassigned') AS caretaker_name
+            FROM resorts r
+            LEFT JOIN reservations res ON res.resort_id = r.resort_id
+            LEFT JOIN payments p ON p.reservation_id = res.reservation_id
+            LEFT JOIN caretakers c ON c.resort_id = r.resort_id AND c.status = 'Active'
+            LEFT JOIN accounts a ON a.account_id = c.account_id
+            WHERE r.owner_id = %s
+            GROUP BY r.resort_id, r.resort_name
+            ORDER BY r.resort_name ASC
+            """,
+            (session.get("owner_id"),),
+        )
+        resort_stats = cursor.fetchall()
+
+        owner_resort_ids = {row["resort_id"] for row in owner_resorts}
+        if selected_resort not in owner_resort_ids:
+            selected_resort = None
+
+        if selected_resort:
+            selected_resort_name = next((row["resort_name"] for row in resort_stats if row["resort_id"] == selected_resort), None)
+        else:
+            selected_resort_name = None
 
         # Defaults if this owner has no resorts yet
         total_bookings = 0
@@ -150,8 +183,12 @@ def admin_dashboard():
             "admin/admin.html",
             username=session.get("fullname"),
             resorts=my_resorts,
-            pending_caretakers=pending_caretakers,
+            owner_resorts=owner_resorts,
             assigned_caretakers=assigned_caretakers,
+            taken_resort_ids=taken_resort_ids,
+            selected_resort=selected_resort,
+            selected_resort_name=selected_resort_name,
+            resort_stats=resort_stats,
             total_bookings=total_bookings,
             total_revenue=total_revenue,
             pending_payment=pending_payment,
@@ -164,6 +201,92 @@ def admin_dashboard():
     finally:
         cursor.close()
         conn.close()
+
+@app.route("/admin/caretakers/create", methods=["POST"])
+@role_required("owner")
+def create_caretaker_account():
+    fullname = request.form.get("fullname", "").strip()
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "").strip()
+    resort_id = request.form.get("resort_id")
+
+    if not fullname or not email or not password or not resort_id:
+        flash("Please fill in all caretaker fields.", "warning")
+        return redirect(url_for("admin_dashboard"))
+
+    if len(password) < 8:
+        flash("Caretaker password must be at least 8 characters.", "warning")
+        return redirect(url_for("admin_dashboard"))
+
+    owner_id = session.get("owner_id")
+    if not owner_id:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT resort_id
+            FROM resorts
+            WHERE resort_id = %s AND owner_id = %s
+            """,
+            (resort_id, owner_id),
+        )
+        if not cursor.fetchone():
+            flash("Selected resort is not valid for your account.", "warning")
+            return redirect(url_for("admin_dashboard"))
+
+        cursor.execute(
+            "SELECT account_id FROM accounts WHERE email = %s",
+            (email,),
+        )
+        if cursor.fetchone():
+            flash("A caretaker account with this email already exists.", "warning")
+            return redirect(url_for("admin_dashboard"))
+
+        cursor.execute(
+            """
+            SELECT 1
+            FROM caretakers
+            WHERE resort_id = %s AND status IN ('Active', 'Pending')
+            LIMIT 1
+            """,
+            (resort_id,),
+        )
+        if cursor.fetchone():
+            flash("This resort already has an active or pending caretaker assigned.", "warning")
+            return redirect(url_for("admin_dashboard"))
+
+        hashed_password = generate_password_hash(password)
+        cursor.execute(
+            """
+            INSERT INTO accounts
+            (fullname, email, password, role, account_status, is_verified, approval_status, approved_by, approved_at)
+            VALUES (%s, %s, %s, 'caretaker', 'Active', 1, 'Approved', %s, NOW())
+            """,
+            (fullname, email, hashed_password, session.get("user_id")),
+        )
+        account_id = cursor.lastrowid
+
+        cursor.execute(
+            """
+            INSERT INTO caretakers (account_id, resort_id, assigned_date, status)
+            VALUES (%s, %s, NOW(), 'Active')
+            """,
+            (account_id, resort_id),
+        )
+        conn.commit()
+        flash(f"Caretaker account for {fullname} was created successfully.", "success")
+    except Exception as exc:
+        conn.rollback()
+        print("CREATE CARETAKER ERROR:", exc)
+        flash("Unable to create caretaker account right now.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
 
 
 #this is route for NAVBAR
@@ -329,7 +452,10 @@ def reports():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT resort_id, resort_name FROM resorts ORDER BY resort_name")
+        cursor.execute(
+            "SELECT resort_id, resort_name FROM resorts WHERE owner_id = %s ORDER BY resort_name",
+            (session.get("owner_id"),),
+        )
         report_resorts = cursor.fetchall()
         resort_filter = " AND r.resort_id = %s" if selected_resort else ""
         resort_params = [selected_resort] if selected_resort else []
@@ -582,7 +708,10 @@ def reviews():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT resort_id, resort_name FROM resorts ORDER BY resort_name")
+        cursor.execute(
+            "SELECT resort_id, resort_name FROM resorts WHERE owner_id = %s ORDER BY resort_name",
+            (session.get("owner_id"),),
+        )
         review_resorts = cursor.fetchall()
         resort_filter = " AND rv.resort_id = %s" if selected_resort else ""
         cursor.execute(

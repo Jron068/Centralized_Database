@@ -72,8 +72,6 @@
 
             <div class="account-type">
 
-                <!-- CUSTOMER -->
-
                 <label class="card">
 
                     <input type="radio" name="role" value="customer" checked>
@@ -91,55 +89,6 @@
                     </div>
 
                 </label>
-
-
-                <!-- CARETAKER -->
-
-                <label class="card">
-
-                    <input type="radio" name="role" value="caretaker">
-
-                    <div class="icon">
-                        <i class="fa-solid fa-house"></i>
-                    </div>
-
-                    <div>
-                        <h3>Caretaker</h3>
-
-                        <p>
-                            I want to manage resort operations.
-                        </p>
-                    </div>
-
-                </label>
-
-            </div>
-
-
-            <!-- RESORT SELECTION -->
-
-            <div class="form-group resort-box" id="resortBox">
-
-                <label>Select Resort Applying For</label>
-
-                <select name="resort_id" id="resortId">
-
-                    
-
-
-                    {% for resort in resorts %}
-
-                    <option value="{{ resort.resort_id }}" {% if resort.has_caretaker %}disabled{% endif %}>
-                        {{ resort.resort_name }}{% if resort.has_caretaker %} - caretaker already assigned{% endif %}
-                    </option>
-
-                    {% endfor %}
-
-                    {% if not resorts %}
-                    <option value="">No admin properties available</option>
-                    {% endif %}
-
-                </select>
 
             </div>
 
@@ -315,31 +264,10 @@
 
 <script>
 
-const customer = document.querySelector('input[value="customer"]');
-const caretaker = document.querySelector('input[value="caretaker"]');
-const resortBox = document.getElementById("resortBox");
 const registrationForm = document.querySelector("form");
 const passwordInput = document.querySelector('input[name="password"]');
 const confirmPasswordInput = document.querySelector('input[name="confirm_password"]');
 const checklistItems = document.querySelectorAll(".password-checklist li");
-
-function toggleResort(){
-
-    if(caretaker.checked){
-        resortBox.style.display = "block";
-        document.getElementById("resortId").required = true;
-    }
-    else{
-        resortBox.style.display = "none";
-        document.getElementById("resortId").required = false;
-    }
-
-}
-
-customer.addEventListener("change", toggleResort);
-caretaker.addEventListener("change", toggleResort);
-
-toggleResort();
 
 function updatePasswordChecklist(){
 
