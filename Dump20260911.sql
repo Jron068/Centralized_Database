@@ -1,355 +1,1211 @@
-CREATE DATABASE  IF NOT EXISTS `centralized_database` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `centralized_database`;
--- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: centralized_database
--- ------------------------------------------------------
--- Server version	8.0.46
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pansol Resorts — Explore Resorts{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/resorts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}"> {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width:220px;height:auto;">
+        </div>
+        <nav class="nav">
+          <a href="/customer_landingpage" class="nav-item">
+            <i class="fa-solid fa-grip"></i> DASHBOARD </a>
+          <p class="nav-label"> My Bookings </p>
+          <a href="{{ url_for('customer_reservation') }}" class="nav-item">
+            <i class="fa-regular fa-calendar-check"></i> My Reservation </a>
+          <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Payment History </a>
+          <p class="nav-label"> My Account </p>
+          <a href="{{ url_for('customer_profileSetting') }}" class="nav-item">
+            <i class="fa-solid fa-gear"></i> Profile Setting </a>
+          <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
+            <i class="fa-solid fa-lock"></i> Change Password </a>
+          <p class="nav-label"> Support </p>
+          <a href="#" class="nav-item">
+            <i class="fa-regular fa-circle-question"></i> Contact Support </a>
+        </nav>
+        <a class="logout" href="{{ url_for('login') }}" style="
+                margin-left:0;
+                display:flex;
+                align-items:center;
+                margin-top:170%;
+                color:#fff;
+                text-decoration:none;
+                opacity:.9;
+           "> &#8592; Log Out </a>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+          </div>
+          <nav class="topbar-links">
+            <a href="/customer_landingpage"> Home </a>
+            <a href="/customer_aboutpage"> About </a>
+            <a href="/resorts" class="active"> Resorts </a>
+            <a href="/customer_howitworks"> How it Works </a>
+          </nav>
+          <div class="topbar-user">
+            <i class="fa-regular fa-bell"></i>
+            <div class="avatar"></div>
+            <span>
+              {{ username }}
+            </span>
+          </div>
+        </header> {% block content %}
+        <div class="page-content">
+          <div class="pagehead">
+            <h1> Explore Resorts </h1>
+            <p> Find the perfect resort for your next getaway </p>
+          </div>
+          <div class="searchrow">
+            <div class="sfield grow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              <input type="text" placeholder="Search resort name or location...">
+            </div>
+            <div class="sfield">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M8 3v4M16 3v4M3 10h18" />
+              </svg>
+              <input type="text" placeholder="Check-in">
+            </div>
+            <div class="sfield">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M8 3v4M16 3v4M3 10h18" />
+              </svg>
+              <input type="text" placeholder="Check-out">
+            </div>
+            <div class="sfield">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              <select>
+                <option> 2 Guests </option>
+                <option> 4 Guests </option>
+                <option> 6+ Guests </option>
+              </select>
+            </div>
+            <button class="searchbtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg> Search </button>
+          </div>
+          <div class="cardrow-wrap">
+            <button class="scrollbtn left" id="scrollLeftBtn" type="button" aria-label="Previous resorts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </button>
+            <div class="cardrow" id="cardRow"></div>
+            <button class="scrollbtn right" id="scrollRightBtn" type="button" aria-label="Next resorts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
+          <div class="trust">
+            <div class="trust-item">
+              <div class="trust-ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2l3 6 7 1-5 5 1.5 7L12 18l-6.5 3L7 14 2 9l7-1z" />
+                </svg>
+              </div>
+              <div>
+                <b> Best Price Guarantee </b>
+                <span> Get the best rates </span>
+              </div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12l2 2 4-4" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </div>
+              <div>
+                <b> Easy Booking </b>
+                <span> Book in just a few clicks </span>
+              </div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" />
+                </svg>
+              </div>
+              <div>
+                <b> Trusted Reviews </b>
+                <span> Real feedback from guests </span>
+              </div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="10" width="18" height="10" rx="2" />
+                  <path d="M7 10V7a5 5 0 0110 0v3" />
+                </svg>
+              </div>
+              <div>
+                <b> Secure Payments </b>
+                <span> Safe and secure transactions </span>
+              </div>
+            </div>
+          </div>
+          <div class="detail" id="detailPanel">
+            <div class="drow">
+              <div>
+                <div class="heroimg" id="heroImg">
+                  <button class="heart active" id="heroHeart" onclick="toggleFav(currentId,true)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z" />
+                    </svg>
+                  </button>
+                  <button class="hero-book-btn checkbtn" type="button">Book Now</button>
+                </div>
+                <div class="thumbstrip" id="thumbStrip"></div>
+              </div>
+              
+            </div>
+            <div class="idblock">
+              <div class="idtop">
+                <h2 id="d-name"></h2>
+              </div>
+              <div class="id-loc" id="d-loc"></div>
+              <div class="id-rate" id="d-rate"></div>
+              <div class="id-price" id="d-price" style="font-weight:800;font-size:18px;margin:6px 0;"></div>
+              <div class="tags" id="d-tags"></div>
+              <p class="id-desc" id="d-desc"></p>
+              <div class="amheading"> Amenities </div>
+              <div class="amrow2" id="d-amrow"></div>
+            </div>
+            <div class="tabbar" id="tabbar">
+              <button class="tabbtn active" data-tab="overview" onclick="showTab('overview')"> Overview </button>
+              <button class="tabbtn" data-tab="amenities" onclick="showTab('amenities')"> Amenities </button>
+              <button class="tabbtn" data-tab="dates" onclick="showTab('dates')"> Available Dates </button>
+              <button class="tabbtn" data-tab="location" onclick="showTab('location')"> Location </button>
+              <button class="tabbtn" data-tab="reviews" onclick="showTab('reviews')"> Reviews <span id="tab-revcount"></span>
+              </button>
+              <button class="tabbtn" data-tab="policy" onclick="showTab('policy')"> Policy </button>
+            </div>
+            <div class="tabpane active" id="tab-overview">
+              <div class="ov3">
+                <div>
+                  <h4> About This Resort </h4>
+                  <p id="ov-desc"></p>
+                  <h4> Resort Hours </h4>
+                  <div class="hourrow" id="ov-hours"></div>
+                </div>
+                <div>
+                  <h4> Resort Gallery </h4>
+                  <div class="gal6" id="ov-gallery"></div>
+                  <button class="ghostbtn" onclick="openGallery()"> View All Photos </button>
+                </div>
+                <div>
+                  <h4> Resort Location </h4>
+                  <div class="minimap" id="ov-map"></div>
+                  <button class="ghostbtn" onclick="openDirections()"> Get Directions </button>
+                </div>
+              </div>
+            </div>
+            <div class="tabpane" id="tab-amenities">
+              <div class="amgrid" id="am-grid"></div>
+            </div>
+            <div class="tabpane" id="tab-dates">
+              <div class="strip" id="dayStrip"></div>
+              <div id="rangeList"></div>
+            </div>
+            <div class="tabpane" id="tab-location">
+              <div class="loc-grid2">
+                <div class="bigmap" id="bigMap"></div>
+                <div>
+                  <div class="addrcard">
+                    <h4> Address </h4>
+                    <p id="loc-addr"></p>
+                    <button class="dirbtn" onclick="openDirections()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 11l18-8-8 18-2-8-8-2z" />
+                      </svg> Get Directions </button>
+                  </div>
+                  <div class="addrcard">
+                    <h4> Nearby </h4>
+                    <div id="nearby"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tabpane" id="tab-reviews">
+              <div class="rev-summary">
+                <div class="rev-score">
+                  <b id="rv-avg"></b>
+                  <div class="rev-stars" id="rv-stars"></div>
+                  <span id="rv-count"></span>
+                </div>
+                <div id="rv-bars"></div>
+              </div>
+            </div>
+            <div class="tabpane" id="tab-policy">
+              <div class="terms-box" style="max-height:none;">
+                <h4 style="margin-top:0;">Terms and Conditions</h4>
+                <ol>
+                  <li>Pay your balance as you enter.</li>
+                  <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
+                  <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
+                    <ol>
+                      <li>If the accommodation date falls on weekdays or weekends, rebooking must fall on weekdays or weekends too.</li>
+                      <li>The rebooking schedule must be the same as the prior booked schedule.</li>
+                      <li>Additional charge of Php2,000.00 for weekdays/ Php5,000.00 for weekends upon rebooking.</li>
+                    </ol>
+                  </li>
+                  <li>In presence of any illegal activities or transactions like: illegal drugs, illegal trading, prostitution, etc., the management serves all the rights to terminate the accommodation without prior notice.</li>
+                  <li>The management will not be liable for any accidents, injuries or losses of belongings during accommodation.</li>
+                  <li>The client will be held liable for any damages to the property during the accommodation.</li>
+                  <li>When the number of person exceeds the resort's <strong>Max Pax</strong>, additional Php200.00 per head will be charged.</li>
+                  <li>Resort is pet-friendly but guest should be responsible on making sure that the pet has proper diaper and will not be allowed near the swimming pool area.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="revsection">
+            <div class="revsection-head">
+              <h3> What Guests Are Saying </h3>
+              <button class="writebtn"> Write a Review </button>
+            </div>
+            <div class="revgrid" id="revGrid"></div>
+            <button class="ghostbtn" id="viewAllRevBtn"> View All Reviews </button>
+          </div>
+        </div> {% endblock %}
+      </div>
+    </div>
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+<script>
 
---
--- Table structure for table `accounts`
---
+  /* ============================================================
+     BOOKING FLOW: package -> calendar -> terms -> form -> payment
+  ============================================================ */
+  let bookingState = {};
 
-DROP TABLE IF EXISTS `accounts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `accounts` (
-  `account_id` int NOT NULL AUTO_INCREMENT,
-  `fullname` varchar(150) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` enum('owner','customer','caretaker') NOT NULL,
-  `account_status` enum('Active','Inactive','Suspended') DEFAULT 'Active',
-  `is_verified` tinyint(1) DEFAULT '0',
-  `verification_code` varchar(10) DEFAULT NULL,
-  `verification_expiration` datetime DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `approval_status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
-  `approved_by` int DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
-  `requested_resort_id` int DEFAULT NULL,
-  PRIMARY KEY (`account_id`),
-  UNIQUE KEY `email` (`email`),
-  KEY `fk_requested_resort` (`requested_resort_id`),
-  CONSTRAINT `fk_requested_resort` FOREIGN KEY (`requested_resort_id`) REFERENCES `resorts` (`resort_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  const TOUR_PACKAGES = [
+    { id: 'day', label: 'Day Tour', hours: '8:00 AM – 5:00 PM' },
+    { id: 'night', label: 'Night Tour', hours: '6:00 PM – 6:00 AM' },
+    { id: '22_hour', label: '22-Hour Tour', hours: '2:00 PM – 12:00 NN (next day)' }
+  ];
 
---
--- Dumping data for table `accounts`
---
+  const EWALLETS = [
+    { id: 'gcash', label: 'GCash', account: '0917-000-0000 (Pansol Resorts)' },
+    { id: 'maya', label: 'Maya', account: '0918-000-0000 (Pansol Resorts)' },
+    { id: 'gotyme', label: 'GoTyme', account: '0919-000-0000 (Pansol Resorts)' }
+  ];
 
-LOCK TABLES `accounts` WRITE;
-/*!40000 ALTER TABLE `accounts` DISABLE KEYS */;
-INSERT INTO `accounts` VALUES (1,'Test Caretaker','caretaker@test.com','scrypt:32768:8:1$Tn6M5cB5P6Y3T8sA$e46dcb6d89b4c0d8d5f3f92a9c8b8e7d4f1b4a5d4d9a3b2c1d6e5f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6','caretaker','Active',1,NULL,NULL,'2026-08-06 04:51:00','Approved',NULL,'2026-08-06 12:51:00',NULL),(4,'Aron-John Castillo','aronjohncastillo098@gmail.com','scrypt:32768:8:1$V2hQlZHQCxRNI5IX$e2036475fd1f6e9fa0501561ca29542bea32527702382c56d5dec58757175714d249e96dcc1ae847163f824126ec71b6795f9d4d23580fbdc7407de458edb8e8','customer','Active',1,NULL,NULL,'2026-08-06 04:57:00','Pending',NULL,NULL,NULL),(9,'Owner One','owner1@pansol.com','scrypt:32768:8:1$V2hQlZHQCxRNI5IX$e2036475fd1f6e9fa0501561ca29542bea32527702382c56d5dec58757175714d249e96dcc1ae847163f824126ec71b6795f9d4d23580fbdc7407de458edb8e8','owner','Active',1,NULL,NULL,'2026-08-08 04:42:36','Approved',NULL,NULL,NULL),(10,'Owner Two','owner2@pansol.com','REPLACE_WITH_REAL_HASH_2','owner','Active',1,NULL,NULL,'2026-08-08 04:42:36','Approved',NULL,NULL,NULL),(11,'Owner Three','owner3@pansol.com','REPLACE_WITH_REAL_HASH_3','owner','Active',1,NULL,NULL,'2026-08-08 04:42:36','Approved',NULL,NULL,NULL),(12,'Aron-John Castillo','atcastillsso@ccc.edu.ph','scrypt:32768:8:1$7dK9mP2xQwR4tY8z$4f4c3f6c1d3e3d9b5f5c0d8e6a9f8c6d3e7b5f4a1c2d9e8f7b6c5d4e3f2a1b0','caretaker','Active',1,NULL,NULL,'2026-08-08 04:44:44','Approved',9,'2026-08-08 13:13:43',NULL),(13,'Aron-John Castillo','atcastillso@ccc.edu.ph','scrypt:32768:8:1$IkfWlj4cjukzZpzf$c80cdf3dc92645bf19e47dc90e780e191ea87dcf336435973fb529b131c221320a60d852fb7145716d348d74bb54b623a947ddb1ecbed658330c72c991631542','customer','Active',0,'728935','2026-08-08 19:31:16','2026-08-08 11:26:15','Pending',NULL,NULL,NULL),(14,'Aron-John Castillo','atcastilslo@ccc.edu.ph','scrypt:32768:8:1$trmHBq2kDH0giFNo$30a774bc15195319a6aef542a5e1dfd59fb6bbbaf584a27d950b12968606529262f5f617805ccb4b0f6d12595aba2907b795fe3ed14e2324b41bc7e3ffeccf33','customer','Active',1,NULL,NULL,'2026-08-08 11:29:55','Pending',NULL,NULL,NULL),(15,'Aron-John Castillo','aronjohncastilloo098@gmail.com','scrypt:32768:8:1$V7IKLcdAhOrPxs69$28b4e94768caebfb15379896f0c9c7267c826bd9e450d32e55fafc170e3f697042521cc003877266dd4c7031ac6d9ae323b0589899219c4bdefd33768ad595d3','customer','Active',1,NULL,NULL,'2026-08-12 11:58:45','Pending',NULL,NULL,NULL),(16,'Aron-John Castillo','aronjohncastillooo098@gmail.com','scrypt:32768:8:1$rgDu5KZzddOxpNQS$9667337dab3da5ab0cff9a9ee963ac333d677736744a92bbae4aa2a694eef9d734584675f3646464086c68902138729bb5a4155a701825e37ec3aa44eb0f1a60','caretaker','Active',1,NULL,NULL,'2026-08-12 12:10:04','Approved',9,'2026-08-12 20:10:40',NULL);
-/*!40000 ALTER TABLE `accounts` ENABLE KEYS */;
-UNLOCK TABLES;
+  // Optional add-on prices (PHP). Change WATER_PRICE to your actual price.
+  const LPG_PRICE = 150;
+  const WATER_PRICE = 50;
+  const EXTRA_PAX_PRICE = 200;
 
---
--- Table structure for table `caretakers`
---
+  // One formula used by the form AND the submit step, so totals always match.
+  function computeTotal(resort, opts) {
+    const o = opts || {};
+    return Number(resort.price || 0)
+      + (o.gas ? LPG_PRICE : 0)
+      + (Math.max(0, Number(o.waterQty) || 0) * WATER_PRICE)
+      + (Math.max(0, Number(o.extraPax) || 0) * EXTRA_PAX_PRICE);
+  }
 
-DROP TABLE IF EXISTS `caretakers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `caretakers` (
-  `caretaker_id` int NOT NULL AUTO_INCREMENT,
-  `account_id` int DEFAULT NULL,
-  `resort_id` int NOT NULL,
-  `assigned_date` datetime DEFAULT CURRENT_TIMESTAMP,
-  `status` enum('Pending','Active','Inactive') DEFAULT 'Pending',
-  PRIMARY KEY (`caretaker_id`),
-  UNIQUE KEY `account_id` (`account_id`),
-  KEY `fk_caretaker_resort` (`resort_id`),
-  CONSTRAINT `caretakers_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_caretaker_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_caretaker_resort` FOREIGN KEY (`resort_id`) REFERENCES `resorts` (`resort_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  function peso(n) {
+    return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
 
---
--- Dumping data for table `caretakers`
---
+  function confirmAction(message) {
+    return window.confirm(message);
+  }
 
-LOCK TABLES `caretakers` WRITE;
-/*!40000 ALTER TABLE `caretakers` DISABLE KEYS */;
-INSERT INTO `caretakers` VALUES (4,12,1,'2026-08-08 12:44:44','Active'),(5,16,2,'2026-08-12 20:10:04','Active');
-/*!40000 ALTER TABLE `caretakers` ENABLE KEYS */;
-UNLOCK TABLES;
+  function ensureModalStyles() {
+    if (document.getElementById('bookingModalStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'bookingModalStyles';
+    style.textContent = `
+      .booking-overlay{position:fixed;inset:0;background:rgba(15,20,18,.55);display:flex;align-items:center;justify-content:center;z-index:1500;padding:24px;}
+      .booking-modal{position:relative;background:#fff;border-radius:14px;width:min(760px,95vw);max-height:92vh;overflow-y:auto;padding:32px 32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
+      .booking-exit{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:none;background:#f1f1f1;font-size:20px;line-height:1;cursor:pointer;color:#333;}
+      .booking-exit:hover{background:#e2e2e2;}
+      .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
+      .pkg-card{border:2px solid #e0e0e0;border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;font-size:12.5px;color:#555;}
+      .pkg-card.selected{border-color:#1e7a45;background:#eaf7ef;}
+      .pkg-card b{display:block;margin-bottom:4px;font-size:14px;color:#1a1a1a;}
+      .agree-row{display:flex;align-items:flex-start;gap:8px;margin:16px 0;font-size:13px;background:#f7f7f5;padding:12px 14px;border-radius:8px;}
+      .agree-row input{margin-top:2px;}
+      .terms-box{max-height:320px;overflow-y:auto;border:1px solid #e2e2e2;border-radius:8px;padding:16px 18px;font-size:13px;background:#fafafa;line-height:1.5;}
+      .ewallet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+      .ewallet-card{border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12.5px;}
+      .ewallet-card.selected{border-color:#1e7a45;background:#eaf7ef;}
+      .qr-box{width:110px;height:110px;margin:8px auto;background:#fff;border:1px dashed #999;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#888;text-align:center;}
+    `;
+    document.head.appendChild(style);
+  }
 
---
--- Table structure for table `customers`
---
+  document.querySelector('.checkbtn').addEventListener('click', async function () {
+      const r = resorts.find(x => x.id === currentId);
+      if (!r) return;
+      if (!r.price) {
+          alert('This resort does not have a price set yet. Please contact support.');
+          return;
+      }
+      bookingState = { resort: r, package: null, agreedPackage: false, agreedTerms: false };
 
-DROP TABLE IF EXISTS `customers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `customers` (
-  `customer_id` int NOT NULL AUTO_INCREMENT,
-  `account_id` int DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`customer_id`),
-  UNIQUE KEY `account_id` (`account_id`),
-  CONSTRAINT `customers_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+      let bookedDates = new Set();
+      try {
+          const res = await fetch(`/resort_availability/${r.id}`);
+          const data = await res.json();
+          bookedDates = new Set(data.booked_dates || []);
+      } catch (err) {
+          bookedDates = new Set();
+      }
+      bookingState.bookedDates = bookedDates;
 
---
--- Dumping data for table `customers`
---
+      openBookingModal();
+  });
 
-LOCK TABLES `customers` WRITE;
-/*!40000 ALTER TABLE `customers` DISABLE KEYS */;
-INSERT INTO `customers` VALUES (1,4,'+639913295173','aronjohncastillo098@gmail.com'),(2,13,'(+63) 991 329 5173','atcastillso@ccc.edu.ph'),(3,14,'(+63) 991 329 5173','atcastilslo@ccc.edu.ph'),(4,15,'121121','aronjohncastilloo098@gmail.com'),(5,9,'1919',NULL);
-/*!40000 ALTER TABLE `customers` ENABLE KEYS */;
-UNLOCK TABLES;
+  function openBookingModal() {
+      ensureModalStyles();
+      const overlay = document.createElement('div');
+      overlay.id = 'bookingOverlay';
+      overlay.className = 'booking-overlay';
+      overlay.innerHTML = `
+        <div class="booking-modal">
+            <button class="booking-exit" type="button" onclick="requestCloseBookingModal()" aria-label="Close">&times;</button>
+            <div id="bookingModalBody"></div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      renderCalendarStep();
+  }
 
---
--- Table structure for table `messages`
---
+  function closeBookingModal() {
+      const el = document.getElementById('bookingOverlay');
+      if (el) el.remove();
+  }
 
-DROP TABLE IF EXISTS `messages`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `messages` (
-  `message_id` int NOT NULL AUTO_INCREMENT,
-  `sender_account` int NOT NULL,
-  `receiver_account` int NOT NULL,
-  `message` text,
-  `is_read` tinyint(1) DEFAULT '0',
-  `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`message_id`),
-  KEY `sender_account` (`sender_account`),
-  KEY `receiver_account` (`receiver_account`),
-  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_account`) REFERENCES `accounts` (`account_id`),
-  CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_account`) REFERENCES `accounts` (`account_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  function requestCloseBookingModal() {
+      if (confirmAction('Are you sure you want to cancel this booking? Any unsaved details will be lost.')) {
+          closeBookingModal();
+      }
+  }
 
---
--- Dumping data for table `messages`
---
+  function renderCalendarStep() {
+      const body = document.getElementById('bookingModalBody');
+      const r = bookingState.resort;
+      const minimumDate = new Date();
+      minimumDate.setHours(0, 0, 0, 0);
+      minimumDate.setDate(minimumDate.getDate() + 3);
+      const view = bookingState.calView || new Date(minimumDate.getFullYear(), minimumDate.getMonth(), 1);
+      bookingState.calView = view;
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const y = view.getFullYear(), m = view.getMonth();
+      const firstDow = new Date(y, m, 1).getDay();
+      const days = new Date(y, m + 1, 0).getDate();
+      const pkgReady = !!bookingState.package && bookingState.agreedPackage;
 
-LOCK TABLES `messages` WRITE;
-/*!40000 ALTER TABLE `messages` DISABLE KEYS */;
-/*!40000 ALTER TABLE `messages` ENABLE KEYS */;
-UNLOCK TABLES;
+      let cells = '';
+      for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+      for (let d = 1; d <= days; d++) {
+          const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const cellDate = new Date(y, m, d);
+          const isTooSoon = cellDate < minimumDate;
+          const isBooked = bookingState.bookedDates.has(dateStr);
+          const unavailable = isTooSoon || isBooked || !pkgReady;
+          cells += `<div class="cal-cell ${isTooSoon ? 'too-soon' : (isBooked ? 'booked' : 'avail')}" data-date="${dateStr}" style="text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:${unavailable ? 'not-allowed' : 'pointer'};opacity:${pkgReady ? 1 : 0.45};background:${isTooSoon ? '#eeeeee' : (isBooked ? '#fbe4e4' : '#e4f5e9')};color:${isTooSoon ? '#999999' : (isBooked ? '#9a2f2f' : '#1e7a45')};">${d}</div>`;
+      }
 
---
--- Table structure for table `notifications`
---
+      body.innerHTML = `
+          <h3 style="margin:0 0 4px;">${r.name} — Book Your Stay</h3>
+          <p style="margin:0 0 10px;font-size:13px;color:#888;">Step 1 of 4 — Package &amp; Date</p>
 
-DROP TABLE IF EXISTS `notifications`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `notifications` (
-  `notification_id` int NOT NULL AUTO_INCREMENT,
-  `account_id` int NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `message` text,
-  `type` varchar(50) DEFAULT NULL,
-  `is_read` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`notification_id`),
-  KEY `account_id` (`account_id`),
-  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+          <div style="font-size:13px;font-weight:600;">Select Tour Package</div>
+          <div class="pkg-grid" id="pkgGrid">
+            ${TOUR_PACKAGES.map(p => `
+              <div class="pkg-card ${bookingState.package === p.id ? 'selected' : ''}" data-pkg="${p.id}">
+                <b>${p.label}</b>${p.hours}
+              </div>`).join('')}
+          </div>
 
---
--- Dumping data for table `notifications`
---
+          <label class="agree-row">
+            <input type="checkbox" id="pkgAgree" ${bookingState.agreedPackage ? 'checked' : ''}>
+            <span>I have selected my preferred tour package and understood its schedule.</span>
+          </label>
 
-LOCK TABLES `notifications` WRITE;
-/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
-INSERT INTO `notifications` VALUES (1,15,'Reservation approved','Your reservation #RSV-8 has been approved.','reservation_approved',1,'2026-09-11 08:40:29');
-/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
-UNLOCK TABLES;
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px;">
+              <button id="calPrev">‹</button>
+              <span>${monthNames[m]} ${y}</span>
+              <button id="calNext">›</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">${cells}</div>
+          <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:#666;">
+              <div><span style="display:inline-block;width:10px;height:10px;background:#e4f5e9;border-radius:2px;margin-right:4px;"></span>Available</div>
+              <div><span style="display:inline-block;width:10px;height:10px;background:#fbe4e4;border-radius:2px;margin-right:4px;"></span>Booked</div>
+          </div>
+          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice.${pkgReady ? '' : ' <strong>Select a package and check the box above to pick a date.</strong>'}</p>
+          <div id="calMsg" style="display:none;margin-top:12px;padding:10px;background:#fbe4e4;color:#9a2f2f;border-radius:8px;font-size:13px;"></div>
+          <button onclick="requestCloseBookingModal()" style="margin-top:16px;width:100%;">Cancel</button>
+      `;
 
---
--- Table structure for table `owners`
---
+      document.getElementById('calPrev').onclick = () => { view.setMonth(view.getMonth()-1); renderCalendarStep(); };
+      document.getElementById('calNext').onclick = () => { view.setMonth(view.getMonth()+1); renderCalendarStep(); };
+      const isMinimumMonth = view.getFullYear() === minimumDate.getFullYear() && view.getMonth() === minimumDate.getMonth();
+      document.getElementById('calPrev').disabled = isMinimumMonth;
 
-DROP TABLE IF EXISTS `owners`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `owners` (
-  `owner_id` int NOT NULL AUTO_INCREMENT,
-  `account_id` int DEFAULT NULL,
-  PRIMARY KEY (`owner_id`),
-  UNIQUE KEY `account_id` (`account_id`),
-  CONSTRAINT `owners_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+      body.querySelectorAll('.pkg-card').forEach(card => {
+          card.addEventListener('click', () => {
+              bookingState.package = card.dataset.pkg;
+              renderCalendarStep();
+          });
+      });
+      document.getElementById('pkgAgree').addEventListener('change', (e) => {
+          bookingState.agreedPackage = e.target.checked;
+          renderCalendarStep();
+      });
 
---
--- Dumping data for table `owners`
---
+      body.querySelectorAll('.cal-cell').forEach(cell => {
+          cell.addEventListener('click', () => {
+              if (!pkgReady) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'Please select a tour package and check the box first.';
+                  return;
+              }
+              const dateStr = cell.dataset.date;
+              if (cell.classList.contains('too-soon')) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'Reservations must be made at least 3 days in advance.';
+              } else if (cell.classList.contains('booked')) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'SORRY, BUT THIS DATE IS NOT AVAILABLE.';
+              } else {
+                  bookingState.checkIn = dateStr;
+                  const d = new Date(dateStr);
+                  d.setDate(d.getDate() + 1);
+                  bookingState.checkOut = d.toISOString().split('T')[0];
+                  renderTermsStep();
+              }
+          });
+      });
+  }
 
-LOCK TABLES `owners` WRITE;
-/*!40000 ALTER TABLE `owners` DISABLE KEYS */;
-INSERT INTO `owners` VALUES (1,9),(2,10),(3,11);
-/*!40000 ALTER TABLE `owners` ENABLE KEYS */;
-UNLOCK TABLES;
+  function renderTermsStep() {
+      const body = document.getElementById('bookingModalBody');
+      body.innerHTML = `
+        <h3 style="margin:0 0 4px;">Terms and Conditions</h3>
+        <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 2 of 4 — Please review our policy before continuing</p>
+        <div class="terms-box">
+          <ol>
+            <li>Pay your balance as you enter.</li>
+            <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
+            <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
+              <ol>
+                <li>If the accommodation date falls on weekdays or weekends, rebooking must fall on weekdays or weekends too.</li>
+                <li>The rebooking schedule must be the same as the prior booked schedule.</li>
+                <li>Additional charge of Php2,000.00 for weekdays/ Php5,000.00 for weekends upon rebooking.</li>
+              </ol>
+            </li>
+            <li>In presence of any illegal activities or transactions like: illegal drugs, illegal trading, prostitution, etc., the management serves all the rights to terminate the accommodation without prior notice.</li>
+            <li>The management will not be liable for any accidents, injuries or losses of belongings during accommodation.</li>
+            <li>The client will be held liable for any damages to the property during the accommodation.</li>
+            <li>When the number of person exceeds the resort's <strong>Max Pax</strong>, additional Php200.00 per head will be charged.</li>
+            <li>Resort is pet-friendly but guest should be responsible on making sure that the pet has proper diaper and will not be allowed near the swimming pool area.</li>
+          </ol>
+        </div>
+        <label class="agree-row">
+          <input type="checkbox" id="termsAgree">
+          <span>I have read and fully agree to the Terms and Conditions above.</span>
+        </label>
+        <div style="display:flex;gap:10px;">
+          <button onclick="renderCalendarStep()" style="flex:1;">Back</button>
+          <button id="termsNext" style="flex:1;" disabled>Agree &amp; Continue</button>
+        </div>
+        <button onclick="requestCloseBookingModal()" style="margin-top:10px;width:100%;">Cancel</button>
+      `;
+      const chk = document.getElementById('termsAgree');
+      const nextBtn = document.getElementById('termsNext');
+      chk.addEventListener('change', () => { nextBtn.disabled = !chk.checked; });
+      nextBtn.onclick = () => {
+          if (!chk.checked) return;
+          bookingState.agreedTerms = true;
+          renderFormStep();
+      };
+  }
 
---
--- Table structure for table `payments`
---
+  function renderFormStep() {
+      const body = document.getElementById('bookingModalBody');
+      const maxPax = bookingState.resort.maxPax || 15;
+      const pkg = TOUR_PACKAGES.find(p => p.id === bookingState.package);
+      body.innerHTML = `
+        <div class="receipt-container">
+          <h3 style="margin:0 0 4px;">Reservation Details</h3>
+          <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 3 of 4 — ${pkg ? pkg.label + ' · ' + pkg.hours : ''}</p>
 
-DROP TABLE IF EXISTS `payments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `payments` (
-  `payment_id` int NOT NULL AUTO_INCREMENT,
-  `reservation_id` int NOT NULL,
-  `proof_of_payment` varchar(255) DEFAULT NULL,
-  `reference_number` varchar(100) DEFAULT NULL,
-  `amount_paid` decimal(10,2) DEFAULT NULL,
-  `payment_status` enum('Pending','Verified','Rejected') DEFAULT 'Pending',
-  `payment_date` datetime DEFAULT NULL,
-  PRIMARY KEY (`payment_id`),
-  KEY `reservation_id` (`reservation_id`),
-  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`reservation_id`) REFERENCES `reservations` (`reservation_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+          <div class="receipt-row"><span class="receipt-label">Reservation Date</span><span class="receipt-dots">${bookingState.checkIn}</span></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfName">Name</label><input class="receipt-input" type="text" id="bfName" autocomplete="name"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfAddress">Address</label><input class="receipt-input" type="text" id="bfAddress" autocomplete="street-address"></div>
 
---
--- Dumping data for table `payments`
---
+          <div class="receipt-space"></div>
 
-LOCK TABLES `payments` WRITE;
-/*!40000 ALTER TABLE `payments` DISABLE KEYS */;
-INSERT INTO `payments` VALUES (1,4,'uploads/payments/0e8ff1a3773e4065a380ea7865541154.png',NULL,150.00,'Pending','2026-09-11 15:49:17'),(2,5,'uploads/payments/43c2b63cfca74458a689352e4ffed8de.jpg',NULL,150.00,'Pending','2026-09-11 16:17:08'),(3,6,'uploads/payments/eded620f647c471391f16d489928e039.jpg',NULL,150.00,'Pending','2026-09-11 16:28:41'),(4,7,'uploads/payments/f00826eef991401896bd33057c559dad.png',NULL,150.00,'Pending','2026-09-11 16:33:48'),(5,8,'uploads/payments/8c24bb6964e9444ea061f4675a207f8b.png',NULL,150.00,'Verified','2026-09-11 16:36:06');
-/*!40000 ALTER TABLE `payments` ENABLE KEYS */;
-UNLOCK TABLES;
+          <div class="receipt-row"><label class="receipt-label" for="bfPhone">Contact No.</label><input class="receipt-input" type="tel" id="bfPhone" autocomplete="tel"></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${bookingState.checkOut}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Resort Price (fixed, includes ${maxPax} pax)</span><span class="receipt-dots">${peso(bookingState.resort.price)}</span></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfExtraPax">Additional Pax (+₱${EXTRA_PAX_PRICE}/head)</label><input class="receipt-input" type="number" id="bfExtraPax" min="0" step="1" value="0"></div>
+          <div class="receipt-row"><span class="receipt-label">Total No. of Person</span><input class="receipt-input" type="text" id="bfPax" value="${maxPax}" readonly></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">LPG (Optional, +₱${LPG_PRICE})</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfGas" aria-label="LPG (Optional)"></span></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">Mineral Water (Optional, +₱${WATER_PRICE})</span><input class="receipt-input" type="number" id="bfWater" min="0" step="1" value="0" aria-label="Mineral Water quantity"></div>
 
---
--- Table structure for table `reservations`
---
+          <div class="receipt-space"></div>
 
-DROP TABLE IF EXISTS `reservations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `reservations` (
-  `reservation_id` int NOT NULL AUTO_INCREMENT,
-  `customer_id` int NOT NULL,
-  `resort_id` int NOT NULL,
-  `check_in` date DEFAULT NULL,
-  `check_out` date DEFAULT NULL,
-  `guests` int DEFAULT NULL,
-  `total_amount` decimal(10,2) DEFAULT NULL,
-  `reservation_status` enum('Pending','Confirmed','Cancelled','Completed','Rejected') DEFAULT 'Pending',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `guest_name` varchar(150) DEFAULT NULL,
-  `guest_phone` varchar(20) DEFAULT NULL,
-  `pax` int DEFAULT NULL,
-  `gas_stove` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`reservation_id`),
-  KEY `customer_id` (`customer_id`),
-  KEY `resort_id` (`resort_id`),
-  CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`),
-  CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`resort_id`) REFERENCES `resorts` (`resort_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+          <div class="receipt-row"><span class="receipt-label">Total Contract Amount (PHP)</span><input class="receipt-input" type="text" id="bfTotal" readonly></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Down payment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" min="0"></div>
+          <div class="receipt-row"><span class="receipt-label">Balance Amount (PHP)</span><input class="receipt-input" type="text" id="bfBalance" readonly></div>
 
---
--- Dumping data for table `reservations`
---
+          <div class="receipt-space"></div>
 
-LOCK TABLES `reservations` WRITE;
-/*!40000 ALTER TABLE `reservations` DISABLE KEYS */;
-INSERT INTO `reservations` VALUES (1,4,5,'2026-05-27','2026-05-28',2,0.00,'Pending','2026-09-11 07:03:58',NULL,NULL,NULL,0),(2,4,5,'2026-05-27','2026-05-28',2,0.00,'Pending','2026-09-11 07:13:12',NULL,NULL,NULL,0),(3,4,5,'2026-05-27','2026-05-28',2,0.00,'Pending','2026-09-11 07:21:12',NULL,NULL,NULL,0),(4,4,5,'2026-05-08','2026-05-09',1,150.00,'Pending','2026-09-11 07:48:37','Aron-John Castillo','09196281147',1,1),(5,4,4,'2026-05-28','2026-05-29',3,150.00,'Pending','2026-09-11 08:17:01','dadsd','09196281147',3,1),(6,5,5,'2026-05-01','2026-05-02',1,150.00,'Pending','2026-09-11 08:28:34','dadsd','125919',1,1),(7,5,5,'2026-05-21','2026-05-22',2,150.00,'Pending','2026-09-11 08:33:42','adadf','1919',2,1),(8,4,5,'2026-05-15','2026-05-16',12,150.00,'Confirmed','2026-09-11 08:35:55','adadf','121121',12,1);
-/*!40000 ALTER TABLE `reservations` ENABLE KEYS */;
-UNLOCK TABLES;
+          <div class="receipt-row"><label class="receipt-label" for="bfMarketer">Marketer/ Contact no.</label><input class="receipt-input" type="text" id="bfMarketer"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfCaretaker">Caretaker/ Contact no.</label><input class="receipt-input" type="text" id="bfCaretaker"></div>
 
---
--- Table structure for table `resorts`
---
+          <div class="receipt-agreement">I, <span id="receiptClientName" class="receipt-agreement-line"></span> confirm the details above are accurate and I already agreed to the Terms and Conditions.</div>
 
-DROP TABLE IF EXISTS `resorts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `resorts` (
-  `resort_id` int NOT NULL AUTO_INCREMENT,
-  `owner_id` int NOT NULL,
-  `caretaker_id` int DEFAULT NULL,
-  `resort_name` varchar(150) NOT NULL,
-  `address` text,
-  `description` text,
-  `email` varchar(150) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `logo` varchar(255) DEFAULT NULL,
-  `amenities` text,
-  `status` enum('Active','Inactive') DEFAULT 'Active',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`resort_id`),
-  KEY `owner_id` (`owner_id`),
-  KEY `caretaker_id` (`caretaker_id`),
-  CONSTRAINT `resorts_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `owners` (`owner_id`),
-  CONSTRAINT `resorts_ibfk_2` FOREIGN KEY (`caretaker_id`) REFERENCES `caretakers` (`caretaker_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+          <div id="bfErr" class="receipt-error"></div>
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <button onclick="renderTermsStep()" style="flex:1;">Back</button>
+            <button onclick="requestCloseBookingModal()" style="flex:1;">Cancel</button>
+          </div>
+          <button id="bfNext" class="receipt-action" style="margin-top:10px;">Continue to Payment</button>
+        </div>
+      `;
 
---
--- Dumping data for table `resorts`
---
+        const totalField = document.getElementById('bfTotal');
+        const balanceField = document.getElementById('bfBalance');
+        const downPaymentField = document.getElementById('bfDownPayment');
+        const gasField = document.getElementById('bfGas');
+        const waterField = document.getElementById('bfWater');
+        const paxField = document.getElementById('bfPax');
+        const extraPaxField = document.getElementById('bfExtraPax');
 
-LOCK TABLES `resorts` WRITE;
-/*!40000 ALTER TABLE `resorts` DISABLE KEYS */;
-INSERT INTO `resorts` VALUES (1,1,NULL,'TRIPLE Z RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36'),(2,1,NULL,'SUNSCAPE RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36'),(3,2,NULL,'LUCKY MIELS RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36'),(4,2,NULL,'MAGIC KINGDOM RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36'),(5,3,NULL,'GALLELY RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36'),(6,3,NULL,'RENALYN RESORT',NULL,NULL,NULL,NULL,NULL,NULL,'Active','2026-08-08 04:42:36');
-/*!40000 ALTER TABLE `resorts` ENABLE KEYS */;
-UNLOCK TABLES;
+        const waterQty = () => Math.max(0, Math.floor(Number(waterField.value) || 0));
 
---
--- Table structure for table `reviews`
---
+        const updateAmounts = () => {
+          const extraPax = Math.max(0, Math.floor(Number(extraPaxField.value) || 0));
+          paxField.value = maxPax + extraPax;
+          const total = computeTotal(bookingState.resort, {
+            gas: gasField.checked,
+            waterQty: waterQty(),
+            extraPax: extraPax
+          });
+          const downPayment = Number(downPaymentField.value) || 0;
+          totalField.value = total.toFixed(2);
+          balanceField.value = Math.max(0, total - downPayment).toFixed(2);
+        };
+        downPaymentField.addEventListener('input', updateAmounts);
+        gasField.addEventListener('change', updateAmounts);
+        waterField.addEventListener('input', updateAmounts);
+        extraPaxField.addEventListener('input', updateAmounts);
+        updateAmounts();
 
-DROP TABLE IF EXISTS `reviews`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `reviews` (
-  `review_id` int NOT NULL AUTO_INCREMENT,
-  `customer_id` int NOT NULL,
-  `resort_id` int NOT NULL,
-  `rating` int DEFAULT NULL,
-  `comment` text,
-  `review_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`review_id`),
-  KEY `customer_id` (`customer_id`),
-  KEY `resort_id` (`resort_id`),
-  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`),
-  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`resort_id`) REFERENCES `resorts` (`resort_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+        document.getElementById('bfName').addEventListener('input', event => {
+          document.getElementById('receiptClientName').textContent = event.target.value;
+        });
 
---
--- Dumping data for table `reviews`
---
+      document.getElementById('bfNext').onclick = () => {
+          const name = document.getElementById('bfName').value.trim();
+          const phone = document.getElementById('bfPhone').value.trim();
+          const pax = document.getElementById('bfPax').value.trim();
+          const err = document.getElementById('bfErr');
+          if (!name || !phone || !pax) {
+              err.textContent = 'Fill in your name, phone number, and pax.';
+              err.style.display = 'block';
+              return;
+          }
+          if (!confirmAction('Are you sure all details are correct? You will proceed to payment next.')) return;
+          bookingState.guestName = name;
+          bookingState.guestPhone = phone;
+          bookingState.pax = pax;
+          bookingState.extraPax = Number(extraPaxField.value) || 0;
+          bookingState.gasStove = document.getElementById('bfGas').checked;
+          bookingState.mineralWater = waterQty();
+          submitReservation();
+      };
+  }
 
-LOCK TABLES `reviews` WRITE;
-/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+  async function submitReservation() {
+      const r = bookingState.resort;
+      const total = computeTotal(r, {
+        gas: bookingState.gasStove,
+        waterQty: bookingState.mineralWater,
+        extraPax: bookingState.extraPax
+      });
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+      const fd = new FormData();
+      fd.append('resort_id', r.id);
+      fd.append('check_in', bookingState.checkIn);
+      fd.append('check_out', bookingState.checkOut);
+      fd.append('tour_type', bookingState.package);
+      fd.append('guest_name', bookingState.guestName);
+      fd.append('guest_phone', bookingState.guestPhone);
+      fd.append('pax', bookingState.pax);
+      fd.append('extra_pax', bookingState.extraPax || 0);
+      fd.append('gas_stove', bookingState.gasStove);
+      fd.append('mineral_water', bookingState.mineralWater);
+      fd.append('total_amount', total);
 
--- Dump completed on 2026-09-11 17:13:59
+      try {
+          const res = await fetch('/book_resort', { method: 'POST', body: fd });
+          const data = await res.json();
+
+          if (data.success) {
+              bookingState.reservationId = data.reservation_id;
+              renderPaymentStep(Number(data.total_amount) || total);
+          } else if (res.status === 401) {
+              window.location.href = '/login';
+          } else {
+              alert(data.message || 'Booking failed.');
+          }
+      } catch (err) {
+          alert('Something went wrong. Please try again.');
+      }
+  }
+
+  function renderPaymentStep(total) {
+      const body = document.getElementById('bookingModalBody');
+      body.innerHTML = `
+          <h3 style="margin:0 0 4px;">Payment — ₱${total.toLocaleString()}</h3>
+          <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 4 of 4 — Choose how you'd like to pay</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+              <button class="payMethod" data-m="Bank transfer" style="height:60px;">Bank transfer</button>
+              <button class="payMethod" data-m="E-wallet" style="height:60px;">E-wallet</button>
+          </div>
+          <div id="ewalletSection" style="display:none;">
+            <div style="font-size:13px;font-weight:600;margin-top:10px;">Select your e-wallet</div>
+            <div class="ewallet-grid" id="ewalletGrid">
+              ${EWALLETS.map(w => `
+                <div class="ewallet-card" data-w="${w.id}">
+                  <b>${w.label}</b>
+                  <div class="qr-box">${w.label}<br>QR Code</div>
+                  <div style="font-size:11px;color:#666;">${w.account}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div id="proofSection" style="display:none;margin-top:14px;">
+              <p style="font-size:13px;color:#555;">Upload a screenshot of your successful payment.</p>
+              <input type="file" id="proofFile" accept="image/*" style="width:100%;margin-bottom:8px;">
+              <div id="proofErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
+              <button id="submitProof" style="width:100%;">Submit for review</button>
+          </div>
+          <button onclick="renderFormStep()" style="margin-top:14px;width:100%;">Back</button>
+          <button onclick="requestCloseBookingModal()" style="margin-top:8px;width:100%;">Cancel</button>
+      `;
+      let method = null;
+      let ewallet = null;
+      body.querySelectorAll('.payMethod').forEach(b => {
+          b.addEventListener('click', () => {
+              method = b.dataset.m;
+              const showEwallet = method === 'E-wallet';
+              document.getElementById('ewalletSection').style.display = showEwallet ? 'block' : 'none';
+              document.getElementById('proofSection').style.display = showEwallet ? (ewallet ? 'block' : 'none') : 'block';
+          });
+      });
+      body.querySelectorAll('.ewallet-card').forEach(card => {
+          card.addEventListener('click', () => {
+              ewallet = card.dataset.w;
+              body.querySelectorAll('.ewallet-card').forEach(c => c.classList.toggle('selected', c === card));
+              document.getElementById('proofSection').style.display = 'block';
+          });
+      });
+      document.getElementById('submitProof').onclick = async () => {
+          const fileInput = document.getElementById('proofFile');
+          const err = document.getElementById('proofErr');
+          if (!fileInput.files.length || !method || (method === 'E-wallet' && !ewallet)) {
+              err.textContent = 'Choose a payment method (and e-wallet, if applicable) and upload your screenshot.';
+              err.style.display = 'block';
+              return;
+          }
+          if (!confirmAction('Are you sure you want to submit this payment for review?')) return;
+          const walletLabel = EWALLETS.find(w => w.id === ewallet)?.label || ewallet;
+          const fd = new FormData();
+          fd.append('reservation_id', bookingState.reservationId);
+          fd.append('payment_method', method === 'E-wallet' ? `E-wallet (${walletLabel})` : method);
+          fd.append('amount_paid', total);
+          fd.append('proof', fileInput.files[0]);
+
+          try {
+              const res = await fetch('/submit_payment', { method: 'POST', body: fd });
+              const data = await res.json();
+              if (data.success) {
+                  document.getElementById('bookingModalBody').innerHTML = `
+                      <h3>Booking sent for review</h3>
+                      <p style="font-size:13px;color:#555;">The admin will confirm once your payment screenshot is checked.</p>
+                      <button onclick="closeBookingModal(); window.location.href='/customer_reservation'" style="width:100%;margin-top:10px;">Go to my reservations</button>
+                  `;
+              } else {
+                  err.textContent = data.message || 'Upload failed.';
+                  err.style.display = 'block';
+              }
+          } catch (e) {
+              err.textContent = 'Something went wrong. Please try again.';
+              err.style.display = 'block';
+          }
+      };
+  }
+
+  /* ============================================================
+     ICONS
+  ============================================================ */
+  const ic = {
+    pool: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 18c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0"/><path d="M4 13V6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v5"/></svg>`,
+    wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a11 11 0 0114 0M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19" r="1"/></svg>`,
+    park: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 16V8h3.5a2.5 2.5 0 010 5H9"/></svg>`,
+    kitchen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v7M4 3l1.5 1.5M4 3l-1.5 1.5M4 10v11M20 3s-3 1-3 6v12"/></svg>`,
+    mic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4"/></svg>`,
+    bbq: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8 6c0-2 1.5-3 1-4M12 5c0-2 1.5-3 1-4M16 6c0-2 1.5-3 1-4"/></svg>`,
+    slide: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20c8-2 6-16 14-16M4 20h6M14 12l6 8"/></svg>`,
+    hall: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg>`,
+    restaurant: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v9a2 2 0 002 2v9M6 2v6M9 2v6M6 8h3M18 2v20M18 2c-2 0-3 2-3 5s1 5 3 5"/></svg>`,
+    cottage: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>`,
+    store: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v11h16V9M4 9h16"/></svg>`,
+    river: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/><path d="M3 12c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/><path d="M3 18c3 0 3 3 6 3s3-3 6-3 3 3 6 3"/></svg>`,
+    clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+    moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3 6.8 6.8 0 0021 12.5z"/></svg>`,
+    calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>`,
+    pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>`,
+    star: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z"/></svg>`
+  };
+
+  function stars(n) {
+    let s = '';
+    for (let i = 0; i < 5; i++) {
+      s += `<span style="opacity:${i < Math.round(n) ? 1 : 0.28}">${ic.star}</span>`;
+    }
+    return s;
+  }
+
+  function scene(variant, angle) {
+    const w = 800;
+    const h = 500;
+    const shift = Math.sin(angle * Math.PI / 180) * 40;
+    const sunX = 620 - (angle % 360) / 360 * 500;
+    const palette = {
+      villa: { water: '#1E8F5B', water2: '#176F45', roof: '#0B4A30', accent: '#E0A233' },
+      family: { water: '#2E9E63', water2: '#1E7A4C', roof: '#123B27', accent: '#E7B24B' },
+      cottage: { water: '#238F5F', water2: '#186B47', roof: '#5A3A1E', accent: '#E0A233' },
+      waterpark: { water: '#1C8FA0', water2: '#146676', roof: '#0B4A30', accent: '#E5B23A' }
+    }[variant] || { water: '#1E8F5B', water2: '#176F45', roof: '#0B4A30', accent: '#E0A233' };
+    let extra = '';
+    if (variant === 'villa') {
+      extra = `<rect x="${520 + shift * .4}" y="${h - 230}" width="150" height="90" rx="6" fill="${palette.roof}"/><polygon points="${505 + shift * .4},${h - 230} ${595 + shift * .4},${h - 280} ${685 + shift * .4},${h - 230}" fill="${palette.roof}"/>`;
+    } else if (variant === 'family') {
+      extra = `<rect x="${90 + shift * .4}" y="${h - 200}" width="120" height="70" rx="6" fill="${palette.roof}"/><polygon points="${80 + shift * .4},${h - 200} ${150 + shift * .4},${h - 240} ${220 + shift * .4},${h - 200}" fill="${palette.roof}"/><rect x="${420 + shift * .4}" y="${h - 180}" width="90" height="50" rx="6" fill="${palette.roof}"/>`;
+    } else if (variant === 'cottage') {
+      extra = `<rect x="${150 + shift * .4}" y="${h - 190}" width="100" height="60" rx="4" fill="${palette.roof}"/><polygon points="${140 + shift * .4},${h - 190} ${200 + shift * .4},${h - 225} ${260 + shift * .4},${h - 190}" fill="#3E2712"/><rect x="${520 + shift * .4}" y="${h - 170}" width="90" height="40" rx="4" fill="${palette.roof}"/><polygon points="${510 + shift * .4},${h - 170} ${565 + shift * .4},${h - 200} ${620 + shift * .4},${h - 170}" fill="#3E2712"/>`;
+    } else if (variant === 'waterpark') {
+      extra = `<path d="M${120 + shift * .4} ${h - 120} C${220 + shift * .4} ${h - 280}, ${320 + shift * .4} ${h - 260}, ${300 + shift * .4} ${h - 120}" fill="none" stroke="${palette.accent}" stroke-width="14" stroke-linecap="round"/><rect x="${540 + shift * .4}" y="${h - 260}" width="18" height="140" fill="${palette.roof}"/>`;
+    }
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg"><rect width="${w}" height="${h}" fill="#EAF4EE"/><circle cx="${sunX}" cy="${h * .28}" r="46" fill="${palette.accent}" opacity="0.85"/><path d="M0 ${h - 260 + shift * .15} Q${w * .25} ${h - 300 + shift * .15} ${w * .5} ${h - 260 + shift * .15} T${w} ${h - 260 + shift * .15} V${h} H0 Z" fill="#BFD9C9" opacity="0.6"/>${extra}<path d="M0 ${h - 150} Q${w * .2} ${h - 190 + shift} ${w * .4} ${h - 150} T${w * .8} ${h - 150} T${w * 1.2} ${h - 150} V${h} H0 Z" fill="${palette.water2}"/><path d="M0 ${h - 110} Q${w * .22} ${h - 145 + shift * .6} ${w * .44} ${h - 110} T${w * .88} ${h - 110} T${w * 1.3} ${h - 110} V${h} H0 Z" fill="${palette.water}"/></svg>`;
+  }
+
+  const dbResorts = {{ resort_rows | tojson }};
+
+  const resortDefaults = {
+    "GALLELY RESORT": {
+      address: "Barangay Bucal, Calamba City, Laguna",
+      variant: "villa", price: 1500, rating: 4.5, reviews: 0, satisfaction: 0, maxPax: 15,
+      tags: ["Family Friendly"], amenities: [], amenitiesFull: []
+    },
+    "Lucky Miels Resort": {
+      variant: "villa", price: 1200, rating: 4.6, reviews: 128, satisfaction: 92, maxPax: 15,
+      tags: ["Family Friendly", "Pet Friendly", "Great for Groups"],
+      amenities: [{n:"Swimming Pool",icon:"pool"},{n:"Free WiFi",icon:"wifi"},{n:"Parking",icon:"park"},{n:"Karaoke",icon:"mic"}],
+      amenitiesFull: [{n:"Private hot spring pool",d:"In every villa",icon:"pool"},{n:"Free WiFi",d:"Common areas & villas",icon:"wifi"},{n:"Covered parking",d:"12 slots",icon:"park"},{n:"Karaoke rooms",d:"Hourly rental",icon:"mic"}]
+    },
+    "Magic Kingdom Resort": {
+      variant: "waterpark", price: 1500, rating: 4.5, reviews: 95, satisfaction: 90, maxPax: 20,
+      tags: ["Waterpark", "Family Friendly", "Great for Groups"],
+      amenities: [{n:"Waterpark",icon:"slide"},{n:"Lazy River",icon:"river"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Restaurant",icon:"restaurant"},{n:"Pool",icon:"pool"}],
+      amenitiesFull: [{n:"Waterpark & slides",d:"3 slides, lifeguard on duty",icon:"slide"},{n:"Lazy river",d:"350m loop",icon:"river"},{n:"Hot spring pools",d:"Separate from waterpark",icon:"pool"},{n:"Restaurant",d:"Filipino & grill menu",icon:"restaurant"},{n:"Function hall",d:"Seats up to 120",icon:"hall"},{n:"Open parking",d:"30 slots",icon:"park"}]
+    },
+    "Sunscape Resort": {
+      variant: "family", price: 1300, rating: 4.7, reviews: 142, satisfaction: 87, maxPax: 18,
+      tags: ["Family Friendly", "Great for Groups"],
+      amenities: [{n:"3 Pools",icon:"pool"},{n:"Karaoke",icon:"mic"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Cottage",icon:"cottage"},{n:"WiFi",icon:"wifi"}],
+      amenitiesFull: [{n:"3 shared hot spring pools",d:"Adult, family, kiddie",icon:"pool"},{n:"Function hall",d:"Air-conditioned, 80 pax",icon:"hall"},{n:"Karaoke rooms",d:"2 available, hourly",icon:"mic"},{n:"Open parking",d:"20 slots",icon:"park"},{n:"Cottages",d:"8 nipa cottages",icon:"cottage"},{n:"Free WiFi",d:"Common areas",icon:"wifi"}]
+    },
+    "Triple Z Resort": {
+      variant: "cottage", price: 1100, rating: 4.4, reviews: 76, satisfaction: 79, maxPax: 12,
+      tags: ["Budget Friendly", "Pet Friendly"],
+      amenities: [{n:"Pool",icon:"pool"},{n:"Cottage",icon:"cottage"},{n:"Parking",icon:"park"},{n:"Store",icon:"store"},{n:"Karaoke",icon:"mic"},{n:"BBQ Pit",icon:"bbq"}],
+      amenitiesFull: [{n:"Shared hot spring pool",d:"Open 6am–10pm",icon:"pool"},{n:"Nipa cottages",d:"6 units",icon:"cottage"},{n:"Open parking",d:"8 slots",icon:"park"},{n:"Sari-sari store",d:"On-site",icon:"store"},{n:"Videoke rental",d:"Per hour",icon:"mic"},{n:"BBQ pit",d:"Shared, first-come",icon:"bbq"}]
+    }
+  };
+
+  // Match resort names case-insensitively (the database stores them in capitals).
+  resortDefaults["Renalyn Resort"] = {
+    variant: "family", price: 1200, rating: 0, reviews: 0, satisfaction: 0, maxPax: 15,
+    tags: [], amenities: [], amenitiesFull: []
+  };
+  const defaultsByName = Object.fromEntries(
+    Object.entries(resortDefaults).map(([name, d]) => [name.trim().toLowerCase(), d])
+  );
+
+  const resorts = dbResorts.map((dbResort) => {
+    const defaults = defaultsByName[String(dbResort.resort_name || '').trim().toLowerCase()] || {};
+    return {
+      id: String(dbResort.resort_id),
+      name: dbResort.resort_name,
+      location: dbResort.address || defaults.address || "Calamba City, Laguna",
+      address: dbResort.address || defaults.address || "Address to be confirmed",
+      desc: dbResort.description || "",
+      logo: dbResort.logo || "",
+      email: dbResort.email || "",
+      phone: dbResort.phone || "",
+      variant: defaults.variant || "villa",
+      price: Number(dbResort.price) || defaults.price || 0,
+      maxPax: Number(dbResort.max_pax) || defaults.maxPax || 15,
+      rating: defaults.rating || 0,
+      reviews: defaults.reviews || 0,
+      satisfaction: defaults.satisfaction || 0,
+      tags: defaults.tags || [],
+      amenities: defaults.amenities || [],
+      amenitiesFull: defaults.amenitiesFull || [],
+      dayPattern: [],
+      ranges: [],
+      ratingBreak: [0, 0, 0, 0, 0],
+      revList: [],
+      nearby: []
+    };
+  });
+  let currentId = resorts.length ? resorts[0].id : null;
+  let favs = new Set();
+
+  function renderCards() {
+    const cardRow = document.getElementById('cardRow');
+    if (!resorts.length) {
+      cardRow.innerHTML = `<div style="width:100%;padding:30px;text-align:center;">No active resorts found.</div>`;
+      return;
+    }
+    cardRow.innerHTML = resorts.map(r => `
+      <div class="rcard ${r.id === currentId ? 'selected' : ''}" onclick="selectResort('${r.id}')">
+        <div class="thumb">
+          ${scene(r.variant, 20)}
+          <button class="heart ${favs.has(r.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav('${r.id}')">
+            <svg viewBox="0 0 24 24" fill="${favs.has(r.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+              <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="body">
+          <div class="rc-top">
+            <b>${r.name}</b>
+            <div class="rc-rate">${ic.star} ${r.rating} <span>(${r.reviews})</span></div>
+          </div>
+          <div class="rc-loc">${ic.pin} ${r.location}</div>
+          <div class="rc-hours">
+            <div>${ic.clock} Day Tour <b>8:00 AM - 5:00 PM</b></div>
+            <div>${ic.moon} Overnight <b>2:00 PM - 11:00 AM</b></div>
+          </div>
+          <div class="rc-price">${r.price ? peso(r.price) : 'Price not set'} <span>/ fixed · up to ${r.maxPax} pax</span></div>
+          <button class="rc-btn" onclick="event.stopPropagation(); selectResort('${r.id}')">View Details</button>
+        </div>
+      </div>
+    `).join('');
+    updateCarouselButtons();
+  }
+
+  function toggleFav(id, fromHero = false) {
+    if (favs.has(id)) { favs.delete(id); } else { favs.add(id); }
+    renderCards();
+    if (currentId === id) {
+      document.getElementById('heroHeart').classList.toggle('active', favs.has(id));
+    }
+  }
+
+  function selectResort(id) {
+    currentId = id;
+    renderCards();
+    renderDetail();
+    document.getElementById('detailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderDetail() {
+    if (!currentId) return;
+    const r = resorts.find(x => x.id === currentId);
+    if (!r) return;
+    document.getElementById('heroImg').querySelector('svg')?.remove();
+    document.getElementById('heroImg').insertAdjacentHTML('afterbegin', scene(r.variant, 10));
+    document.getElementById('heroHeart').classList.toggle('active', favs.has(r.id));
+    document.getElementById('d-name').textContent = r.name;
+    document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
+    document.getElementById('d-rate').innerHTML = `${ic.star} ${r.rating} <span>(${r.reviews} reviews)</span>`;
+    document.getElementById('d-price').innerHTML = r.price
+      ? `${peso(r.price)} <span style="font-weight:500;font-size:13px;color:#6b7674;">fixed · includes ${r.maxPax} pax · +${peso(EXTRA_PAX_PRICE)}/extra head</span>`
+      : `<span style="font-weight:500;font-size:13px;color:#9a2f2f;">Price not set</span>`;
+    document.getElementById('d-tags').innerHTML = r.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    document.getElementById('d-desc').textContent = r.desc;
+    document.getElementById('d-amrow').innerHTML = r.amenities.map(a => `
+      <div class="amitem"><div class="ic">${ic[a.icon] || ''}</div><span>${a.n}</span></div>
+    `).join('');
+    document.getElementById('ov-desc').textContent = r.desc;
+    document.getElementById('ov-hours').innerHTML = `
+      <div>${ic.clock} Day Tour &nbsp; <b>8:00 AM - 5:00 PM</b></div>
+      <div>${ic.moon} Overnight &nbsp; <b>2:00 PM - 11:00 AM</b></div>
+    `;
+    document.getElementById('ov-gallery').innerHTML = [30, 90, 150, 210, 270, 330].map(a => `<div>${scene(r.variant, a)}</div>`).join('');
+    document.getElementById('ov-map').innerHTML = miniMap(r);
+    document.getElementById('am-grid').innerHTML = r.amenitiesFull.map(a => `
+      <div class="amcard"><div class="ic">${ic[a.icon] || ''}</div><div><b>${a.n}</b><span>${a.d}</span></div></div>
+    `).join('');
+    document.getElementById('dayStrip').innerHTML = '<p style="color:#6b7674;">Loading availability…</p>';
+    document.getElementById('rangeList').innerHTML = '';
+    loadAvailabilityDates(r);
+    document.getElementById('loc-addr').textContent = r.address;
+    document.getElementById('nearby').innerHTML = r.nearby.map(n => `<div class="nearitem">${n[0]} <span>${n[1]}</span></div>`).join('');
+    document.getElementById('bigMap').innerHTML = bigMap(r);
+    document.getElementById('rv-avg').textContent = Number(r.rating).toFixed(1);
+    document.getElementById('rv-stars').innerHTML = stars(r.rating);
+    document.getElementById('rv-count').textContent = `Based on ${r.reviews} verified stays`;
+    document.getElementById('rv-bars').innerHTML = r.ratingBreak.map((pct, i) => `
+      <div class="barrow"><span class="lbl">${5 - i} star</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>
+    `).join('');
+    document.getElementById('tab-revcount').textContent = `(${r.reviews})`;
+    document.getElementById('revGrid').innerHTML = r.revList.map(rv => `
+      <div class="revcard2">
+        <div class="rev-head2"><div class="rev-ava2">${rv.n.split(' ').map(x => x[0]).join('')}</div><div><b>${rv.n}</b><span>${rv.d}</span></div></div>
+        <div class="rev-rating"><div class="stars">${stars(rv.r)}</div><b>${rv.r.toFixed(1)}</b></div>
+        <p>${rv.t}</p>
+        <div class="revphotos">${[5, 55, 105].map(a => `<div>${scene(r.variant, a)}</div>`).join('')}</div>
+      </div>
+    `).join('');
+    document.getElementById('viewAllRevBtn').textContent = `View All ${r.reviews} Reviews`;
+    showTab('overview');
+  }
+
+  async function loadAvailabilityDates(resort) {
+    let bookedDates = new Set();
+    try {
+      const response = await fetch(`/resort_availability/${resort.id}`);
+      const data = await response.json();
+      bookedDates = new Set(data.booked_dates || []);
+    } catch (error) {
+      // Keep the calendar usable if the availability request is temporarily unavailable.
+    }
+    if (currentId !== resort.id) return;
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const dates = Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return date;
+    });
+    const format = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    document.getElementById('dayStrip').innerHTML = `
+      <div style="display:flex;gap:16px;margin:0 0 14px;font-size:13px;">
+        <span><i style="display:inline-block;width:12px;height:12px;background:#fff;border:1px solid #bbb;border-radius:2px;"></i> Vacant</span>
+        <span><i style="display:inline-block;width:12px;height:12px;background:#d9534f;border-radius:2px;"></i> Booked</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7, minmax(56px, 1fr));gap:8px;">
+        ${dates.map(date => {
+          const booked = bookedDates.has(format(date));
+          return `<div title="${date.toLocaleDateString()} — ${booked ? 'Booked' : 'Vacant'}" style="padding:10px 4px;text-align:center;border:1px solid ${booked ? '#d9534f' : '#d8d8d8'};border-radius:6px;background:${booked ? '#d9534f' : '#fff'};color:${booked ? '#fff' : '#263238'};">
+            <strong>${date.getDate()}</strong><br><small>${date.toLocaleDateString(undefined, { month: 'short' })}</small>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function openGallery() {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort) return;
+    const angles = [30, 90, 150, 210, 270, 330];
+    let index = 0;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `<div style="width:min(900px,100%);position:relative;color:#fff;text-align:center;"><button aria-label="Close gallery" style="position:absolute;right:0;top:-42px;font-size:28px;background:none;border:0;color:#fff;cursor:pointer;">&times;</button><h3>${resort.name} Gallery</h3><div id="galleryImage" style="background:#fff;border-radius:10px;overflow:hidden;"></div><div style="margin-top:14px;"><button id="galleryPrev">&larr; Previous</button> <span id="galleryCount"></span> <button id="galleryNext">Next &rarr;</button></div></div>`;
+    const render = () => {
+      overlay.querySelector('#galleryImage').innerHTML = scene(resort.variant, angles[index]);
+      overlay.querySelector('#galleryCount').textContent = `${index + 1} / ${angles.length}`;
+    };
+    overlay.querySelector('[aria-label="Close gallery"]').onclick = () => overlay.remove();
+    overlay.querySelector('#galleryPrev').onclick = () => { index = (index + angles.length - 1) % angles.length; render(); };
+    overlay.querySelector('#galleryNext').onclick = () => { index = (index + 1) % angles.length; render(); };
+    overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+    render();
+  }
+
+  function openDirections() {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort) return;
+    const destination = resort.address === 'Address to be confirmed' ? `${resort.name}, Calamba City, Laguna` : resort.address;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`, '_blank', 'noopener');
+  }
+
+  function miniMap(r) {
+    return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="150" fill="#DCF2E4"/><path d="M0 40 H300 M0 90 H300" stroke="#BFE0CC" stroke-width="4"/><path d="M60 0 V150 M220 0 V150" stroke="#BFE0CC" stroke-width="4"/><circle cx="150" cy="75" r="7" fill="#0B4A30"/><path d="M150 75 v-18 l7 -4 z" fill="#0B4A30"/></svg>`;
+  }
+
+  function bigMap(r) {
+    return `<svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="260" fill="#DCF2E4"/><path d="M0 60 H500 M0 130 H500 M0 200 H500" stroke="#BFE0CC" stroke-width="6"/><path d="M90 0 V260 M260 0 V260 M410 0 V260" stroke="#BFE0CC" stroke-width="6"/><path d="M0 40 C150 100,320 20,500 100" stroke="#E0A233" stroke-width="5" fill="none" opacity="0.7"/><circle cx="250" cy="130" r="9" fill="#0B4A30"/><circle cx="250" cy="130" r="16" fill="none" stroke="#0B4A30" stroke-width="2" opacity="0.4"/><path d="M250 130 v-26 l10 -6 z" fill="#0B4A30"/><text x="264" y="108" font-family="Manrope" font-size="12" font-weight="700" fill="#0B4A30">${r.name}</text></svg>`;
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tabpane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+  }
+
+  const cardRow = document.getElementById('cardRow');
+  const leftBtn = document.getElementById('scrollLeftBtn');
+  const rightBtn = document.getElementById('scrollRightBtn');
+
+  function getScrollAmount() {
+    const card = cardRow.querySelector('.rcard');
+    if (!card) return 300;
+    return card.offsetWidth + 16;
+  }
+  leftBtn.addEventListener('click', () => cardRow.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' }));
+  rightBtn.addEventListener('click', () => cardRow.scrollBy({ left: getScrollAmount(), behavior: 'smooth' }));
+
+  function updateCarouselButtons() {
+    if (!cardRow) return;
+    const maxScroll = cardRow.scrollWidth - cardRow.clientWidth;
+    leftBtn.classList.toggle('hidden', cardRow.scrollLeft <= 5);
+    rightBtn.classList.toggle('hidden', cardRow.scrollLeft >= maxScroll - 5);
+  }
+  cardRow.addEventListener('scroll', updateCarouselButtons);
+
+  let isDraggingCards = false, cardStartX = 0, cardScrollLeft = 0;
+  cardRow.addEventListener('mousedown', e => {
+    isDraggingCards = true;
+    cardRow.classList.add('dragging');
+    cardStartX = e.pageX - cardRow.offsetLeft;
+    cardScrollLeft = cardRow.scrollLeft;
+  });
+  cardRow.addEventListener('mouseleave', () => { isDraggingCards = false; cardRow.classList.remove('dragging'); });
+  cardRow.addEventListener('mouseup', () => { isDraggingCards = false; cardRow.classList.remove('dragging'); });
+  cardRow.addEventListener('mousemove', e => {
+    if (!isDraggingCards) return;
+    e.preventDefault();
+    const x = e.pageX - cardRow.offsetLeft;
+    const walk = (x - cardStartX) * 1.5;
+    cardRow.scrollLeft = cardScrollLeft - walk;
+  });
+  cardRow.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      if (cardRow.scrollWidth > cardRow.clientWidth) {
+        e.preventDefault();
+        cardRow.scrollLeft += e.deltaY;
+      }
+    }
+  }, { passive: false });
+
+  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const stayDates = { ci: new Date(2026, 4, 28), co: new Date(2026, 4, 29) };
+  const dpView = { ci: new Date(2026, 4, 1), co: new Date(2026, 4, 1) };
+  let activeDatePicker = null;
+
+  function fmtDate(d) { return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+
+  function openDatePicker(which, evt) {
+    evt.stopPropagation();
+    if (activeDatePicker === which) { closeDatePicker(); return; }
+    closeDatePicker();
+    activeDatePicker = which;
+    dpView[which] = new Date(stayDates[which].getFullYear(), stayDates[which].getMonth(), 1);
+    document.getElementById(which + '-pop').classList.add('open');
+    renderDatePicker(which);
+  }
+  function closeDatePicker() {
+    if (!activeDatePicker) return;
+    document.getElementById(activeDatePicker + '-pop').classList.remove('open');
+    activeDatePicker = null;
+  }
+  document.addEventListener('click', (e) => {
+    if (!activeDatePicker) return;
+    const pop = document.getElementById(activeDatePicker + '-pop');
+    if (pop && !pop.contains(e.target)) closeDatePicker();
+  });
+  function shiftDpMonth(which, dir, evt) {
+    evt.stopPropagation();
+    dpView[which].setMonth(dpView[which].getMonth() + dir);
+    renderDatePicker(which);
+  }
+  function renderDatePicker(which) {
+    const pop = document.getElementById(which + '-pop');
+    const view = dpView[which];
+    const year = view.getFullYear();
+    const month = view.getMonth();
+    const firstDow = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const minDate = which === 'co' ? stayDates.ci : today;
+    let cells = '';
+    for (let i = 0; i < firstDow; i++) cells += `<div class="dp-day muted"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDate = new Date(year, month, day);
+      const isDisabled = cellDate < minDate;
+      const isSelected = sameDay(cellDate, stayDates[which]);
+      const isToday = sameDay(cellDate, today);
+      const classes = ['dp-day', isDisabled ? 'disabled' : '', isSelected ? 'selected' : '', (isToday && !isSelected) ? 'today' : ''].filter(Boolean).join(' ');
+      cells += `<div class="${classes}" ${isDisabled ? '' : `onclick="pickDate('${which}', ${year}, ${month}, ${day}, event)"`}>${day}</div>`;
+    }
+    pop.innerHTML = `
+      <div class="dp-head"><b>${MONTH_NAMES[month]} ${year}</b><div class="dp-nav"><button onclick="shiftDpMonth('${which}', -1, event)">‹</button><button onclick="shiftDpMonth('${which}', 1, event)">›</button></div></div>
+      <div class="dp-grid">${DOW_NAMES.map(d => `<div class="dp-dow">${d}</div>`).join('')}${cells}</div>
+    `;
+  }
+  function pickDate(which, year, month, day, evt) {
+    evt.stopPropagation();
+    const chosen = new Date(year, month, day);
+    stayDates[which] = chosen;
+    document.getElementById(which + '-date').textContent = fmtDate(chosen);
+    if (which === 'ci' && stayDates.co <= chosen) {
+      const nextDay = new Date(chosen);
+      nextDay.setDate(chosen.getDate() + 1);
+      stayDates.co = nextDay;
+      document.getElementById('co-date').textContent = fmtDate(nextDay);
+    }
+    closeDatePicker();
+  }
+
+  const searchInput = document.querySelector('.searchrow input[type="text"]');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const keyword = this.value.toLowerCase().trim();
+      document.querySelectorAll('.rcard').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(keyword) ? '' : 'none';
+      });
+      setTimeout(updateCarouselButtons, 50);
+    });
+  }
+
+  renderCards();
+  renderDetail();
+  updateCarouselButtons();
+  window.addEventListener('resize', () => updateCarouselButtons());
+</script>
+  </body>
+</html>

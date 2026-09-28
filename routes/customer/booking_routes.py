@@ -10,6 +10,28 @@ from config import get_connection
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'payments')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'webp'}
 
+# Common add-on rates. Keep these the same as the constants in the page
+# (EXTRA_PAX_PRICE, LPG_PRICE, WATER_PRICE).
+EXTRA_PAX_RATE = Decimal('200.00')     # per head beyond the resort's included pax
+MINERAL_WATER_RATE = Decimal('50.00')  # per bottle/unit
+GAS_STOVE_RATE = Decimal('150.00')     # LPG, flat
+MAX_GUESTS = 100                       # sanity limit only
+
+# Fixed price and included pax for each resort, keyed by resort_id.
+# VERIFY these ids match your resorts table. Better long term: store
+# `price` and `max_pax` columns on the resorts table and read them from there.
+RESORT_RATES = {
+    1: {'price': Decimal('1100.00'), 'max_pax': 12},  # Triple Z
+    2: {'price': Decimal('1300.00'), 'max_pax': 18},  # Sunscape
+    3: {'price': Decimal('1200.00'), 'max_pax': 15},  # Lucky Miels
+    4: {'price': Decimal('1500.00'), 'max_pax': 20},  # Magic Kingdom
+    5: {'price': Decimal('1500.00'), 'max_pax': 15},  # Gallely
+    6: {'price': Decimal('1200.00'), 'max_pax': 15},
+}
+
+# Tour packages do not change the fixed price.
+TOUR_TYPES = {'day', 'night', '22_hour'}
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
@@ -53,15 +75,25 @@ def book_resort():
         guests = int(request.form.get('pax', ''))
         check_in = datetime.strptime(request.form.get('check_in', ''), '%Y-%m-%d').date()
         check_out = datetime.strptime(request.form.get('check_out', ''), '%Y-%m-%d').date()
-        total_amount = Decimal(request.form.get('total_amount', ''))
+        # The mineral water field is now a quantity, not true/false.
+        water_qty = int(request.form.get('mineral_water', '0') or 0)
     except (TypeError, ValueError, InvalidOperation):
         return jsonify({"success": False, "message": "Please provide valid booking details."}), 400
 
     guest_name = request.form.get('guest_name', '').strip()
     guest_phone = request.form.get('guest_phone', '').strip()
     gas_stove = request.form.get('gas_stove', 'false').lower() == 'true'
-    if not guest_name or not guest_phone or guests < 1 or total_amount < 0:
+    # The page sends this field as "package"; "tour_type" is also accepted.
+    tour_type = (request.form.get('tour_type') or request.form.get('package') or '').strip()
+
+    if not guest_name or not guest_phone or not (1 <= guests <= MAX_GUESTS):
         return jsonify({"success": False, "message": "Please complete all booking details."}), 400
+    if water_qty < 0 or water_qty > 500:
+        return jsonify({"success": False, "message": "Invalid mineral water quantity."}), 400
+    if tour_type not in TOUR_TYPES:
+        return jsonify({"success": False, "message": "Select a valid tour package."}), 400
+    if resort_id not in RESORT_RATES:
+        return jsonify({"success": False, "message": "This resort does not have a price set yet."}), 400
     if check_out <= check_in:
         return jsonify({"success": False, "message": "Check-out must be after check-in."}), 400
     minimum_check_in = datetime.now().date() + timedelta(days=3)
@@ -100,6 +132,24 @@ def book_resort():
             conn.rollback()
             return jsonify({"success": False, "message": "That resort is not available."}), 404
 
+        cursor.execute(
+            "SELECT role, is_verified, account_status FROM accounts WHERE account_id = %s",
+            (session['account_id'],),
+        )
+        account = cursor.fetchone()
+        if not account or account['role'] != 'customer' or not account['is_verified'] or account['account_status'] != 'Active':
+            conn.rollback()
+            return jsonify({"success": False, "message": "Please log in with an active, verified customer account to book."}), 403
+
+        # Total = fixed resort price + extra pax + LPG + mineral water.
+        # Always computed on the server; the browser total is never trusted.
+        rate = RESORT_RATES[resort_id]
+        extra_pax = max(0, guests - rate['max_pax'])
+        total_amount = (rate['price']
+                        + EXTRA_PAX_RATE * extra_pax
+                        + (GAS_STOVE_RATE if gas_stove else Decimal('0.00'))
+                        + MINERAL_WATER_RATE * water_qty)
+
         cursor.execute("""
             INSERT INTO reservations
                 (customer_id, resort_id, check_in, check_out, guests, total_amount,
@@ -112,7 +162,8 @@ def book_resort():
         return jsonify({
             "success": True,
             "message": "Reservation submitted successfully!",
-            "reservation_id": reservation_id
+            "reservation_id": reservation_id,
+            "total_amount": str(total_amount)
         }), 201
     except Exception:
         conn.rollback()

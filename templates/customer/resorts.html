@@ -188,6 +188,7 @@
               </div>
               <div class="id-loc" id="d-loc"></div>
               <div class="id-rate" id="d-rate"></div>
+              <div class="id-price" id="d-price" style="font-weight:800;font-size:18px;margin:6px 0;"></div>
               <div class="tags" id="d-tags"></div>
               <p class="id-desc" id="d-desc"></p>
               <div class="amheading"> Amenities </div>
@@ -200,6 +201,7 @@
               <button class="tabbtn" data-tab="location" onclick="showTab('location')"> Location </button>
               <button class="tabbtn" data-tab="reviews" onclick="showTab('reviews')"> Reviews <span id="tab-revcount"></span>
               </button>
+              <button class="tabbtn" data-tab="policy" onclick="showTab('policy')"> Policy </button>
             </div>
             <div class="tabpane active" id="tab-overview">
               <div class="ov3">
@@ -257,6 +259,27 @@
                 <div id="rv-bars"></div>
               </div>
             </div>
+            <div class="tabpane" id="tab-policy">
+              <div class="terms-box" style="max-height:none;">
+                <h4 style="margin-top:0;">Terms and Conditions</h4>
+                <ol>
+                  <li>Pay your balance as you enter.</li>
+                  <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
+                  <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
+                    <ol>
+                      <li>If the accommodation date falls on weekdays or weekends, rebooking must fall on weekdays or weekends too.</li>
+                      <li>The rebooking schedule must be the same as the prior booked schedule.</li>
+                      <li>Additional charge of Php2,000.00 for weekdays/ Php5,000.00 for weekends upon rebooking.</li>
+                    </ol>
+                  </li>
+                  <li>In presence of any illegal activities or transactions like: illegal drugs, illegal trading, prostitution, etc., the management serves all the rights to terminate the accommodation without prior notice.</li>
+                  <li>The management will not be liable for any accidents, injuries or losses of belongings during accommodation.</li>
+                  <li>The client will be held liable for any damages to the property during the accommodation.</li>
+                  <li>When the number of person exceeds the resort's <strong>Max Pax</strong>, additional Php200.00 per head will be charged.</li>
+                  <li>Resort is pet-friendly but guest should be responsible on making sure that the pet has proper diaper and will not be allowed near the swimming pool area.</li>
+                </ol>
+              </div>
+            </div>
           </div>
           <div class="revsection">
             <div class="revsection-head">
@@ -273,14 +296,76 @@
 <script>
 
   /* ============================================================
-     BOOKING FLOW: calendar -> rules/form -> payment -> screenshot
+     BOOKING FLOW: package -> calendar -> terms -> form -> payment
   ============================================================ */
   let bookingState = {};
+
+  const TOUR_PACKAGES = [
+    { id: 'day', label: 'Day Tour', hours: '8:00 AM – 5:00 PM' },
+    { id: 'night', label: 'Night Tour', hours: '6:00 PM – 6:00 AM' },
+    { id: '22_hour', label: '22-Hour Tour', hours: '2:00 PM – 12:00 NN (next day)' }
+  ];
+
+  const EWALLETS = [
+    { id: 'gcash', label: 'GCash', account: '0917-000-0000 (Pansol Resorts)' },
+    { id: 'maya', label: 'Maya', account: '0918-000-0000 (Pansol Resorts)' },
+    { id: 'gotyme', label: 'GoTyme', account: '0919-000-0000 (Pansol Resorts)' }
+  ];
+
+  // Optional add-on prices (PHP). Change WATER_PRICE to your actual price.
+  const LPG_PRICE = 150;
+  const WATER_PRICE = 50;
+  const EXTRA_PAX_PRICE = 200;
+
+  // One formula used by the form AND the submit step, so totals always match.
+  function computeTotal(resort, opts) {
+    const o = opts || {};
+    return Number(resort.price || 0)
+      + (o.gas ? LPG_PRICE : 0)
+      + (Math.max(0, Number(o.waterQty) || 0) * WATER_PRICE)
+      + (Math.max(0, Number(o.extraPax) || 0) * EXTRA_PAX_PRICE);
+  }
+
+  function peso(n) {
+    return '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  function confirmAction(message) {
+    return window.confirm(message);
+  }
+
+  function ensureModalStyles() {
+    if (document.getElementById('bookingModalStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'bookingModalStyles';
+    style.textContent = `
+      .booking-overlay{position:fixed;inset:0;background:rgba(15,20,18,.55);display:flex;align-items:center;justify-content:center;z-index:1500;padding:24px;}
+      .booking-modal{position:relative;background:#fff;border-radius:14px;width:min(760px,95vw);max-height:92vh;overflow-y:auto;padding:32px 32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
+      .booking-exit{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:none;background:#f1f1f1;font-size:20px;line-height:1;cursor:pointer;color:#333;}
+      .booking-exit:hover{background:#e2e2e2;}
+      .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
+      .pkg-card{border:2px solid #e0e0e0;border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;font-size:12.5px;color:#555;}
+      .pkg-card.selected{border-color:#1e7a45;background:#eaf7ef;}
+      .pkg-card b{display:block;margin-bottom:4px;font-size:14px;color:#1a1a1a;}
+      .agree-row{display:flex;align-items:flex-start;gap:8px;margin:16px 0;font-size:13px;background:#f7f7f5;padding:12px 14px;border-radius:8px;}
+      .agree-row input{margin-top:2px;}
+      .terms-box{max-height:320px;overflow-y:auto;border:1px solid #e2e2e2;border-radius:8px;padding:16px 18px;font-size:13px;background:#fafafa;line-height:1.5;}
+      .ewallet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+      .ewallet-card{border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12.5px;}
+      .ewallet-card.selected{border-color:#1e7a45;background:#eaf7ef;}
+      .qr-box{width:110px;height:110px;margin:8px auto;background:#fff;border:1px dashed #999;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#888;text-align:center;}
+    `;
+    document.head.appendChild(style);
+  }
 
   document.querySelector('.checkbtn').addEventListener('click', async function () {
       const r = resorts.find(x => x.id === currentId);
       if (!r) return;
-      bookingState = { resort: r };
+      if (!r.price) {
+          alert('This resort does not have a price set yet. Please contact support.');
+          return;
+      }
+      bookingState = { resort: r, package: null, agreedPackage: false, agreedTerms: false };
 
       let bookedDates = new Set();
       try {
@@ -296,13 +381,15 @@
   });
 
   function openBookingModal() {
+      ensureModalStyles();
       const overlay = document.createElement('div');
       overlay.id = 'bookingOverlay';
       overlay.className = 'booking-overlay';
       overlay.innerHTML = `
         <div class="booking-modal">
-              <div id="bookingModalBody"></div>
-          </div>
+            <button class="booking-exit" type="button" onclick="requestCloseBookingModal()" aria-label="Close">&times;</button>
+            <div id="bookingModalBody"></div>
+        </div>
       `;
       document.body.appendChild(overlay);
       renderCalendarStep();
@@ -311,6 +398,12 @@
   function closeBookingModal() {
       const el = document.getElementById('bookingOverlay');
       if (el) el.remove();
+  }
+
+  function requestCloseBookingModal() {
+      if (confirmAction('Are you sure you want to cancel this booking? Any unsaved details will be lost.')) {
+          closeBookingModal();
+      }
   }
 
   function renderCalendarStep() {
@@ -325,6 +418,7 @@
       const y = view.getFullYear(), m = view.getMonth();
       const firstDow = new Date(y, m, 1).getDay();
       const days = new Date(y, m + 1, 0).getDate();
+      const pkgReady = !!bookingState.package && bookingState.agreedPackage;
 
       let cells = '';
       for (let i = 0; i < firstDow; i++) cells += '<div></div>';
@@ -333,13 +427,28 @@
           const cellDate = new Date(y, m, d);
           const isTooSoon = cellDate < minimumDate;
           const isBooked = bookingState.bookedDates.has(dateStr);
-          const unavailable = isTooSoon || isBooked;
-          cells += `<div class="cal-cell ${isTooSoon ? 'too-soon' : (isBooked ? 'booked' : 'avail')}" data-date="${dateStr}" style="text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:${unavailable ? 'not-allowed' : 'pointer'};background:${isTooSoon ? '#eeeeee' : (isBooked ? '#fbe4e4' : '#e4f5e9')};color:${isTooSoon ? '#999999' : (isBooked ? '#9a2f2f' : '#1e7a45')};">${d}</div>`;
+          const unavailable = isTooSoon || isBooked || !pkgReady;
+          cells += `<div class="cal-cell ${isTooSoon ? 'too-soon' : (isBooked ? 'booked' : 'avail')}" data-date="${dateStr}" style="text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:${unavailable ? 'not-allowed' : 'pointer'};opacity:${pkgReady ? 1 : 0.45};background:${isTooSoon ? '#eeeeee' : (isBooked ? '#fbe4e4' : '#e4f5e9')};color:${isTooSoon ? '#999999' : (isBooked ? '#9a2f2f' : '#1e7a45')};">${d}</div>`;
       }
 
       body.innerHTML = `
-          <h3 style="margin:0 0 12px;">${r.name} — pick a date</h3>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <h3 style="margin:0 0 4px;">${r.name} — Book Your Stay</h3>
+          <p style="margin:0 0 10px;font-size:13px;color:#888;">Step 1 of 4 — Package &amp; Date</p>
+
+          <div style="font-size:13px;font-weight:600;">Select Tour Package</div>
+          <div class="pkg-grid" id="pkgGrid">
+            ${TOUR_PACKAGES.map(p => `
+              <div class="pkg-card ${bookingState.package === p.id ? 'selected' : ''}" data-pkg="${p.id}">
+                <b>${p.label}</b>${p.hours}
+              </div>`).join('')}
+          </div>
+
+          <label class="agree-row">
+            <input type="checkbox" id="pkgAgree" ${bookingState.agreedPackage ? 'checked' : ''}>
+            <span>I have selected my preferred tour package and understood its schedule.</span>
+          </label>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px;">
               <button id="calPrev">‹</button>
               <span>${monthNames[m]} ${y}</span>
               <button id="calNext">›</button>
@@ -349,9 +458,9 @@
               <div><span style="display:inline-block;width:10px;height:10px;background:#e4f5e9;border-radius:2px;margin-right:4px;"></span>Available</div>
               <div><span style="display:inline-block;width:10px;height:10px;background:#fbe4e4;border-radius:2px;margin-right:4px;"></span>Booked</div>
           </div>
-          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice.</p>
+          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice.${pkgReady ? '' : ' <strong>Select a package and check the box above to pick a date.</strong>'}</p>
           <div id="calMsg" style="display:none;margin-top:12px;padding:10px;background:#fbe4e4;color:#9a2f2f;border-radius:8px;font-size:13px;"></div>
-          <button onclick="closeBookingModal()" style="margin-top:16px;width:100%;">Cancel</button>
+          <button onclick="requestCloseBookingModal()" style="margin-top:16px;width:100%;">Cancel</button>
       `;
 
       document.getElementById('calPrev').onclick = () => { view.setMonth(view.getMonth()-1); renderCalendarStep(); };
@@ -359,8 +468,25 @@
       const isMinimumMonth = view.getFullYear() === minimumDate.getFullYear() && view.getMonth() === minimumDate.getMonth();
       document.getElementById('calPrev').disabled = isMinimumMonth;
 
+      body.querySelectorAll('.pkg-card').forEach(card => {
+          card.addEventListener('click', () => {
+              bookingState.package = card.dataset.pkg;
+              renderCalendarStep();
+          });
+      });
+      document.getElementById('pkgAgree').addEventListener('change', (e) => {
+          bookingState.agreedPackage = e.target.checked;
+          renderCalendarStep();
+      });
+
       body.querySelectorAll('.cal-cell').forEach(cell => {
           cell.addEventListener('click', () => {
+              if (!pkgReady) {
+                  const msg = document.getElementById('calMsg');
+                  msg.style.display = 'block';
+                  msg.textContent = 'Please select a tour package and check the box first.';
+                  return;
+              }
               const dateStr = cell.dataset.date;
               if (cell.classList.contains('too-soon')) {
                   const msg = document.getElementById('calMsg');
@@ -375,47 +501,19 @@
                   const d = new Date(dateStr);
                   d.setDate(d.getDate() + 1);
                   bookingState.checkOut = d.toISOString().split('T')[0];
-                  renderFormStep();
+                  renderTermsStep();
               }
           });
       });
   }
 
-  function renderFormStep() {
+  function renderTermsStep() {
       const body = document.getElementById('bookingModalBody');
       body.innerHTML = `
-        <div class="receipt-container">
-          <div class="receipt-header">
-            <h3>ACKNOWLEDGEMENT RECEIPT</h3>
-          </div>
-
-          <div class="receipt-row"><span class="receipt-label">Reservation Date</span><span class="receipt-dots">${bookingState.checkIn}</span></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfName">Name</label><input class="receipt-input" type="text" id="bfName" autocomplete="name"></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfAddress">Address</label><input class="receipt-input" type="text" id="bfAddress" autocomplete="street-address"></div>
-
-          <div class="receipt-space"></div>
-
-          <div class="receipt-row"><label class="receipt-label" for="bfPhone">Contact No.</label><input class="receipt-input" type="tel" id="bfPhone" autocomplete="tel"></div>
-          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn}" readonly></div>
-          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${bookingState.checkOut}" readonly></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfPax">Total No. of Person</label><input class="receipt-input" type="number" id="bfPax" min="1"></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfExtraPax">Extra No. of Pax</label><input class="receipt-input" type="number" id="bfExtraPax" min="0"></div>
-          <div class="receipt-row receipt-option-row"><span class="receipt-label">LPG (Optional)</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfGas" aria-label="LPG (Optional)"></span></div>
-          <div class="receipt-row receipt-option-row"><span class="receipt-label">Mineral Water (Optional)</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfWater" aria-label="Mineral Water (Optional)"></span></div>
-
-          <div class="receipt-space"></div>
-
-          <div class="receipt-row"><span class="receipt-label">Total Contract Amount (PHP)</span><input class="receipt-input" type="text" id="bfTotal" readonly></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Down payment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" min="0"></div>
-          <div class="receipt-row"><span class="receipt-label">Balance Amount (PHP)</span><input class="receipt-input" type="text" id="bfBalance" readonly></div>
-
-          <div class="receipt-space"></div>
-
-          <div class="receipt-row"><label class="receipt-label" for="bfMarketer">Marketer/ Contact no.</label><input class="receipt-input" type="text" id="bfMarketer"></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfCaretaker">Caretaker/ Contact no.</label><input class="receipt-input" type="text" id="bfCaretaker"></div>
-
-          <div class="receipt-terms-title">Terms and Conditions:</div>
-          <ol class="receipt-terms">
+        <h3 style="margin:0 0 4px;">Terms and Conditions</h3>
+        <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 2 of 4 — Please review our policy before continuing</p>
+        <div class="terms-box">
+          <ol>
             <li>Pay your balance as you enter.</li>
             <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
             <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
@@ -428,38 +526,103 @@
             <li>In presence of any illegal activities or transactions like: illegal drugs, illegal trading, prostitution, etc., the management serves all the rights to terminate the accommodation without prior notice.</li>
             <li>The management will not be liable for any accidents, injuries or losses of belongings during accommodation.</li>
             <li>The client will be held liable for any damages to the property during the accommodation.</li>
-            <li>When the number of person exceeds the agreed total number, additional Php200.00 per head will be charged.</li>
+            <li>When the number of person exceeds the resort's <strong>Max Pax</strong>, additional Php200.00 per head will be charged.</li>
             <li>Resort is pet-friendly but guest should be responsible on making sure that the pet has proper diaper and will not be allowed near the swimming pool area.</li>
           </ol>
+        </div>
+        <label class="agree-row">
+          <input type="checkbox" id="termsAgree">
+          <span>I have read and fully agree to the Terms and Conditions above.</span>
+        </label>
+        <div style="display:flex;gap:10px;">
+          <button onclick="renderCalendarStep()" style="flex:1;">Back</button>
+          <button id="termsNext" style="flex:1;" disabled>Agree &amp; Continue</button>
+        </div>
+        <button onclick="requestCloseBookingModal()" style="margin-top:10px;width:100%;">Cancel</button>
+      `;
+      const chk = document.getElementById('termsAgree');
+      const nextBtn = document.getElementById('termsNext');
+      chk.addEventListener('change', () => { nextBtn.disabled = !chk.checked; });
+      nextBtn.onclick = () => {
+          if (!chk.checked) return;
+          bookingState.agreedTerms = true;
+          renderFormStep();
+      };
+  }
 
-          <div class="receipt-agreement">I, <span id="receiptClientName" class="receipt-agreement-line"></span> fully understand and agree with all the terms and conditions above.</div>
+  function renderFormStep() {
+      const body = document.getElementById('bookingModalBody');
+      const maxPax = bookingState.resort.maxPax || 15;
+      const pkg = TOUR_PACKAGES.find(p => p.id === bookingState.package);
+      body.innerHTML = `
+        <div class="receipt-container">
+          <h3 style="margin:0 0 4px;">Reservation Details</h3>
+          <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 3 of 4 — ${pkg ? pkg.label + ' · ' + pkg.hours : ''}</p>
 
-          <div class="receipt-signatures">
-            <div><strong>Resort Management</strong><div class="receipt-signature-line"></div><small>Signature over Printed Name/ Date</small></div>
-            <div><strong>Client</strong><div class="receipt-signature-line"></div><small>Signature over Printed Name/ Date</small></div>
-          </div>
+          <div class="receipt-row"><span class="receipt-label">Reservation Date</span><span class="receipt-dots">${bookingState.checkIn}</span></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfName">Name</label><input class="receipt-input" type="text" id="bfName" autocomplete="name"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfAddress">Address</label><input class="receipt-input" type="text" id="bfAddress" autocomplete="street-address"></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><label class="receipt-label" for="bfPhone">Contact No.</label><input class="receipt-input" type="tel" id="bfPhone" autocomplete="tel"></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${bookingState.checkOut}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Resort Price (fixed, includes ${maxPax} pax)</span><span class="receipt-dots">${peso(bookingState.resort.price)}</span></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfExtraPax">Additional Pax (+₱${EXTRA_PAX_PRICE}/head)</label><input class="receipt-input" type="number" id="bfExtraPax" min="0" step="1" value="0"></div>
+          <div class="receipt-row"><span class="receipt-label">Total No. of Person</span><input class="receipt-input" type="text" id="bfPax" value="${maxPax}" readonly></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">LPG (Optional, +₱${LPG_PRICE})</span><span class="receipt-dots receipt-check-dots"><input type="checkbox" id="bfGas" aria-label="LPG (Optional)"></span></div>
+          <div class="receipt-row receipt-option-row"><span class="receipt-label">Mineral Water (Optional, +₱${WATER_PRICE})</span><input class="receipt-input" type="number" id="bfWater" min="0" step="1" value="0" aria-label="Mineral Water quantity"></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><span class="receipt-label">Total Contract Amount (PHP)</span><input class="receipt-input" type="text" id="bfTotal" readonly></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Down payment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" min="0"></div>
+          <div class="receipt-row"><span class="receipt-label">Balance Amount (PHP)</span><input class="receipt-input" type="text" id="bfBalance" readonly></div>
+
+          <div class="receipt-space"></div>
+
+          <div class="receipt-row"><label class="receipt-label" for="bfMarketer">Marketer/ Contact no.</label><input class="receipt-input" type="text" id="bfMarketer"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfCaretaker">Caretaker/ Contact no.</label><input class="receipt-input" type="text" id="bfCaretaker"></div>
+
+          <div class="receipt-agreement">I, <span id="receiptClientName" class="receipt-agreement-line"></span> confirm the details above are accurate and I already agreed to the Terms and Conditions.</div>
 
           <div id="bfErr" class="receipt-error"></div>
-          <button id="bfNext" class="receipt-action">Continue to payment</button>
-          <button onclick="closeBookingModal()" class="receipt-action">Cancel</button>
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <button onclick="renderTermsStep()" style="flex:1;">Back</button>
+            <button onclick="requestCloseBookingModal()" style="flex:1;">Cancel</button>
+          </div>
+          <button id="bfNext" class="receipt-action" style="margin-top:10px;">Continue to Payment</button>
         </div>
       `;
 
-        const nights = Math.max(1, Math.round((new Date(bookingState.checkOut) - new Date(bookingState.checkIn)) / 86400000));
-        const baseTotal = bookingState.resort.price * nights;
         const totalField = document.getElementById('bfTotal');
         const balanceField = document.getElementById('bfBalance');
         const downPaymentField = document.getElementById('bfDownPayment');
-          const gasField = document.getElementById('bfGas');
-          const updateAmounts = () => {
-            const total = baseTotal + (gasField.checked ? 150 : 0);
+        const gasField = document.getElementById('bfGas');
+        const waterField = document.getElementById('bfWater');
+        const paxField = document.getElementById('bfPax');
+        const extraPaxField = document.getElementById('bfExtraPax');
+
+        const waterQty = () => Math.max(0, Math.floor(Number(waterField.value) || 0));
+
+        const updateAmounts = () => {
+          const extraPax = Math.max(0, Math.floor(Number(extraPaxField.value) || 0));
+          paxField.value = maxPax + extraPax;
+          const total = computeTotal(bookingState.resort, {
+            gas: gasField.checked,
+            waterQty: waterQty(),
+            extraPax: extraPax
+          });
           const downPayment = Number(downPaymentField.value) || 0;
-            totalField.value = total.toFixed(2);
-            balanceField.value = Math.max(0, total - downPayment).toFixed(2);
-          };
-          downPaymentField.addEventListener('input', updateAmounts);
-          gasField.addEventListener('change', updateAmounts);
-          updateAmounts();
+          totalField.value = total.toFixed(2);
+          balanceField.value = Math.max(0, total - downPayment).toFixed(2);
+        };
+        downPaymentField.addEventListener('input', updateAmounts);
+        gasField.addEventListener('change', updateAmounts);
+        waterField.addEventListener('input', updateAmounts);
+        extraPaxField.addEventListener('input', updateAmounts);
+        updateAmounts();
 
         document.getElementById('bfName').addEventListener('input', event => {
           document.getElementById('receiptClientName').textContent = event.target.value;
@@ -475,29 +638,36 @@
               err.style.display = 'block';
               return;
           }
+          if (!confirmAction('Are you sure all details are correct? You will proceed to payment next.')) return;
           bookingState.guestName = name;
           bookingState.guestPhone = phone;
           bookingState.pax = pax;
+          bookingState.extraPax = Number(extraPaxField.value) || 0;
           bookingState.gasStove = document.getElementById('bfGas').checked;
-          bookingState.mineralWater = document.getElementById('bfWater').checked;
+          bookingState.mineralWater = waterQty();
           submitReservation();
       };
   }
 
   async function submitReservation() {
       const r = bookingState.resort;
-      const nights = Math.max(1, Math.round((new Date(bookingState.checkOut) - new Date(bookingState.checkIn)) / 86400000));
-      let total = r.price * nights;
-      if (bookingState.gasStove) total += 150;
+      const total = computeTotal(r, {
+        gas: bookingState.gasStove,
+        waterQty: bookingState.mineralWater,
+        extraPax: bookingState.extraPax
+      });
 
       const fd = new FormData();
       fd.append('resort_id', r.id);
       fd.append('check_in', bookingState.checkIn);
       fd.append('check_out', bookingState.checkOut);
+      fd.append('tour_type', bookingState.package);
       fd.append('guest_name', bookingState.guestName);
       fd.append('guest_phone', bookingState.guestPhone);
       fd.append('pax', bookingState.pax);
+      fd.append('extra_pax', bookingState.extraPax || 0);
       fd.append('gas_stove', bookingState.gasStove);
+      fd.append('mineral_water', bookingState.mineralWater);
       fd.append('total_amount', total);
 
       try {
@@ -506,7 +676,7 @@
 
           if (data.success) {
               bookingState.reservationId = data.reservation_id;
-              renderPaymentStep(total);
+              renderPaymentStep(Number(data.total_amount) || total);
           } else if (res.status === 401) {
               window.location.href = '/login';
           } else {
@@ -520,36 +690,62 @@
   function renderPaymentStep(total) {
       const body = document.getElementById('bookingModalBody');
       body.innerHTML = `
-          <h3 style="margin:0 0 10px;">Payment — ₱${total.toLocaleString()}</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <h3 style="margin:0 0 4px;">Payment — ₱${total.toLocaleString()}</h3>
+          <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 4 of 4 — Choose how you'd like to pay</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
               <button class="payMethod" data-m="Bank transfer" style="height:60px;">Bank transfer</button>
               <button class="payMethod" data-m="E-wallet" style="height:60px;">E-wallet</button>
           </div>
-          <div id="proofSection" style="display:none;">
+          <div id="ewalletSection" style="display:none;">
+            <div style="font-size:13px;font-weight:600;margin-top:10px;">Select your e-wallet</div>
+            <div class="ewallet-grid" id="ewalletGrid">
+              ${EWALLETS.map(w => `
+                <div class="ewallet-card" data-w="${w.id}">
+                  <b>${w.label}</b>
+                  <div class="qr-box">${w.label}<br>QR Code</div>
+                  <div style="font-size:11px;color:#666;">${w.account}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div id="proofSection" style="display:none;margin-top:14px;">
               <p style="font-size:13px;color:#555;">Upload a screenshot of your successful payment.</p>
               <input type="file" id="proofFile" accept="image/*" style="width:100%;margin-bottom:8px;">
               <div id="proofErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
               <button id="submitProof" style="width:100%;">Submit for review</button>
           </div>
+          <button onclick="renderFormStep()" style="margin-top:14px;width:100%;">Back</button>
+          <button onclick="requestCloseBookingModal()" style="margin-top:8px;width:100%;">Cancel</button>
       `;
       let method = null;
+      let ewallet = null;
       body.querySelectorAll('.payMethod').forEach(b => {
           b.addEventListener('click', () => {
               method = b.dataset.m;
+              const showEwallet = method === 'E-wallet';
+              document.getElementById('ewalletSection').style.display = showEwallet ? 'block' : 'none';
+              document.getElementById('proofSection').style.display = showEwallet ? (ewallet ? 'block' : 'none') : 'block';
+          });
+      });
+      body.querySelectorAll('.ewallet-card').forEach(card => {
+          card.addEventListener('click', () => {
+              ewallet = card.dataset.w;
+              body.querySelectorAll('.ewallet-card').forEach(c => c.classList.toggle('selected', c === card));
               document.getElementById('proofSection').style.display = 'block';
           });
       });
       document.getElementById('submitProof').onclick = async () => {
           const fileInput = document.getElementById('proofFile');
           const err = document.getElementById('proofErr');
-          if (!fileInput.files.length || !method) {
-              err.textContent = 'Choose a payment method and upload your screenshot.';
+          if (!fileInput.files.length || !method || (method === 'E-wallet' && !ewallet)) {
+              err.textContent = 'Choose a payment method (and e-wallet, if applicable) and upload your screenshot.';
               err.style.display = 'block';
               return;
           }
+          if (!confirmAction('Are you sure you want to submit this payment for review?')) return;
+          const walletLabel = EWALLETS.find(w => w.id === ewallet)?.label || ewallet;
           const fd = new FormData();
           fd.append('reservation_id', bookingState.reservationId);
-          fd.append('payment_method', method);
+          fd.append('payment_method', method === 'E-wallet' ? `E-wallet (${walletLabel})` : method);
           fd.append('amount_paid', total);
           fd.append('proof', fileInput.files[0]);
 
@@ -633,37 +829,46 @@
   const resortDefaults = {
     "GALLELY RESORT": {
       address: "Barangay Bucal, Calamba City, Laguna",
-      variant: "villa", price: 1500, rating: 4.5, reviews: 0, satisfaction: 0,
+      variant: "villa", price: 1500, rating: 4.5, reviews: 0, satisfaction: 0, maxPax: 15,
       tags: ["Family Friendly"], amenities: [], amenitiesFull: []
     },
     "Lucky Miels Resort": {
-      variant: "villa", price: 1200, rating: 4.6, reviews: 128, satisfaction: 92,
+      variant: "villa", price: 1200, rating: 4.6, reviews: 128, satisfaction: 92, maxPax: 15,
       tags: ["Family Friendly", "Pet Friendly", "Great for Groups"],
       amenities: [{n:"Swimming Pool",icon:"pool"},{n:"Free WiFi",icon:"wifi"},{n:"Parking",icon:"park"},{n:"Karaoke",icon:"mic"}],
       amenitiesFull: [{n:"Private hot spring pool",d:"In every villa",icon:"pool"},{n:"Free WiFi",d:"Common areas & villas",icon:"wifi"},{n:"Covered parking",d:"12 slots",icon:"park"},{n:"Karaoke rooms",d:"Hourly rental",icon:"mic"}]
     },
     "Magic Kingdom Resort": {
-      variant: "waterpark", price: 1500, rating: 4.5, reviews: 95, satisfaction: 90,
+      variant: "waterpark", price: 1500, rating: 4.5, reviews: 95, satisfaction: 90, maxPax: 20,
       tags: ["Waterpark", "Family Friendly", "Great for Groups"],
       amenities: [{n:"Waterpark",icon:"slide"},{n:"Lazy River",icon:"river"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Restaurant",icon:"restaurant"},{n:"Pool",icon:"pool"}],
       amenitiesFull: [{n:"Waterpark & slides",d:"3 slides, lifeguard on duty",icon:"slide"},{n:"Lazy river",d:"350m loop",icon:"river"},{n:"Hot spring pools",d:"Separate from waterpark",icon:"pool"},{n:"Restaurant",d:"Filipino & grill menu",icon:"restaurant"},{n:"Function hall",d:"Seats up to 120",icon:"hall"},{n:"Open parking",d:"30 slots",icon:"park"}]
     },
     "Sunscape Resort": {
-      variant: "family", price: 1300, rating: 4.7, reviews: 142, satisfaction: 87,
+      variant: "family", price: 1300, rating: 4.7, reviews: 142, satisfaction: 87, maxPax: 18,
       tags: ["Family Friendly", "Great for Groups"],
       amenities: [{n:"3 Pools",icon:"pool"},{n:"Karaoke",icon:"mic"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Cottage",icon:"cottage"},{n:"WiFi",icon:"wifi"}],
       amenitiesFull: [{n:"3 shared hot spring pools",d:"Adult, family, kiddie",icon:"pool"},{n:"Function hall",d:"Air-conditioned, 80 pax",icon:"hall"},{n:"Karaoke rooms",d:"2 available, hourly",icon:"mic"},{n:"Open parking",d:"20 slots",icon:"park"},{n:"Cottages",d:"8 nipa cottages",icon:"cottage"},{n:"Free WiFi",d:"Common areas",icon:"wifi"}]
     },
     "Triple Z Resort": {
-      variant: "cottage", price: 1100, rating: 4.4, reviews: 76, satisfaction: 79,
+      variant: "cottage", price: 1100, rating: 4.4, reviews: 76, satisfaction: 79, maxPax: 12,
       tags: ["Budget Friendly", "Pet Friendly"],
       amenities: [{n:"Pool",icon:"pool"},{n:"Cottage",icon:"cottage"},{n:"Parking",icon:"park"},{n:"Store",icon:"store"},{n:"Karaoke",icon:"mic"},{n:"BBQ Pit",icon:"bbq"}],
       amenitiesFull: [{n:"Shared hot spring pool",d:"Open 6am–10pm",icon:"pool"},{n:"Nipa cottages",d:"6 units",icon:"cottage"},{n:"Open parking",d:"8 slots",icon:"park"},{n:"Sari-sari store",d:"On-site",icon:"store"},{n:"Videoke rental",d:"Per hour",icon:"mic"},{n:"BBQ pit",d:"Shared, first-come",icon:"bbq"}]
     }
   };
 
+  // Match resort names case-insensitively (the database stores them in capitals).
+  resortDefaults["Renalyn Resort"] = {
+    variant: "family", price: 1200, rating: 0, reviews: 0, satisfaction: 0, maxPax: 15,
+    tags: [], amenities: [], amenitiesFull: []
+  };
+  const defaultsByName = Object.fromEntries(
+    Object.entries(resortDefaults).map(([name, d]) => [name.trim().toLowerCase(), d])
+  );
+
   const resorts = dbResorts.map((dbResort) => {
-    const defaults = resortDefaults[dbResort.resort_name] || {};
+    const defaults = defaultsByName[String(dbResort.resort_name || '').trim().toLowerCase()] || {};
     return {
       id: String(dbResort.resort_id),
       name: dbResort.resort_name,
@@ -674,7 +879,8 @@
       email: dbResort.email || "",
       phone: dbResort.phone || "",
       variant: defaults.variant || "villa",
-      price: defaults.price || 0,
+      price: Number(dbResort.price) || defaults.price || 0,
+      maxPax: Number(dbResort.max_pax) || defaults.maxPax || 15,
       rating: defaults.rating || 0,
       reviews: defaults.reviews || 0,
       satisfaction: defaults.satisfaction || 0,
@@ -717,7 +923,7 @@
             <div>${ic.clock} Day Tour <b>8:00 AM - 5:00 PM</b></div>
             <div>${ic.moon} Overnight <b>2:00 PM - 11:00 AM</b></div>
           </div>
-          <div class="rc-price">₱${r.price.toLocaleString()} <span>/ Day Tour</span></div>
+          <div class="rc-price">${r.price ? peso(r.price) : 'Price not set'} <span>/ fixed · up to ${r.maxPax} pax</span></div>
           <button class="rc-btn" onclick="event.stopPropagation(); selectResort('${r.id}')">View Details</button>
         </div>
       </div>
@@ -750,6 +956,9 @@
     document.getElementById('d-name').textContent = r.name;
     document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
     document.getElementById('d-rate').innerHTML = `${ic.star} ${r.rating} <span>(${r.reviews} reviews)</span>`;
+    document.getElementById('d-price').innerHTML = r.price
+      ? `${peso(r.price)} <span style="font-weight:500;font-size:13px;color:#6b7674;">fixed · includes ${r.maxPax} pax · +${peso(EXTRA_PAX_PRICE)}/extra head</span>`
+      : `<span style="font-weight:500;font-size:13px;color:#9a2f2f;">Price not set</span>`;
     document.getElementById('d-tags').innerHTML = r.tags.map(t => `<span class="tag">${t}</span>`).join('');
     document.getElementById('d-desc').textContent = r.desc;
     document.getElementById('d-amrow').innerHTML = r.amenities.map(a => `

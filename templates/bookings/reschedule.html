@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Reschedule Booking #{{ booking.id }}</h2>
+<p class="text-muted">
+    Current time: {{ booking.scheduled_at.strftime('%Y-%m-%d %H:%M') }}<br>
+    Deadline: {{ booking.reschedule_deadline.strftime('%Y-%m-%d %H:%M') }}
+</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.new_time.label(class="form-label") }}
+        {{ form.new_time(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.reason.label(class="form-label") }}
+        {{ form.reason(class="form-control", rows=3) }}
+    </div>
+    <button type="submit" class="btn btn-warning">Request Reschedule</button>
+    <a href="{{ url_for('bookings.detail', booking_id=booking.id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
