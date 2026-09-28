@@ -8,9 +8,8 @@ def login():
     if request.method == "GET":
         return render_template("auth/login.html")
 
-    email = request.form.get("email")
+    email = (request.form.get("email") or "").strip()
     password = request.form.get("password")
-    selected_role = request.form.get("role")
 
     if not email or not password:
         flash("Please complete all fields.", "warning")
@@ -20,9 +19,10 @@ def login():
     cursor = conn.cursor(dictionary=True)
 
     try:
+        # Only account-level fields here — no "role" column needed anymore.
         cursor.execute(
             """
-            SELECT account_id, fullname, email, password, role,
+            SELECT account_id, fullname, email, password,
                    account_status, is_verified, approval_status
             FROM accounts
             WHERE email = %s
@@ -35,10 +35,6 @@ def login():
             flash("Invalid email or password.", "error")
             return redirect(url_for("login"))
 
-        if selected_role and account["role"] != selected_role:
-            flash("Role mismatched. Please input your correct account type.", "warning")
-            return redirect(url_for("login"))
-
         if not check_password_hash(account["password"], password):
             flash("Invalid email or password.", "error")
             return redirect(url_for("login"))
@@ -47,55 +43,82 @@ def login():
             flash("Your account is not active.", "error")
             return redirect(url_for("login"))
 
-        if account["role"] == "caretaker":
+        account_id = account["account_id"]
+
+        # ------------------------------------------------------------
+        # Determine the role by checking which table this account_id
+        # actually belongs to, instead of trusting a stored role string.
+        # Check owners (admin) first, then caretakers, then customers.
+        # ------------------------------------------------------------
+        cursor.execute(
+            "SELECT owner_id FROM owners WHERE account_id = %s",
+            (account_id,)
+        )
+        owner_row = cursor.fetchone()
+
+        cursor.execute(
+            "SELECT resort_id, status FROM caretakers WHERE account_id = %s",
+            (account_id,)
+        )
+        caretaker_row = cursor.fetchone()
+
+        cursor.execute(
+            "SELECT customer_id FROM customers WHERE account_id = %s",
+            (account_id,)
+        )
+        customer_row = cursor.fetchone()
+
+        role = None
+
+        if owner_row:
+            role = "owner"
+        elif caretaker_row:
+            role = "caretaker"
+        elif customer_row:
+            role = "customer"
+
+        if role is None:
+            flash("No role found for this account.", "error")
+            return redirect(url_for("login"))
+
+        # ------------------------------------------------------------
+        # Role-specific validation (same checks you had before)
+        # ------------------------------------------------------------
+        if role == "caretaker":
             if account["approval_status"] != "Approved":
                 flash("Your account is still pending owner approval.", "warning")
                 return redirect(url_for("login"))
 
-            cursor.execute(
-                "SELECT resort_id, status FROM caretakers WHERE account_id = %s",
-                (account["account_id"],)
-            )
-            caretaker_row = cursor.fetchone()
-            if not caretaker_row or caretaker_row["status"] != "Active":
+            if caretaker_row["status"] != "Active":
                 flash("Your caretaker assignment is not active.", "warning")
                 return redirect(url_for("login"))
+
             session["resort_id"] = caretaker_row["resort_id"]
 
-        elif account["role"] == "customer":
+        elif role == "customer":
             if not account["is_verified"]:
                 flash("Please verify your account first.", "warning")
                 return redirect(url_for("login"))
 
-        elif account["role"] == "owner":
-            # Look up this owner's owner_id so the dashboard can filter
-            # resorts/caretakers to only what this owner manages.
-            cursor.execute(
-                "SELECT owner_id FROM owners WHERE account_id = %s",
-                (account["account_id"],)
-            )
-            owner_row = cursor.fetchone()
+            session["customer_id"] = customer_row["customer_id"]
 
-            if not owner_row:
-                flash("No owner profile linked to this account.", "error")
-                return redirect(url_for("login"))
-
+        elif role == "owner":
             session["owner_id"] = owner_row["owner_id"]
 
-        session["user_id"] = account["account_id"]
-        session["account_id"] = account["account_id"]
+        # ------------------------------------------------------------
+        # Common session data
+        # ------------------------------------------------------------
+        session["user_id"] = account_id
+        session["account_id"] = account_id
         session["fullname"] = account["fullname"]
-        session["role"] = account["role"]
+        session["role"] = role
 
-        if account["role"] == "customer":
+        if role == "customer":
             return redirect(url_for("customer_aboutpage"))
-        elif account["role"] == "caretaker":
+        elif role == "caretaker":
             return redirect(url_for("caretaker_dashboard"))
-        elif account["role"] == "owner":
+        elif role == "owner":
             return redirect(url_for("admin_dashboard"))
-        else:
-            flash("Unknown account role.", "error")
-            return redirect(url_for("login"))
 
     finally:
         cursor.close()

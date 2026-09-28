@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Booking #{{ booking.id }}</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p><strong>Customer:</strong> {{ booking.customer_name }}</p>
+        <p><strong>Contact:</strong> {{ booking.customer_contact or '—' }}</p>
+        <p><strong>Service:</strong> {{ booking.service }}</p>
+        <p><strong>Scheduled:</strong> {{ booking.scheduled_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Status:</strong> {{ booking.status }}</p>
+        <p><strong>Type:</strong> {{ 'Walk-in' if booking.is_walkin else 'Regular' }}</p>
+        <p>
+            <strong>Accepted by:</strong>
+            {{ booking.accepted_by.username if booking.accepted_by else '—' }}
+        </p>
+        <p><strong>Accepted at:</strong>
+            {{ booking.accepted_at.strftime('%Y-%m-%d %H:%M') if booking.accepted_at else '—' }}
+        </p>
+        <p><strong>Reschedule deadline:</strong>
+            {% if booking.reschedule_deadline %}
+                {{ booking.reschedule_deadline.strftime('%Y-%m-%d %H:%M') }}
+                {% if booking.can_customer_reschedule %}<span class="badge bg-success">Open</span>{% else %}<span class="badge bg-secondary">Closed</span>{% endif %}
+            {% else %}—{% endif %}
+        </p>
+        <p><strong>Created by:</strong> {{ booking.created_by.username if booking.created_by else '—' }}</p>
+    </div>
+</div>
+
+<a href="{{ url_for('bookings.list_bookings') }}" class="btn btn-secondary">Back to list</a>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>All Bookings</h2>
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Scheduled</th>
+            <th>Status</th>
+            <th>Accepted by</th>
+            <th>Type</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for b in bookings %}
+        <tr>
+            <td>{{ b.id }}</td>
+            <td>{{ b.customer_name }}</td>
+            <td>{{ b.service }}</td>
+            <td>{{ b.scheduled_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                <span class="badge bg-{{ 'success' if b.status == 'accepted' else
+                                        'warning' if b.status == 'pending' else
+                                        'info' if b.status == 'reschedule_requested' else
+                                        'secondary' }}">
+                    {{ b.status }}
+                </span>
+            </td>
+            <td>{{ b.accepted_by.username if b.accepted_by else '—' }}</td>
+            <td>{{ 'Walk-in' if b.is_walkin else 'Regular' }}</td>
+            <td>
+                <a href="{{ url_for('bookings.detail', booking_id=b.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+
+                {% if b.status == 'pending' %}
+                <form method="POST" action="{{ url_for('bookings.accept', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-success">Accept</button>
+                </form>
+                <form method="POST" action="{{ url_for('bookings.decline', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-danger">Decline</button>
+                </form>
+                {% endif %}
+
+                {% if b.can_customer_reschedule %}
+                <a href="{{ url_for('bookings.reschedule', booking_id=b.id) }}" class="btn btn-sm btn-outline-warning">Reschedule</a>
+                {% endif %}
+
+                {% if b.status == 'reschedule_requested' %}
+                <form method="POST" action="{{ url_for('bookings.approve_reschedule', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-success">Approve Reschedule</button>
+                </form>
+                <form method="POST" action="{{ url_for('bookings.decline_reschedule', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-danger">Decline</button>
+                </form>
+                {% endif %}
+
+                {% if b.status == 'accepted' %}
+                <form method="POST" action="{{ url_for('bookings.complete', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-info">Complete</button>
+                </form>
+                {% endif %}
+
+                {% if b.status not in ('completed', 'cancelled') %}
+                <form method="POST" action="{{ url_for('bookings.cancel', booking_id=b.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

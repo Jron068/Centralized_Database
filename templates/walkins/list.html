@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Walk-in Bookings</h2>
+<a href="{{ url_for('walkins.create') }}" class="btn btn-primary mb-3">+ New Walk-in</a>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Scheduled</th>
+            <th>Recorded by</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for w in walkins %}
+        <tr>
+            <td>{{ w.id }}</td>
+            <td>{{ w.customer_name }}</td>
+            <td>{{ w.service }}</td>
+            <td>{{ w.scheduled_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ w.created_by.username if w.created_by else '—' }}</td>
+            <td>
+                <a href="{{ url_for('walkins.detail', booking_id=w.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

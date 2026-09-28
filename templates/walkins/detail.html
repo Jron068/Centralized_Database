@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Walk-in #{{ booking.id }}</h2>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Customer:</strong> {{ booking.customer_name }}</p>
+        <p><strong>Service:</strong> {{ booking.service }}</p>
+        <p><strong>Scheduled:</strong> {{ booking.scheduled_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Recorded by:</strong> {{ booking.created_by.username if booking.created_by else '—' }}</p>
+    </div>
+</div>
+
+{% if proof %}
+<div class="card border-success mb-3">
+    <div class="card-header bg-success text-white">Payment Proof</div>
+    <div class="card-body">
+        <p><strong>Payer Name:</strong> {{ proof.payer_name }}</p>
+        <p><strong>Signature:</strong> {{ proof.payer_signature }}</p>
+        <p><strong>Amount:</strong> ₱{{ '%.2f'|format(proof.amount) if proof.amount else '—' }}</p>
+        <p><strong>Recorded at:</strong> {{ proof.recorded_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning">No payment proof recorded.</div>
+{% endif %}
+
+<a href="{{ url_for('walkins.list_walkins') }}" class="btn btn-secondary">Back to walk-ins</a>
+{% endblock %}
