@@ -1,6 +1,6 @@
 from config import get_connection
 from flask import jsonify, render_template, session
-from app import app
+from templates.admin.app import app
 
 @app.route("/resorts")
 def resorts():

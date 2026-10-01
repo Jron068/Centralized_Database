@@ -38,6 +38,7 @@ from routes.admins.admin_payments import *
 from routes.caretaker import *
 from routes.resorts import *
 from routes.admins.reservation import *
+from routes.admins.property_manager import *   # Property Manager (must come after routes.caretaker)
 
 
 

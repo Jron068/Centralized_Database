@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Walk-in Verification — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Standalone styling: swap for your admin stylesheet / base template if you have one. -->
+<style>
+  body { font-family: system-ui, sans-serif; margin:0; background:#f5f7f5; color:#1f2d24; }
+  .wrap { max-width:1100px; margin:0 auto; padding:24px; }
+  h1 { margin:0 0 4px; } p.sub { margin:0 0 20px; opacity:.7; }
+  .flash { padding:10px 14px; border-radius:8px; margin-bottom:12px; background:#e6f4ea; }
+  .flash.warning { background:#fff4e0; } .flash.danger { background:#fdeaea; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; }
+  th, td { padding:12px; text-align:left; border-bottom:1px solid #e5ebe6; vertical-align:middle; }
+  th { background:#eef3ef; font-size:13px; }
+  .badge { padding:3px 10px; border-radius:20px; font-size:12px; background:#fff4e0; }
+  .badge.Confirmed { background:#e6f4ea; } .badge.Rejected { background:#fdeaea; }
+  button { padding:7px 14px; border-radius:6px; border:0; cursor:pointer; font-weight:600; }
+  .approve { background:#2e7d4f; color:#fff; } .reject { background:#fff; border:1px solid #c0392b; color:#c0392b; }
+  a.back { display:inline-block; margin-bottom:16px; color:#2e7d4f; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{{ url_for('admin_dashboard') }}">&larr; Back to dashboard</a>
+  <h1>Walk-in Bookings</h1>
+  <p class="sub">Check the amount and photo submitted by the caretaker, then approve or reject.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <table>
+    <thead>
+      <tr><th>Booking</th><th>Resort</th><th>Guest</th><th>Stay</th><th>Total amount</th><th>Photo</th><th>Status</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for w in walkins %}
+      <tr>
+        <td>#RSV-{{ w.reservation_id }}<br><small>{{ w.created_at.strftime('%b %d, %Y %I:%M %p') }}</small></td>
+        <td>{{ w.resort_name }}</td>
+        <td>{{ w.guest_name }}{% if w.guest_contact %}<br><small>{{ w.guest_contact }}</small>{% endif %}<br><small>{{ w.guests }} guests &middot; {{ 'Has account' if w.customer_id and w.customer_id != placeholder_id else 'No account' }}</small>{% if w.handled_by_name %}<br><small>Booked by {{ w.handled_by_name }}</small>{% endif %}</td>
+        <td>{{ w.check_in }} to {{ w.check_out }}</td>
+        <td>&#8369;{{ "%.2f"|format(w.amount_paid or 0) }}</td>
+        <td>
+          {% if w.proof_of_payment %}
+          <a href="{{ url_for('static', filename=w.proof_of_payment) }}" target="_blank">
+            <img src="{{ url_for('static', filename=w.proof_of_payment) }}" alt="Proof" style="width:90px;height:64px;object-fit:cover;border-radius:6px;">
+          </a>
+          {% else %}No photo{% endif %}
+        </td>
+        <td><span class="badge {{ w.reservation_status }}">{{ w.reservation_status }}</span></td>
+        <td>
+          {% if w.reservation_status == 'Pending' %}
+          <form method="post" action="{{ url_for('admin_review_walkin', reservation_id=w.reservation_id) }}" style="display:flex;gap:6px;">
+            <button class="approve" name="action" value="approve" type="submit">Approve</button>
+            <button class="reject" name="action" value="reject" type="submit" onclick="return confirm('Reject this walk-in booking?')">Reject</button>
+          </form>
+          {% else %}&mdash;{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" style="text-align:center;opacity:.6;">No walk-in bookings yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

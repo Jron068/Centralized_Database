@@ -5,6 +5,22 @@
 <title>Guests — Pansol Resorts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+<style>
+  .flash { padding:10px 14px; border-radius:8px; margin-bottom:12px; background:#f1f5f2; }
+  .flash.success { background:#e6f4ea; } .flash.warning { background:#fff4e0; } .flash.danger { background:#fdeaea; }
+  .pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; background:#eef3ef; }
+  .pill.checked-in { background:#e6f4ea; color:#256b43; } .pill.reserved { background:#e8f0fb; color:#27529a; }
+  .pill.pending-verification { background:#fff4e0; color:#9a6200; } .pill.rejected, .pill.cancelled { background:#fdeaea; color:#a33; }
+  .pill.walk-in { background:#f3e8fb; color:#6a2f99; }
+  .proof-thumb { width:52px; height:38px; object-fit:cover; border-radius:6px; }
+  .live { font-size:12px; opacity:.65; margin-left:8px; font-weight:400; }
+  .modal { max-height:90vh; overflow-y:auto; }
+  .customer-results { position:absolute; left:0; right:0; background:#fff; border:1px solid #d5ddd7; border-radius:8px; z-index:5; display:none; box-shadow:0 6px 16px rgba(0,0,0,.08); }
+  .customer-results div { padding:9px 12px; cursor:pointer; } .customer-results div:hover { background:#eef3ef; }
+  .customer-results small { opacity:.65; }
+  .proof-preview { display:none; max-width:200px; max-height:140px; margin-top:8px; border-radius:8px; object-fit:cover; }
+  .hint { font-size:12px; opacity:.7; margin-top:4px; }
+</style>
 </head>
 <body>
 
@@ -20,7 +36,7 @@
     <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
     <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
     <li><a href="{{ url_for('caretaker_guests') }}" class="active"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
     <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
     <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
     <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
@@ -38,7 +54,7 @@
       <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
-      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
         <div class="avatar"></div>
         <span class="user-name">{{ fullname }}</span>
@@ -50,110 +66,223 @@
     <div class="page-header">
       <div>
         <h1>Guests</h1>
-        <p>Manage guest reservations and check-in/check-out for Lucky Miels Resort.</p>
+        <p>Manage guest reservations, walk-in bookings and check-in/check-out for {{ resort.resort_name }}. <span class="live" id="liveStamp"></span></p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-primary" onclick="document.getElementById('newGuestModal').classList.add('open')">+ Add Guest</button>
+        <button class="btn btn-primary" onclick="document.getElementById('walkinModal').classList.add('open')">+ Add Walk-in Guest</button>
       </div>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
     <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-label">Total Guests Today</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Checked In</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Checked Out</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Upcoming Reservations</div>
-        <div class="stat-value">0</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Total Guests Today</div><div class="stat-value" id="statToday">0</div></div>
+      <div class="stat-card"><div class="stat-label">Checked In</div><div class="stat-value" id="statIn">0</div></div>
+      <div class="stat-card"><div class="stat-label">Checked Out</div><div class="stat-value" id="statOut">0</div></div>
+      <div class="stat-card"><div class="stat-label">Upcoming Reservations</div><div class="stat-value" id="statUpcoming">0</div></div>
+      <div class="stat-card"><div class="stat-label">Awaiting Admin</div><div class="stat-value" id="statPending">0</div></div>
     </div>
 
     <div class="toolbar">
-      <div class="search-box">🔍 <input type="text" placeholder="Search guest name or booking ID..."></div>
-      <select class="select-filter">
-        <option>All Status</option>
+      <div class="search-box">🔍 <input type="text" id="guestSearch" placeholder="Search guest name or booking ID..."></div>
+      <select class="select-filter" id="statusFilter">
+        <option value="">All Status</option>
         <option>Checked In</option>
         <option>Checked Out</option>
         <option>Reserved</option>
+        <option>Pending Verification</option>
+        <option>Rejected</option>
         <option>Cancelled</option>
+      </select>
+      <select class="select-filter" id="sourceFilter">
+        <option value="">All Sources</option>
+        <option>Walk-in</option>
+        <option>Online</option>
       </select>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <h2>Guest List</h2>
-      </div>
+      <div class="card-header"><h2>Guest List</h2></div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Guest</th>
-              <th>Booking ID</th>
-              <th>Check-in</th>
-              <th>Check-out</th>
-              <th>Room / Unit</th>
-              <th>Status</th>
-              <th></th>
+              <th>Guest</th><th>Booking ID</th><th>Check-in</th><th>Check-out</th><th>Guests</th>
+              <th>Source</th><th>Amount</th><th>Photo</th><th>Status</th>
             </tr>
           </thead>
-          <tbody>
-            {% for guest in guests %}
-            <tr>
-              <td>{{ guest.guest_name or 'Guest' }}</td>
-              <td>#RSV-{{ guest.reservation_id }}</td>
-              <td>{{ guest.check_in }}</td>
-              <td>{{ guest.check_out }}</td>
-              <td>{{ guest.guests }} guests</td>
-              <td>{{ guest.reservation_status }}</td>
-              <td></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="7" class="empty-state">No guest records found for your assigned resort.</td></tr>
-            {% endfor %}
-          </tbody>
+          <tbody id="guestRows"></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="newGuestModal">
+<!-- Walk-in booking modal -->
+<div class="modal-overlay" id="walkinModal">
   <div class="modal">
-    <h3>Add Guest</h3>
-    <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" placeholder="Guest name">
-    </div>
-    <div class="form-group">
-      <label>Booking ID</label>
-      <input type="text" placeholder="e.g. LM-0231">
-    </div>
-    <div class="form-group">
-      <label>Room / Unit</label>
-      <input type="text" placeholder="e.g. Cottage 3">
-    </div>
-    <div class="form-group">
-      <label>Check-in Date</label>
-      <input type="date">
-    </div>
-    <div class="form-group">
-      <label>Check-out Date</label>
-      <input type="date">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="document.getElementById('newGuestModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary">Save Guest</button>
-    </div>
+    <h3>Add Walk-in Guest</h3>
+    <form method="post" action="{{ url_for('caretaker_walkin') }}" enctype="multipart/form-data" id="walkinForm">
+      <input type="hidden" name="next" value="guests">
+      <div class="form-group">
+        <label for="guest_name">Guest name{% if features.name_only %} *{% endif %}</label>
+        {% if features.name_only %}
+        <input type="text" id="guest_name" name="guest_name" maxlength="120" required placeholder="Full name of the walk-in guest">
+        {% else %}
+        <input type="text" id="guest_name" name="guest_name" maxlength="120" readonly placeholder="Filled in from the customer account below">
+        {% endif %}
+      </div>
+      <div class="form-group">
+        <label for="guest_contact">Phone number</label>
+        <input type="tel" id="guest_contact" name="guest_contact" maxlength="20" required placeholder="e.g. 0917 123 4567">
+        <div class="hint">Needed so you can follow up on the guest's inquiries (not needed if you link their account).</div>
+      </div>
+      <div class="form-group" style="position:relative;">
+        <label for="customer_search">{% if features.name_only %}Link customer account (optional){% else %}Customer account *{% endif %}</label>
+        <input type="text" id="customer_search" autocomplete="off" placeholder="Search name or email...">
+        <input type="hidden" name="customer_id" id="customer_id">
+        <div id="customerResults" class="customer-results"></div>
+        <div class="hint">{% if features.name_only %}No account? Just type the name and phone number above. You book on the guest's behalf and handle their inquiries.{% else %}Every booking is linked to a customer account.{% if features.placeholder_missing %} To book guests who have no account, first register one customer account with the email <strong>{{ features.placeholder_email }}</strong> (one-time).{% endif %} You book on the customer's behalf.{% endif %}</div>
+      </div>
+      <div class="form-group"><label for="check_in">Check-in *</label><input type="date" id="check_in" name="check_in" required></div>
+      <div class="form-group"><label for="check_out">Check-out *</label><input type="date" id="check_out" name="check_out" required></div>
+      <div class="form-group"><label for="guests">Number of guests *</label><input type="number" id="guests" name="guests" min="1" required></div>
+      <div class="form-group"><label for="amount">Total amount (₱) *</label><input type="number" id="amount" name="amount" min="0.01" step="0.01" required></div>
+      <div class="form-group">
+        <label for="proof">Photo (proof of payment) *</label>
+        <input type="file" id="proof" name="proof" accept="image/png,image/jpeg,image/webp" required>
+        <div class="hint">JPG, PNG or WEBP, up to 5 MB. The admin reviews this photo and the amount.</div>
+        <img id="proofPreview" class="proof-preview" alt="Photo preview">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('walkinModal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit for Verification</button>
+      </div>
+    </form>
   </div>
 </div>
 
+<script>
+  const DATA_URL = "{{ url_for('caretaker_guests_data') }}";
+  const SEARCH_URL = "{{ url_for('caretaker_walkin_customers') }}";
+  let state = {{ data|tojson }};
+
+  const $ = (id) => document.getElementById(id);
+  const slug = (s) => s.toLowerCase().replace(/\s+/g, '-');
+  const money = (n) => n == null ? '—' : '₱' + Number(n).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  function cell(tr, content) {
+    const td = document.createElement('td');
+    if (content instanceof Node) td.appendChild(content); else td.textContent = content;
+    tr.appendChild(td); return td;
+  }
+  function pill(text, extra) {
+    const s = document.createElement('span');
+    s.className = 'pill ' + slug(extra || text); s.textContent = text; return s;
+  }
+
+  function render() {
+    const st = state.stats;
+    $('statToday').textContent = st.today_guests; $('statIn').textContent = st.checked_in;
+    $('statOut').textContent = st.checked_out; $('statUpcoming').textContent = st.upcoming;
+    $('statPending').textContent = st.pending;
+
+    const q = $('guestSearch').value.trim().toLowerCase();
+    const status = $('statusFilter').value, source = $('sourceFilter').value;
+    const rows = state.guests.filter(g =>
+      (!q || g.guest.toLowerCase().includes(q) || g.booking.toLowerCase().includes(q) || String(g.id) === q.replace('#rsv-', '')) &&
+      (!status || g.status === status) && (!source || g.source === source));
+
+    const body = $('guestRows'); body.innerHTML = '';
+    if (!rows.length) {
+      const tr = document.createElement('tr'); const td = cell(tr, 'No guest records found for your assigned resort.');
+      td.colSpan = 9; td.className = 'empty-state'; body.appendChild(tr); return;
+    }
+    rows.forEach(g => {
+      const tr = document.createElement('tr');
+      const who = document.createElement('div'); who.textContent = g.guest;
+      if (g.contact) { const sm = document.createElement('small'); sm.style.display = 'block'; sm.style.opacity = '.65'; sm.textContent = g.contact; who.appendChild(sm); }
+      cell(tr, who); cell(tr, g.booking); cell(tr, g.check_in); cell(tr, g.check_out); cell(tr, g.guests + ' guests');
+      cell(tr, g.source === 'Walk-in' ? pill('Walk-in') : 'Online');
+      cell(tr, money(g.amount));
+      if (g.proof) {
+        const a = document.createElement('a'); a.href = g.proof; a.target = '_blank';
+        const img = document.createElement('img'); img.src = g.proof; img.alt = 'Proof'; img.className = 'proof-thumb';
+        a.appendChild(img); cell(tr, a);
+      } else cell(tr, '—');
+      cell(tr, pill(g.status));
+      body.appendChild(tr);
+    });
+  }
+
+  async function refresh() {
+    try {
+      const res = await fetch(DATA_URL, {headers: {'Accept': 'application/json'}});
+      if (!res.ok) return;
+      state = await res.json(); render();
+      $('liveStamp').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    } catch (e) { /* keep showing the last data */ }
+  }
+
+  ['guestSearch', 'statusFilter', 'sourceFilter'].forEach(id => $(id).addEventListener('input', render));
+  render();
+  setInterval(refresh, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+
+  // ---- Walk-in form ----
+  const today = new Date().toISOString().split('T')[0];
+  const ci = $('check_in'), co = $('check_out');
+  ci.min = today; co.min = today;
+  ci.addEventListener('change', () => { co.min = ci.value || today; });
+
+  const proofInput = $('proof'), preview = $('proofPreview'), MAX_BYTES = 5 * 1024 * 1024;
+  proofInput.addEventListener('change', () => {
+    const f = proofInput.files[0];
+    if (!f) { preview.style.display = 'none'; return; }
+    if (f.size > MAX_BYTES) { alert('Photo is too large (maximum 5 MB).'); proofInput.value = ''; preview.style.display = 'none'; return; }
+    preview.src = URL.createObjectURL(f); preview.style.display = 'block';
+  });
+
+  const searchBox = $('customer_search'), idField = $('customer_id'), nameField = $('guest_name'), contactField = $('guest_contact'), results = $('customerResults');
+  let timer = null;
+  const ACCOUNT_REQUIRED = {{ 'false' if features.name_only else 'true' }};
+  function unlinkAccount() {
+    idField.value = ''; contactField.required = true;
+    if (ACCOUNT_REQUIRED) { nameField.value = ''; nameField.readOnly = true; } else { nameField.readOnly = false; }
+  }
+  searchBox.addEventListener('input', () => {
+    unlinkAccount();
+    clearTimeout(timer);
+    const q = searchBox.value.trim();
+    if (q.length < 2) { results.style.display = 'none'; return; }
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch(SEARCH_URL + '?q=' + encodeURIComponent(q));
+        const list = await res.json();
+        results.innerHTML = '';
+        if (!list.length) { const none = document.createElement('div'); none.textContent = 'No matching account — you can still book using the name above.'; results.appendChild(none); }
+        list.forEach(c => {
+          const row = document.createElement('div'); row.textContent = c.name + ' ';
+          const small = document.createElement('small'); small.textContent = '(' + c.email + ')'; row.appendChild(small);
+          row.addEventListener('click', () => {
+            idField.value = c.customer_id;
+            nameField.value = c.name; nameField.readOnly = true; contactField.required = false;   // name comes from the account
+            searchBox.value = c.name + ' (' + c.email + ')';
+            results.style.display = 'none';
+          });
+          results.appendChild(row);
+        });
+        results.style.display = 'block';
+      } catch (e) { results.style.display = 'none'; }
+    }, 250);
+  });
+  $('walkinForm').addEventListener('submit', (e) => {
+    if (ACCOUNT_REQUIRED && !idField.value) { e.preventDefault(); alert("Please select the customer's account from the search results."); searchBox.focus(); }
+  });
+</script>
 </body>
 </html>

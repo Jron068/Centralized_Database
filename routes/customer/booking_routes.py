@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from flask import render_template, request, session, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
-from app import app
+from templates.admin.app import app
 from config import get_connection
 
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'payments')

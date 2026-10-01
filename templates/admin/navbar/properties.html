@@ -77,6 +77,7 @@
 
       <div class="toolbar">
         <input class="search-input" id="propertySearch" placeholder="Search properties" aria-label="Search properties">
+        <a class="btn btn-outline" href="{{ url_for('admin_properties_manage') }}">Property Manager</a>
         <button class="btn btn-primary" id="addPropertyButton" type="button">+ Add Property</button>
       </div>
 
@@ -140,6 +141,7 @@
             <p>{{ property.address or 'No address provided' }}</p>
             <div class="property-meta"><span>{{ property.email or property.phone or 'No contact details' }}</span><span class="pill {{ 'pill-active' if property.status == 'Active' else 'pill-cancelled' }}">{{ property.status }}</span></div>
             <div class="action-group">
+              <a class="btn btn-primary btn-sm" href="{{ url_for('admin_property_detail', resort_id=property.resort_id) }}">Manage</a>
               <button class="btn btn-outline btn-sm edit-property-button" type="button">Edit</button>
               <form method="post" action="{{ url_for('delete_property', resort_id=property.resort_id) }}" onsubmit="return confirm('Delete this property?');">
                 <button class="btn btn-danger-outline btn-sm" type="submit">Delete</button>

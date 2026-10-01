@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 
-from app import db
+from templates.admin.app import db
 from models import Booking, User
 from forms import BookingForm, RescheduleRequestForm
 

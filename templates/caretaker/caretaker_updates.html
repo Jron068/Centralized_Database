@@ -21,7 +21,7 @@
     <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
     <li><a href="{{ url_for('caretaker_updates') }}" class="active"><span class="icon">⟳</span> Updates</a></li>
     <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
     <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
     <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
     <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
@@ -42,10 +42,10 @@
       <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
-      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
         <div class="avatar"></div>
-        <span class="user-name">Aron-John Castillo</span>
+        <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
   </header>

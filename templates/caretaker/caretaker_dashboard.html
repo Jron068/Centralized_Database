@@ -6,6 +6,32 @@
 <title>Pansol Resorts | Dashboard Overview</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker_dashboard.css') }}">
+<style>
+.bk-panel{margin-top:24px;padding:24px}
+.bk-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.bk-head h3{margin:0 0 4px;font-size:18px}.bk-sub{margin:0;font-size:13px;opacity:.65}
+.bk-chips{display:flex;gap:8px}
+.bk-chip{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.bk-chip.pending,.bk-pill.pending{background:#fff4e0;color:#9a6200}
+.bk-chip.confirmed,.bk-pill.confirmed{background:#e3f3e8;color:#1f6b3a}
+.bk-pill.rejected,.bk-pill.cancelled{background:#fdeaea;color:#a12a2a}
+.bk-pill.completed{background:#eceff1;color:#4b5963}
+.bk-wrap{overflow-x:auto;border:1px solid #e6ebe7;border-radius:12px}
+.bk-table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
+.bk-table th{background:#f6f8f6;padding:12px 16px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#6b7a70;white-space:nowrap}
+.bk-table td{padding:14px 16px;border-top:1px solid #eef1ee;vertical-align:middle}
+.bk-table tr:hover td{background:#fafcfa}
+.bk-cust{display:flex;align-items:center;gap:12px}
+.bk-ava{width:36px;height:36px;border-radius:50%;background:#2f6a4f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.bk-cust small,.bk-table td small{display:block;opacity:.65;font-size:12px;margin-top:2px}
+.bk-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.bk-proof{width:64px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #e0e6e1}
+.bk-actions{display:flex;gap:8px;margin:0}
+.bk-btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent}
+.bk-btn.approve{background:#2f6a4f;color:#fff}.bk-btn.approve:hover{background:#245640}
+.bk-btn.reject{background:#fff;color:#a12a2a;border-color:#e3b9b9}.bk-btn.reject:hover{background:#fdeaea}
+.bk-empty{padding:32px;text-align:center;opacity:.6}
+</style>
 </head>
 <body>
 
@@ -26,7 +52,7 @@
       <a href="{{ url_for('caretaker_dashboard') }}" class="nav-item active"><i class="fa-solid fa-grip"></i> Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}" class="nav-item"><i class="fa-solid fa-arrows-rotate"></i> Updates</a>
       <a href="{{ url_for('caretaker_guests') }}" class="nav-item"><i class="fa-solid fa-users"></i> Guests</a>
-      <a href="{{ url_for('caretaker_inventory') }}" class="nav-item"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+      <a href="{{ url_for('caretaker_inventory') }}" class="nav-item"><i class="fa-solid fa-calendar-check"></i> Reservations</a>
       <a href="{{ url_for('caretaker_maintenance') }}" class="nav-item"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</a>
       <a href="{{ url_for('caretaker_reports') }}" class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</a>
     </nav>
@@ -92,7 +118,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Recent Updates</h3>
-            <a href="#" class="view-all">View All</a>
+            <a href="{{ url_for('caretaker_updates') }}" class="view-all">View All</a>
           </div>
 
           {% for notification in notifications %}
@@ -114,7 +140,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Messages</h3>
-            <a href="#" class="view-all">View All</a>
+            <a href="{{ url_for('caretaker_messages') }}" class="view-all">View All</a>
           </div>
 
           {% for notification in notifications %}
@@ -152,10 +178,10 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Upcoming Reservations</h3>
-            <a href="#" class="view-all">View All</a>
+            <a href="{{ url_for('caretaker_inventory') }}" class="view-all">View All</a>
           </div>
 
-          {% for reservation in reservations %}
+          {% for reservation in upcoming %}
           <div class="reservation">
             <div class="reservation-thumb thumb-1"></div>
             <div class="reservation-info">
@@ -187,45 +213,40 @@
 
       </section>
 
-      <section class="panel" style="margin-top:24px;">
-        <div class="panel-head">
-          <h3>Customer Booking Requests</h3>
-          <span>{{ reservations|length }} shown</span>
+      <section class="panel bk-panel">
+        <div class="bk-head">
+          <div>
+            <h3>Customer Booking Requests</h3>
+            <p class="bk-sub">Online bookings for {{ resort.resort_name }}. Check the payment proof, then approve or reject.</p>
+          </div>
+          <div class="bk-chips">
+            <span class="bk-chip pending">{{ pending_count }} Pending</span>
+            <span class="bk-chip confirmed">{{ confirmed_count }} Confirmed</span>
+          </div>
         </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; text-align:left;">
-            <thead>
-              <tr><th>Customer</th><th>Stay</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr>
-            </thead>
+        <div class="bk-wrap">
+          <table class="bk-table">
+            <thead><tr><th>Customer</th><th>Stay</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
-              {% for reservation in reservations %}
+              {% for b in reservations %}
               <tr>
-                <td>{{ reservation.guest_name or 'Guest' }}<br><small>{{ reservation.guests }} guests</small></td>
-                <td>{{ reservation.check_in }} to {{ reservation.check_out }}</td>
-                <td>{{ reservation.payment_status }}{% if reservation.amount_paid %}<br>&#8369;{{ "%.2f"|format(reservation.amount_paid) }}{% endif %}</td>
+                <td><div class="bk-cust"><div class="bk-ava">{{ (b.guest_name or 'G')[0]|upper }}</div>
+                  <div>{{ b.guest_name or 'Guest' }}<small>{{ b.guests }} guest{{ '' if b.guests == 1 else 's' }}</small></div></div></td>
+                <td>{{ b.check_in.strftime('%b %d, %Y') }} &rarr; {{ b.check_out.strftime('%b %d, %Y') }}<small>{{ b.nights }} night{{ '' if b.nights == 1 else 's' }}</small></td>
+                <td>{{ b.payment_status or 'No payment' }}{% if b.amount_paid %}<small>&#8369;{{ "{:,.2f}".format(b.amount_paid) }}</small>{% endif %}</td>
+                <td>{% if b.proof_url %}<a href="{{ b.proof_url }}" target="_blank"><img class="bk-proof" src="{{ b.proof_url }}" alt="Payment proof"></a>{% else %}<small>No proof</small>{% endif %}</td>
+                <td><span class="bk-pill {{ b.reservation_status|lower }}">{{ b.reservation_status }}</span></td>
                 <td>
-                  {% if reservation.proof_of_payment %}
-                  <a href="{{ url_for('static', filename=reservation.proof_of_payment) }}" target="_blank">
-                    <img src="{{ url_for('static', filename=reservation.proof_of_payment) }}" alt="Payment proof" style="width:72px;height:52px;object-fit:cover;border-radius:6px;">
-                  </a>
-                  {% else %}No proof{% endif %}
-                </td>
-                <td>{{ reservation.reservation_status }}</td>
-                <td>
-                  {% if reservation.reservation_status == 'Confirmed' %}
-                    <span class="badge confirmed">Approved</span>
-                  {% elif reservation.reservation_status == 'Pending' and reservation.payment_status == 'Pending' %}
-                    <form method="post" action="{{ url_for('caretaker_review_reservation', reservation_id=reservation.reservation_id) }}">
-                      <button class="btn-primary" name="action" value="approve" type="submit">Approve</button>
-                      <button class="btn-outline" name="action" value="reject" type="submit">Reject</button>
-                    </form>
-                  {% else %}
-                    <span>{{ reservation.reservation_status }}</span>
-                  {% endif %}
+                  {% if b.can_review %}
+                  <form class="bk-actions" method="post" action="{{ url_for('caretaker_review_reservation', reservation_id=b.reservation_id) }}">
+                    <button class="bk-btn approve" name="action" value="approve" type="submit">Approve</button>
+                    <button class="bk-btn reject" name="action" value="reject" type="submit" onclick="return confirm('Reject this booking?')">Reject</button>
+                  </form>
+                  {% else %}<small>&mdash;</small>{% endif %}
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="6">No customer booking requests found.</td></tr>
+              <tr><td colspan="6" class="bk-empty">No customer booking requests yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
