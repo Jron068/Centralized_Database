@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 
 from flask import render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash
-from app import app
+from templates.admin.app import app
 from config import get_connection
 from models.decorators import role_required
 

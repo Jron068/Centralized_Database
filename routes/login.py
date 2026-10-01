@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, session, flash, url_for
 from werkzeug.security import check_password_hash
-from app import app
+from templates.admin.app import app
 from config import get_connection
 
 @app.route("/login", methods=["GET", "POST"])

@@ -7,7 +7,7 @@ from flask import render_template, request, redirect, session, url_for, flash
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
 
-from app import app, mail
+from templates.admin.app import app, mail
 from config import get_connection
 
 def generate_random_password(length=10):
@@ -141,76 +141,7 @@ def verification():
         cursor.close()
         conn.close()
 
-@app.route("/caretaker-dashboard")
-def caretaker_dashboard():
-    if session.get("role") != "caretaker":
-        return redirect(url_for("login"))
-
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """
-            SELECT r.resort_id, r.resort_name, r.address, r.description,
-                   r.logo, r.status
-            FROM resorts r
-            JOIN caretakers c ON c.resort_id = r.resort_id
-            WHERE c.account_id = %s AND c.status = 'Active'
-            """,
-            (session.get("account_id"),),
-        )
-        resort = cursor.fetchone()
-        if not resort:
-            session.clear()
-            flash("Your caretaker assignment is no longer active.", "warning")
-            return redirect(url_for("login"))
-
-        cursor.execute(
-            """
-                 SELECT r.reservation_id, r.guest_name, r.check_in, r.check_out,
-                     r.guests, r.total_amount, r.reservation_status,
-                     COALESCE(p.payment_status, 'No payment') AS payment_status,
-                     p.proof_of_payment, p.amount_paid, p.payment_date
-            FROM reservations r
-                 LEFT JOIN payments p ON p.payment_id = (
-                  SELECT p2.payment_id
-                  FROM payments p2
-                  WHERE p2.reservation_id = r.reservation_id
-                  ORDER BY p2.payment_id DESC
-                  LIMIT 1
-                 )
-            WHERE r.resort_id = %s
-              AND r.check_out >= CURDATE()
-              AND r.reservation_status IN ('Pending', 'Confirmed')
-            ORDER BY r.check_in ASC
-            LIMIT 10
-            """,
-            (resort["resort_id"],),
-        )
-        reservations = cursor.fetchall()
-
-        cursor.execute(
-            """
-            SELECT title, message, created_at, is_read
-            FROM notifications
-            WHERE account_id = %s
-            ORDER BY created_at DESC
-            LIMIT 5
-            """,
-            (session.get("account_id"),),
-        )
-        notifications = cursor.fetchall()
-
-        return render_template(
-            "caretaker/caretaker_dashboard.html",
-            fullname=session.get("fullname"),
-            resort=resort,
-            reservations=reservations,
-            notifications=notifications,
-        )
-    finally:
-        cursor.close()
-        conn.close()
+# NOTE: /caretaker-dashboard now lives in caretaker.py (customer bookings only, walk-ins hidden).
 
 @app.route("/customer-dashboard")
 def customer_dashboard():

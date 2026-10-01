@@ -1,6 +1,6 @@
 from flask import render_template, request, session, redirect, url_for, flash
 from werkzeug.security import check_password_hash, generate_password_hash
-from app import app
+from templates.admin.app import app
 from config import get_connection
 from flask import jsonify
 

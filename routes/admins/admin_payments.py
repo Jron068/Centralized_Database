@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 
 from flask import render_template, request, redirect, url_for, session
-from app import app
+from templates.admin.app import app
 from config import get_connection
 from models.decorators import role_required
 

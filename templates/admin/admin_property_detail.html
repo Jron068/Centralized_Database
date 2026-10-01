@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — {{ resort.resort_name }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+<style>
+.flash{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#e5f4ea;color:#1f6b3a}
+.flash.warning{background:#fbeed9;color:#9a6200}.flash.danger,.flash.error{background:#fdeaea;color:#a12a2a}
+.pm-card .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.pm-card .mini div{background:#f4f8f5;border-radius:8px;padding:8px;text-align:center}
+.pm-card .mini b{display:block;font-size:16px}.pm-card .mini span{font-size:11px;opacity:.7}
+.pm-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pm-actions form{margin:0}
+.badge-alert{background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0;border-bottom:1px solid #dfe6e1}
+.tab-btn{background:none;border:0;padding:10px 16px;cursor:pointer;font-weight:600;color:#6b7a70;border-bottom:3px solid transparent}
+.tab-btn.active{color:#2f6a4f;border-bottom-color:#2f6a4f}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.bars{display:flex;align-items:flex-end;gap:14px;height:160px;padding-top:10px}
+.bars div{flex:1;text-align:center;font-size:11px}.bars i{display:block;background:#7fb496;border-radius:6px 6px 0 0;min-height:3px;margin-bottom:6px}
+.thumb{width:56px;height:40px;object-fit:cover;border-radius:6px}
+.row-actions{display:flex;gap:6px}.row-actions form{margin:0}
+.src{font-size:11px;padding:2px 8px;border-radius:10px;background:#eef3ef}.src.w{background:#efe3f7;color:#6b2f8f}
+.edit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.edit-grid .full{grid-column:1/-1}
+@media(max-width:760px){.edit-grid{grid-template-columns:1fr}.pm-card .mini{grid-template-columns:repeat(2,1fr)}}
+.upd{padding:12px 0;border-bottom:1px solid #e5ebe6}.upd:last-child{border:0}.muted{opacity:.65;font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link active" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link active" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
+      </div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
+    </div>
+    <div class="content">
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin_properties_manage') }}">&larr; All properties</a>
+      <div class="card-row" style="margin-top:16px;">
+        <div>
+          <h1 class="page-title" style="margin:0;">{{ resort.resort_name }}</h1>
+          <p class="page-sub" style="margin:4px 0 0;">{{ resort.address or 'No address provided' }}</p>
+        </div>
+        <form method="post" action="{{ url_for('admin_property_status', resort_id=resort.resort_id) }}" class="pm-actions">
+          <span class="pill {{ 'pill-active' if resort.status == 'Active' else 'pill-cancelled' }}">{{ resort.status }}</span>
+          <select class="select-input" name="status">
+            <option value="Active" {{ 'selected' if resort.status == 'Active' }}>Active</option>
+            <option value="Inactive" {{ 'selected' if resort.status == 'Inactive' }}>Inactive</option>
+          </select>
+          <button class="btn btn-primary btn-sm" type="submit">Change status</button>
+        </form>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+      <div class="tabs">
+        <button class="tab-btn" data-tab="overview">Reports</button>
+        <button class="tab-btn" data-tab="bookings">Bookings <span class="badge-alert" id="bkBadge" style="display:none"></span></button>
+        <button class="tab-btn" data-tab="maintenance">Maintenance <span class="badge-alert" id="mtBadge" style="display:none"></span></button>
+        <button class="tab-btn" data-tab="edit">Edit Details</button>
+        <button class="tab-btn" data-tab="updates">Updates</button>
+      </div>
+
+      <!-- REPORTS -->
+      <section class="tab-panel" id="tab-overview">
+        <form class="toolbar" method="get" action="{{ url_for('admin_property_detail', resort_id=resort.resort_id) }}">
+          <label for="month">Month</label>
+          <input class="search-input" id="month" name="month" type="month" value="{{ state.reports.month }}">
+          <button class="btn btn-primary" type="submit">Apply</button>
+        </form>
+        <div class="grid-4" style="margin-bottom:22px;" id="stats"></div>
+        <div class="card"><h3>Verified revenue &mdash; last 6 months</h3><div class="bars" id="trend"></div></div>
+      </section>
+
+      <!-- BOOKINGS -->
+      <section class="tab-panel" id="tab-bookings">
+        <div class="toolbar">
+          <input class="search-input" id="bq" placeholder="Search guest or booking ID">
+          <select class="select-input" id="bs"><option value="">All status</option><option>Pending Verification</option><option>Reserved</option><option>Checked In</option><option>Checked Out</option><option>Rejected</option><option>Cancelled</option></select>
+          <select class="select-input" id="bsrc"><option value="">All sources</option><option>Online</option><option>Walk-in</option></select>
+          {% if urls.walkins %}<a class="btn btn-outline" href="{{ urls.walkins }}">Walk-in Approvals</a>{% endif %}
+        </div>
+        <div class="card"><table>
+          <thead><tr><th>Booking</th><th>Guest</th><th>Stay</th><th>Guests</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="bookRows"></tbody></table></div>
+      </section>
+
+      <!-- MAINTENANCE -->
+      <section class="tab-panel" id="tab-maintenance">
+        <div class="card"><h3>Maintenance requests from the caretaker</h3><table>
+          <thead><tr><th>Issue</th><th>Location</th><th>Priority</th><th>Reported</th><th>Status</th><th></th></tr></thead>
+          <tbody id="mtRows"></tbody></table></div>
+      </section>
+
+      <!-- EDIT -->
+      <section class="tab-panel" id="tab-edit">
+        <form class="card" method="post" action="{{ url_for('admin_property_save', resort_id=resort.resort_id) }}" style="padding:22px;">
+          <h3>Edit property</h3>
+          <div class="edit-grid">
+            {% for f in text_fields %}
+              {% if f == 'description' %}
+              <div class="form-row full"><label for="f_{{ f }}">Description</label><textarea id="f_{{ f }}" name="{{ f }}" rows="4" maxlength="2000">{{ resort[f] or '' }}</textarea></div>
+              {% else %}
+              <div class="form-row {{ 'full' if f == 'amenities' }}"><label for="f_{{ f }}">{{ {'resort_name':'Property name','address':'Location / address','email':'Contact email','phone':'Contact phone','amenities':'Amenities (comma separated)'}[f] }}</label>
+                <input id="f_{{ f }}" name="{{ f }}" value="{{ resort[f] or '' }}" {{ 'required' if f == 'resort_name' }} {{ 'type=email' if f == 'email' }}></div>
+              {% endif %}
+            {% endfor %}
+            {% for p in price_fields %}
+            <div class="form-row"><label for="p_{{ p }}">{{ p.replace('_', ' ').title() }} (&#8369;)</label>
+              <input id="p_{{ p }}" name="{{ p }}" type="number" min="0" step="0.01" value="{{ resort[p] if resort[p] is not none else '' }}"></div>
+            {% endfor %}
+            {% if not price_fields %}<p class="muted full">Your resorts table has no price column, so there is no price to edit here.</p>{% endif %}
+          </div>
+          <div style="margin-top:18px;"><button class="btn btn-primary" type="submit">Save changes</button></div>
+        </form>
+      </section>
+
+      <!-- UPDATES -->
+      <section class="tab-panel" id="tab-updates">
+        <div class="grid-2">
+          <form class="card" method="post" action="{{ url_for('admin_property_post_update', resort_id=resort.resort_id) }}" style="padding:22px;">
+            <h3>Post an update to the caretaker</h3>
+            <div class="form-row"><label>Title</label><input name="title" maxlength="100" required placeholder="e.g. New rates start next month"></div>
+            <div class="form-row"><label>Details</label><textarea name="message" rows="5" maxlength="1000" required></textarea></div>
+            <button class="btn btn-primary" type="submit">Post update</button>
+          </form>
+          <div class="card"><h3>Recent updates</h3><div id="updList"></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = {{ state|tojson }};
+const URLS = {{ urls|tojson }}, SEEN_URL = "{{ seen_url }}", RID = {{ resort.resort_id }};
+const DATA_URL = "{{ url_for('admin_property_data', resort_id=resort.resort_id) }}?month=" + state.reports.month;
+const money = n => '\u20B1' + Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const withId = (u, id) => u.replace(/\/0(?=\/|$)/, '/' + id);
+const $ = id => document.getElementById(id);
+
+function showTab(t) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + t));
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+showTab("{{ tab }}");
+
+function render() {
+  const r = state.reports;
+  $('stats').innerHTML = [
+    ['Bookings', r.bookings, r.month_label], ['Confirmed', r.confirmed, r.pending + ' pending'],
+    ['Verified Revenue', money(r.revenue), r.month_label], ['Occupancy', r.occupancy + '%', 'of days booked'],
+    ['Avg. Rating', r.rating ?? '\u2014', r.reviews != null ? r.reviews + ' reviews' : 'no reviews table']
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s[0]}</div><div class="stat-value">${s[1]}</div><div class="stat-sub">${esc(s[2])}</div></div>`).join('');
+  const max = Math.max(1, ...r.trend.map(t => t.revenue));
+  $('trend').innerHTML = r.trend.map(t => `<div><i style="height:${Math.round(t.revenue / max * 120)}px"></i>${t.label}<br><b>${money(t.revenue).replace('.00','')}</b></div>`).join('');
+
+  const q = $('bq').value.toLowerCase(), st = $('bs').value, sc = $('bsrc').value;
+  const rows = state.bookings.filter(b => (!st || b.status === st) && (!sc || b.source === sc) && (!q || (b.guest + ' ' + b.booking).toLowerCase().includes(q)));
+  $('bookRows').innerHTML = rows.length ? rows.map(b => {
+    let act = '\u2014';
+    if (b.raw_status === 'Pending') {
+      if (b.source === 'Walk-in' && URLS.walkin) act = `<form class="row-actions" method="post" action="${withId(URLS.walkin, b.id)}"><button class="btn btn-primary btn-sm" name="action" value="approve">Approve</button><button class="btn btn-outline btn-sm" name="action" value="reject" onclick="return confirm('Reject this booking?')">Reject</button></form>`;
+      else if (URLS.review) act = `<a class="btn btn-primary btn-sm" href="${withId(URLS.review, b.id)}">Review</a>`;
+    } else if (URLS.review && b.source === 'Online') act = `<a class="btn btn-outline btn-sm" href="${withId(URLS.review, b.id)}">View</a>`;
+    return `<tr><td>${esc(b.booking)}<br><span class="src ${b.source === 'Walk-in' ? 'w' : ''}">${b.source}</span></td>
+      <td>${esc(b.guest)}<br><small class="muted">${esc(b.email)}</small></td><td>${esc(b.check_in)} to ${esc(b.check_out)}</td><td>${esc(b.guests)}</td>
+      <td>${esc(b.payment_status || 'No payment')}${b.amount != null ? '<br>' + money(b.amount) : ''}</td>
+      <td>${b.proof ? `<a href="${esc(b.proof)}" target="_blank"><img class="thumb" src="${esc(b.proof)}"></a>` : '\u2014'}</td>
+      <td>${esc(b.status)}</td><td>${act}</td></tr>`;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;opacity:.6">No bookings for this property yet.</td></tr>';
+  const pend = state.bookings.filter(b => b.raw_status === 'Pending').length;
+  $('bkBadge').style.display = pend ? '' : 'none'; $('bkBadge').textContent = pend;
+
+  $('mtRows').innerHTML = state.maintenance.length ? state.maintenance.map(m => `<tr>
+    <td><b>${esc(m.issue)}</b><br><small class="muted">${esc(m.description)}<br>by ${esc(m.reported_by)}</small></td><td>${esc(m.location)}</td>
+    <td><span class="pill ${m.priority === 'Urgent' ? 'pill-cancelled' : (m.priority === 'High' ? 'pill-pending' : 'pill-confirmed')}">${esc(m.priority)}</span></td>
+    <td>${esc(m.reported)}</td><td>${m.seen ? 'Seen' : '<b>New</b>'}</td>
+    <td>${m.seen ? '' : `<form method="post" action="${withId(SEEN_URL, m.id)}"><input type="hidden" name="resort_id" value="${RID}"><button class="btn btn-outline btn-sm">Mark as seen</button></form>`}</td></tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;opacity:.6">No maintenance requests for this property.</td></tr>';
+  const open = state.maintenance.filter(m => !m.seen).length;
+  $('mtBadge').style.display = open ? '' : 'none'; $('mtBadge').textContent = open;
+
+  $('updList').innerHTML = state.updates.length ? state.updates.map(u => `<div class="upd"><b>${esc(u.title)}</b><br>${esc(u.message)}<br><span class="muted">${esc(u.date)}</span></div>`).join('') : '<p class="muted">No updates posted yet.</p>';
+}
+['bq', 'bs', 'bsrc'].forEach(i => $(i).addEventListener('input', render));
+render();
+setInterval(async () => { try { const r = await fetch(DATA_URL); if (r.ok) { state = await r.json(); render(); } } catch (e) {} }, 20000);
+</script>
+</body>
+</html>

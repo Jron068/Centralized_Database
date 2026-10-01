@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Inventory — Pansol Resorts</title>
+<title>Reservations — Pansol Resorts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
 </head>
@@ -20,7 +20,7 @@
     <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
     <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
     <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}" class="active"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}" class="active"><span class="icon">🗓</span> Reservations</a></li>
     <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
     <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
     <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
@@ -38,10 +38,10 @@
       <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
-      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
         <div class="avatar"></div>
-        <span class="user-name">Aron-John Castillo</span>
+        <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
   </header>
@@ -49,107 +49,82 @@
   <div class="content">
     <div class="page-header">
       <div>
-        <h1>Inventory</h1>
-        <p>Track supplies and equipment for Lucky Miels Resort.</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-primary" onclick="document.getElementById('newItemModal').classList.add('open')">+ Add Item</button>
+        <h1>Reservations</h1>
+        <p>Customer reservations for {{ resort.resort_name }}. Updates automatically when customers book or the admin changes a status. Walk-ins appear here once the admin confirms them.</p>
       </div>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="flash {{ category }}" style="padding:10px 14px;border-radius:8px;margin-bottom:12px;background:#f1f5f2;">{{ message }}</div>{% endfor %}
+    {% endwith %}
+
     <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-label">Total Items</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Low Stock</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Out of Stock</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Categories</div>
-        <div class="stat-value">0</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Total Reservations</div><div class="stat-value" id="stTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Verification</div><div class="stat-value" id="stPending">0</div></div>
+      <div class="stat-card"><div class="stat-label">Upcoming</div><div class="stat-value" id="stUpcoming">0</div></div>
+      <div class="stat-card"><div class="stat-label">Checked In</div><div class="stat-value" id="stIn">0</div></div>
     </div>
 
     <div class="toolbar">
-      <div class="search-box">🔍 <input type="text" placeholder="Search item name..."></div>
-      <select class="select-filter">
-        <option>All Categories</option>
-        <option>Housekeeping</option>
-        <option>Kitchen</option>
-        <option>Pool &amp; Grounds</option>
-        <option>Office</option>
-      </select>
-      <select class="select-filter">
-        <option>All Stock Levels</option>
-        <option>In Stock</option>
-        <option>Low Stock</option>
-        <option>Out of Stock</option>
+      <div class="search-box">🔍 <input type="text" id="q" placeholder="Search customer or booking ID..."></div>
+      <select class="select-filter" id="statusFilter">
+        <option value="">All Status</option>
+        <option>Pending Verification</option><option>Reserved</option><option>Checked In</option>
+        <option>Checked Out</option><option>Rejected</option><option>Cancelled</option>
       </select>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <h2>Inventory List</h2>
-      </div>
+      <div class="card-header"><h2>Customer Reservations</h2></div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Stock Level</th>
-              <th>Last Updated</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="6" class="empty-state">No inventory items recorded yet.</td>
-            </tr>
-          </tbody>
+          <thead><tr><th>Booking</th><th>Customer</th><th>Stay</th><th>Guests</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="newItemModal">
-  <div class="modal">
-    <h3>Add Inventory Item</h3>
-    <div class="form-group">
-      <label>Item Name</label>
-      <input type="text" placeholder="e.g. Bath Towels">
-    </div>
-    <div class="form-group">
-      <label>Category</label>
-      <select>
-        <option>Housekeeping</option>
-        <option>Kitchen</option>
-        <option>Pool &amp; Grounds</option>
-        <option>Office</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Quantity</label>
-      <input type="number" placeholder="0">
-    </div>
-    <div class="form-group">
-      <label>Reorder Threshold</label>
-      <input type="number" placeholder="0">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="document.getElementById('newItemModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary">Save Item</button>
-    </div>
-  </div>
-</div>
+<script>
+const REVIEW_URL = "{{ url_for('caretaker_review_reservation', reservation_id=0) }}";
+const DATA_URL = "{{ url_for('caretaker_inventory_data') }}";
+const NEXT = "{{ url_for('caretaker_inventory') }}";
+let state = {{ data|tojson }};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+function render() {
+  const q = document.getElementById('q').value.toLowerCase();
+  const st = document.getElementById('statusFilter').value;
+  const s = state.stats;
+  stTotal.textContent = s.total; stPending.textContent = s.pending; stUpcoming.textContent = s.upcoming; stIn.textContent = s.checked_in;
+  const list = state.reservations.filter(r =>
+    (!st || r.status === st) &&
+    (!q || (r.customer + ' ' + r.booking + ' ' + (r.email||'')).toLowerCase().includes(q)));
+  rows.innerHTML = list.length ? list.map(r => `
+    <tr>
+      <td>${esc(r.booking)}<br><small>${esc(r.source)}</small></td>
+      <td>${esc(r.customer)}<br><small>${esc(r.email)}${r.contact ? ' · ' + esc(r.contact) : ''}</small></td>
+      <td>${esc(r.check_in)} to ${esc(r.check_out)}</td>
+      <td>${esc(r.guests)}</td>
+      <td>${esc(r.payment_status || 'No payment')}${r.amount != null ? '<br>&#8369;' + r.amount.toLocaleString(undefined,{minimumFractionDigits:2}) : ''}</td>
+      <td>${r.proof ? `<a href="${esc(r.proof)}" target="_blank"><img src="${esc(r.proof)}" alt="Proof" style="width:56px;height:40px;object-fit:cover;border-radius:6px;"></a>` : 'No proof'}</td>
+      <td>${esc(r.status)}</td>
+      <td>${r.can_review ? `
+        <form method="post" action="${REVIEW_URL.replace('/0/', '/' + r.id + '/')}" style="display:flex;gap:6px;">
+          <input type="hidden" name="next" value="${NEXT}">
+          <button class="btn btn-primary btn-sm" name="action" value="approve" type="submit">Approve</button>
+          <button class="btn btn-outline btn-sm" name="action" value="reject" type="submit" onclick="return confirm('Reject this reservation?')">Reject</button>
+        </form>` : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty-state">No customer reservations found.</td></tr>';
+}
+q.addEventListener('input', render);
+statusFilter.addEventListener('change', render);
+async function refresh() {
+  try { const r = await fetch(DATA_URL, {headers:{'Accept':'application/json'}}); if (r.ok) { state = await r.json(); render(); } } catch (e) {}
+}
+render();
+setInterval(refresh, 15000);
+</script>
 </body>
 </html>

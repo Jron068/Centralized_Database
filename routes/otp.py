@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import render_template, request, redirect, session, flash, url_for
-from app import app
+from templates.admin.app import app
 from config import get_connection
 
 @app.route("/otp")

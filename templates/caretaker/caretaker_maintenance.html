@@ -20,7 +20,7 @@
     <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
     <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
     <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">📦</span> Inventory</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
     <li><a href="{{ url_for('caretaker_maintenance') }}" class="active"><span class="icon">🛠</span> Maintenance</a></li>
     <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
     <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
@@ -38,10 +38,10 @@
       <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
-      <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="badge-dot"></span></button>
+      <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
         <div class="avatar"></div>
-        <span class="user-name">Aron-John Castillo</span>
+        <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
   </header>
@@ -50,70 +50,40 @@
     <div class="page-header">
       <div>
         <h1>Maintenance</h1>
-        <p>Log and track maintenance requests for Lucky Miels Resort.</p>
+        <p>Log maintenance requests for {{ resort.resort_name }}. The admin is notified as soon as you submit one.</p>
       </div>
       <div class="header-actions">
         <button class="btn btn-primary" onclick="document.getElementById('newTicketModal').classList.add('open')">+ New Request</button>
       </div>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="flash {{ category }}" style="padding:10px 14px;border-radius:8px;margin-bottom:12px;background:#f1f5f2;">{{ message }}</div>{% endfor %}
+    {% endwith %}
+
     <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-label">Open Requests</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">In Progress</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Completed (30d)</div>
-        <div class="stat-value">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Urgent</div>
-        <div class="stat-value">0</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Total Requests</div><div class="stat-value" id="stTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">Awaiting Admin</div><div class="stat-value" id="stAwaiting">0</div></div>
+      <div class="stat-card"><div class="stat-label">Seen by Admin</div><div class="stat-value" id="stSeen">0</div></div>
+      <div class="stat-card"><div class="stat-label">Urgent</div><div class="stat-value" id="stUrgent">0</div></div>
     </div>
 
     <div class="toolbar">
-      <div class="search-box">🔍 <input type="text" placeholder="Search maintenance request..."></div>
-      <select class="select-filter">
-        <option>All Priority</option>
-        <option>Urgent</option>
-        <option>High</option>
-        <option>Normal</option>
-        <option>Low</option>
+      <div class="search-box">🔍 <input type="text" id="q" placeholder="Search maintenance request..."></div>
+      <select class="select-filter" id="prioFilter">
+        <option value="">All Priority</option><option>Urgent</option><option>High</option><option>Normal</option><option>Low</option>
       </select>
-      <select class="select-filter">
-        <option>All Status</option>
-        <option>Open</option>
-        <option>In Progress</option>
-        <option>Completed</option>
+      <select class="select-filter" id="statFilter">
+        <option value="">All Status</option><option>Awaiting admin</option><option>Seen by admin</option>
       </select>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <h2>Maintenance Requests</h2>
-      </div>
+      <div class="card-header"><h2>Maintenance Requests</h2></div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Issue</th>
-              <th>Location</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Reported</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="6" class="empty-state">No maintenance requests logged yet.</td>
-            </tr>
-          </tbody>
+          <thead><tr><th>Issue</th><th>Location</th><th>Priority</th><th>Status</th><th>Reported</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -121,35 +91,38 @@
 </div>
 
 <div class="modal-overlay" id="newTicketModal">
-  <div class="modal">
+  <form class="modal" method="post" action="{{ url_for('caretaker_maintenance') }}">
     <h3>New Maintenance Request</h3>
-    <div class="form-group">
-      <label>Issue Title</label>
-      <input type="text" placeholder="e.g. Air conditioning not cooling">
+    <div class="form-group"><label>Issue Title</label><input type="text" name="title" maxlength="100" required placeholder="e.g. Air conditioning not cooling"></div>
+    <div class="form-group"><label>Location</label><input type="text" name="location" maxlength="100" required placeholder="e.g. Cottage 2"></div>
+    <div class="form-group"><label>Priority</label>
+      <select name="priority"><option>Low</option><option selected>Normal</option><option>High</option><option>Urgent</option></select>
     </div>
-    <div class="form-group">
-      <label>Location</label>
-      <input type="text" placeholder="e.g. Cottage 2">
-    </div>
-    <div class="form-group">
-      <label>Priority</label>
-      <select>
-        <option>Low</option>
-        <option>Normal</option>
-        <option>High</option>
-        <option>Urgent</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Description</label>
-      <textarea rows="4" placeholder="Describe the issue..."></textarea>
-    </div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="4" maxlength="1000" required placeholder="Describe the issue..."></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="document.getElementById('newTicketModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary">Submit Request</button>
+      <button type="button" class="btn btn-outline" onclick="document.getElementById('newTicketModal').classList.remove('open')">Cancel</button>
+      <button type="submit" class="btn btn-primary">Submit Request</button>
     </div>
-  </div>
+  </form>
 </div>
 
+<script>
+let state = {{ data|tojson }};
+const DATA_URL = "{{ url_for('caretaker_maintenance_data') }}";
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render() {
+  const q = document.getElementById('q').value.toLowerCase(), pr = prioFilter.value, st = statFilter.value, s = state.stats;
+  stTotal.textContent = s.total || 0; stAwaiting.textContent = s.awaiting || 0; stSeen.textContent = s.seen || 0; stUrgent.textContent = s.urgent || 0;
+  const list = state.requests.filter(r => (!pr || r.priority === pr) && (!st || r.status === st) &&
+    (!q || (r.issue + ' ' + r.location + ' ' + r.description).toLowerCase().includes(q)));
+  rows.innerHTML = list.length ? list.map(r => `
+    <tr><td><strong>${esc(r.issue)}</strong><br><small>${esc(r.description)}</small></td>
+    <td>${esc(r.location)}</td><td>${esc(r.priority)}</td><td>${esc(r.status)}</td><td>${esc(r.reported)}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty-state">No maintenance requests logged yet.</td></tr>';
+}
+[q, prioFilter, statFilter].forEach(e => e.addEventListener('input', render));
+async function refresh() { try { const r = await fetch(DATA_URL); if (r.ok) { state = await r.json(); render(); } } catch (e) {} }
+render(); setInterval(refresh, 15000);
+</script>
 </body>
 </html>

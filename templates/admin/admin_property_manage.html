@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pansol Resorts — Property Manager</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+<style>
+.flash{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#e5f4ea;color:#1f6b3a}
+.flash.warning{background:#fbeed9;color:#9a6200}.flash.danger,.flash.error{background:#fdeaea;color:#a12a2a}
+.pm-card .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.pm-card .mini div{background:#f4f8f5;border-radius:8px;padding:8px;text-align:center}
+.pm-card .mini b{display:block;font-size:16px}.pm-card .mini span{font-size:11px;opacity:.7}
+.pm-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pm-actions form{margin:0}
+.badge-alert{background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0;border-bottom:1px solid #dfe6e1}
+.tab-btn{background:none;border:0;padding:10px 16px;cursor:pointer;font-weight:600;color:#6b7a70;border-bottom:3px solid transparent}
+.tab-btn.active{color:#2f6a4f;border-bottom-color:#2f6a4f}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.bars{display:flex;align-items:flex-end;gap:14px;height:160px;padding-top:10px}
+.bars div{flex:1;text-align:center;font-size:11px}.bars i{display:block;background:#7fb496;border-radius:6px 6px 0 0;min-height:3px;margin-bottom:6px}
+.thumb{width:56px;height:40px;object-fit:cover;border-radius:6px}
+.row-actions{display:flex;gap:6px}.row-actions form{margin:0}
+.src{font-size:11px;padding:2px 8px;border-radius:10px;background:#eef3ef}.src.w{background:#efe3f7;color:#6b2f8f}
+.edit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.edit-grid .full{grid-column:1/-1}
+@media(max-width:760px){.edit-grid{grid-template-columns:1fr}.pm-card .mini{grid-template-columns:repeat(2,1fr)}}
+.upd{padding:12px 0;border-bottom:1px solid #e5ebe6}.upd:last-child{border:0}.muted{opacity:.65;font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="side-nav">
+      <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link active" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
+      <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
+      <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
+      <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
+      <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
+    </div>
+    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+  </div>
+  <div class="main">
+    <div class="topnav">
+      <div class="topnav-links">
+        <a class="topnav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="topnav-link" href="{{ url_for('booking') }}">Booking</a>
+        <a class="topnav-link active" href="{{ url_for('properties') }}">Properties</a>
+        <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
+      </div>
+      <div class="profile"><span class="avatar"></span> {{ username }}</div>
+    </div>
+    <div class="content">
+      <h1 class="page-title">Property Manager</h1>
+      <p class="page-sub">Everything for each of your resorts in one place &middot; {{ month_label }}</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+      <div class="toolbar">
+        <input class="search-input" id="q" placeholder="Search properties">
+        <a class="btn btn-outline" href="{{ url_for('properties') }}">Add / Delete Properties</a>
+        <a class="btn btn-outline" href="{{ url_for('admin_walkins') }}">Walk-in Approvals</a>
+      </div>
+      <div class="grid-3">
+        {% for c in cards %}
+        <div class="property-card pm-card" data-name="{{ c.name|lower }}">
+          <div class="property-img">{{ c.name }}</div>
+          <div class="property-body">
+            <h4>{{ c.name }}</h4>
+            <p>{{ c.address }}</p>
+            <div class="property-meta"><span>{{ c.contact }}</span><span class="pill {{ 'pill-active' if c.status == 'Active' else 'pill-cancelled' }}">{{ c.status }}</span></div>
+            <div class="mini">
+              <div><b>{{ c.bookings }}</b><span>Bookings</span></div>
+              <div><b>&#8369;{{ "{:,.0f}".format(c.revenue) }}</b><span>Revenue</span></div>
+              <div><b>{{ c.occupancy }}%</b><span>Occupancy</span></div>
+              <div><b>{{ c.pending }}</b><span>Pending</span></div>
+            </div>
+            <div class="pm-actions">
+              <a class="btn btn-primary btn-sm" href="{{ url_for('admin_property_detail', resort_id=c.id) }}">Manage</a>
+              <a class="btn btn-outline btn-sm" href="{{ url_for('admin_property_detail', resort_id=c.id, tab='maintenance') }}">Maintenance{% if c.open_maintenance %}<span class="badge-alert">{{ c.open_maintenance }}</span>{% endif %}</a>
+              <form method="post" action="{{ url_for('admin_property_status', resort_id=c.id) }}" onsubmit="return confirm('Set {{ c.name|e }} to {{ 'Inactive' if c.status == 'Active' else 'Active' }}?');">
+                <input type="hidden" name="next" value="list">
+                <input type="hidden" name="status" value="{{ 'Inactive' if c.status == 'Active' else 'Active' }}">
+                <button class="btn btn-outline btn-sm" type="submit">{{ 'Deactivate' if c.status == 'Active' else 'Activate' }}</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="card" style="grid-column:1/-1;text-align:center;padding:34px;">No properties yet. Add one from the Properties page.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('q').addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('[data-name]').forEach(c => c.hidden = !c.dataset.name.includes(q));
+});
+</script>
+</body>
+</html>

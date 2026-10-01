@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Walk-in — Pansol Resorts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+<style>
+  .walkin-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+  .walkin-grid .full { grid-column:1 / -1; }
+  .flash { padding:10px 14px; border-radius:8px; margin-bottom:12px; background:#f1f5f2; }
+  .flash.success { background:#e6f4ea; } .flash.warning { background:#fff4e0; } .flash.danger { background:#fdeaea; }
+  .proof-preview { display:none; max-width:220px; max-height:160px; margin-top:10px; border-radius:8px; object-fit:cover; }
+  .hint { font-size:12px; opacity:.7; margin-top:4px; }
+  @media (max-width:700px) { .walkin-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="leaf">🌿</span>
+    <div class="sidebar-brand-text">
+      <div class="name">PANSOL RESORTS</div>
+      <div class="tagline">Centralized Reservation Hub</div>
+    </div>
+  </div>
+  <ul class="sidebar-nav">
+    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
+    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
+    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
+    <li><a href="{{ url_for('caretaker_walkin') }}" class="active"><span class="icon">🚶</span> Walk-in</a></li>
+    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
+    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
+    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
+    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
+  </ul>
+  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <nav class="topbar-nav">
+      <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('caretaker_updates') }}">Updates</a>
+      <a href="{{ url_for('caretaker_reports') }}">Reports</a>
+      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar"></div>
+        <span class="user-name">{{ fullname }}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <h1>Walk-in Booking</h1>
+        <p>Record a walk-in customer at {{ resort.resort_name }}. The admin will verify the amount and photo before the booking is confirmed.</p>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="card" style="padding:20px;">
+      <div class="card-header"><h2>New Walk-in</h2></div>
+      <form method="post" action="{{ url_for('caretaker_walkin') }}" enctype="multipart/form-data" id="walkinForm">
+        <div class="walkin-grid">
+          <div class="form-group">
+            <label for="guest_name">Guest name *</label>
+            <input type="text" id="guest_name" name="guest_name" required maxlength="120" value="{{ form.get('guest_name', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="guest_contact">Contact number</label>
+            <input type="text" id="guest_contact" name="guest_contact" maxlength="30" value="{{ form.get('guest_contact', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="check_in">Check-in *</label>
+            <input type="date" id="check_in" name="check_in" required value="{{ form.get('check_in', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="check_out">Check-out *</label>
+            <input type="date" id="check_out" name="check_out" required value="{{ form.get('check_out', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="guests">Number of guests *</label>
+            <input type="number" id="guests" name="guests" min="1" required value="{{ form.get('guests', '') }}">
+          </div>
+          <div class="form-group">
+            <label for="amount">Total amount (₱) *</label>
+            <input type="number" id="amount" name="amount" min="0.01" step="0.01" required value="{{ form.get('amount', '') }}">
+          </div>
+          <div class="form-group full">
+            <label for="proof">Photo (proof of payment) *</label>
+            <input type="file" id="proof" name="proof" accept="image/png,image/jpeg,image/webp" required>
+            <div class="hint">JPG, PNG or WEBP, up to 5 MB.</div>
+            <img id="proofPreview" class="proof-preview" alt="Photo preview">
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:16px;">
+          <button type="submit" class="btn btn-primary">Submit for Verification</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header"><h2>Recent Walk-ins</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Booking ID</th><th>Guest</th><th>Stay</th><th>Guests</th><th>Amount</th><th>Photo</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for w in walkins %}
+            <tr>
+              <td>#RSV-{{ w.reservation_id }}</td>
+              <td>{{ w.guest_name }}</td>
+              <td>{{ w.check_in }} to {{ w.check_out }}</td>
+              <td>{{ w.guests }}</td>
+              <td>{% if w.amount_paid %}&#8369;{{ "%.2f"|format(w.amount_paid) }}{% endif %}</td>
+              <td>
+                {% if w.proof_of_payment %}
+                <a href="{{ url_for('static', filename=w.proof_of_payment) }}" target="_blank">
+                  <img src="{{ url_for('static', filename=w.proof_of_payment) }}" alt="Proof" style="width:56px;height:40px;object-fit:cover;border-radius:6px;">
+                </a>
+                {% endif %}
+              </td>
+              <td>{{ 'Awaiting admin verification' if w.reservation_status == 'Pending' else w.reservation_status }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="empty-state">No walk-in bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const proofInput = document.getElementById('proof');
+  const preview = document.getElementById('proofPreview');
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const today = new Date().toISOString().split('T')[0];
+  const ci = document.getElementById('check_in'), co = document.getElementById('check_out');
+  ci.min = today; co.min = today;
+  ci.addEventListener('change', () => { co.min = ci.value || today; });
+
+  proofInput.addEventListener('change', () => {
+    const f = proofInput.files[0];
+    if (!f) { preview.style.display = 'none'; return; }
+    if (f.size > MAX_BYTES) {
+      alert('Photo is too large (maximum 5 MB).');
+      proofInput.value = ''; preview.style.display = 'none'; return;
+    }
+    preview.src = URL.createObjectURL(f);
+    preview.style.display = 'block';
+  });
+</script>
+</body>
+</html>
