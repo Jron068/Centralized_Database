@@ -72,6 +72,12 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
 
         <div class="content">
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <p class="flash {{ category }}">{{ message }}</p>
+                {% endfor %}
+            {% endwith %}
+
             <div class="icon">
                 <i class="fa-solid fa-lock"></i>
             </div>
@@ -80,33 +86,31 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
 
             <p>
                 Code sent to
-                <strong>{{ phone }}</strong>
+                <strong>{{ email }}</strong>
             </p>
 
             <form action="{{ url_for('verify_otp') }}" method="POST">
 
-                <input type="hidden" name="phone" value="{{ phone }}">
-
                 <div class="otp-box">
 
-                    <input type="text" maxlength="1" name="otp1">
-                    <input type="text" maxlength="1" name="otp2">
-                    <input type="text" maxlength="1" name="otp3">
-                    <input type="text" maxlength="1" name="otp4">
-                    <input type="text" maxlength="1" name="otp5">
-                    <input type="text" maxlength="1" name="otp6">
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp1" required>
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp2" required>
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp3" required>
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp4" required>
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp5" required>
+                    <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" name="otp6" required>
 
                 </div>
-
-                <p class="resend">
-                    Didn't receive the code?
-                    <a href="#">Resend</a>
-                </p>
 
                 <button type="submit">
                     Verify Code
                 </button>
 
+            </form>
+
+            <form action="{{ url_for('resend_otp') }}" method="POST" class="resend">
+                <span>Didn't receive the code?</span>
+                <button type="submit">Resend code</button>
             </form>
 
         </div>

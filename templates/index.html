@@ -13,6 +13,34 @@
   section[id] {
     scroll-margin-top: 90px;
   }
+  .resort-card {
+    cursor: default;
+  }
+  .resort-card > img {
+    display: block;
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+  }
+  .resort-description {
+    color: #555;
+    line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .resort-contact {
+    color: #555;
+    font-size: 14px;
+    margin-top: 8px;
+    overflow-wrap: anywhere;
+  }
+  .resort-contact a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .resort-contact i {
+    color: #00a86b;
+    margin-right: 6px;
+  }
 </style>
 
 <!-- ===================== HOME / HERO ===================== -->
@@ -31,54 +59,57 @@
 </section>
 
 <section class="partner-resorts">
+    {% for resort in resorts %}
     <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/luckymiels.jpg') }}" alt="Lucky Miels Resort">
+        <img
+            src="{{ resort.logo or url_for('static', filename='images/default-resort.svg') }}"
+            alt="{{ resort.resort_name }} photo"
+            loading="lazy"
+        >
         <div class="card-content">
-            <h3>Lucky Miels Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
+            <h3>{{ resort.resort_name }}</h3>
+            <p class="location">
+                <i class="fa-solid fa-location-dot"></i>
+                {{ resort.address or 'Location not provided' }}
+            </p>
+            {% if resort.description %}
+            <p class="resort-description">{{ resort.description }}</p>
+            {% endif %}
+            {% if resort.phone %}
+            <p class="resort-contact">
+                <i class="fa-solid fa-phone"></i>
+                <a href="tel:{{ resort.phone }}">{{ resort.phone }}</a>
+            </p>
+            {% endif %}
+            {% if resort.email %}
+            <p class="resort-contact">
+                <i class="fa-solid fa-envelope"></i>
+                <a href="mailto:{{ resort.email }}">{{ resort.email }}</a>
+            </p>
+            {% endif %}
+            {% if resort.price is not none %}
+            <p class="resort-contact">
+                <i class="fa-solid fa-tag"></i>
+                From ₱{{ "{:,.2f}".format(resort.price) }}
+            </p>
+            {% endif %}
+            {% if resort.max_pax %}
+            <p class="resort-contact">
+                <i class="fa-solid fa-users"></i>
+                Up to {{ resort.max_pax }} guests
+            </p>
+            {% endif %}
+            {% if resort.amenities %}
+            <p class="resort-contact">
+                <i class="fa-solid fa-star"></i>
+                {{ resort.amenities }}
+            </p>
+            {% endif %}
         </div>
     </div>
-    <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/sunscape.jpg') }}" alt="Sunscape Resort">
-        <div class="card-content">
-            <h3>Sunscape Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
-        </div>
-    </div>
-    <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/triplez.jpg') }}" alt="Triple Z Resort">
-        <div class="card-content">
-            <h3>Triple Z Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
-        </div>
-    </div>
-    <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/magic.jpg') }}" alt="Magic Kingdom Resort">
-        <div class="card-content">
-            <h3>Magic Kingdom Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
-        </div>
-    </div>
-    <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/renalyn.jpg') }}" alt="Renalyn Resort">
-        <div class="card-content">
-            <h3>Renalyn Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
-        </div>
-    </div>
-    <div class="resort-card">
-        <img src="{{ url_for('static', filename='images/gallely.jpg') }}" alt="Gallely Resort">
-        <div class="card-content">
-            <h3>Gallely Resort</h3>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Laguna</p>
-            <p class="rating">⭐ 4.6 (128 reviews)</p>
-        </div>
-    </div>
+    {% else %}
+    <p>No active resorts are available right now.</p>
+    {% endfor %}
 </section>
 
 

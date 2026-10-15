@@ -1,11 +1,17 @@
+import os
+
 import mysql.connector
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_connection():
     connection = mysql.connector.connect(
-        host="localhost",
-        port=3306,
-        user="root",
-        password="root123",
-        database="centralized_database"
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", "root"),
+        # An empty DB_PASSWORD in .env should still use the local default.
+        password=os.getenv("DB_PASSWORD") or "root123",
+        database=os.getenv("DB_NAME", "centralized_database"),
     )
     return connection

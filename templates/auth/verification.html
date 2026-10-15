@@ -57,71 +57,49 @@
         <div class="content">
 
             <div class="icon">
-                <i class="fa-solid fa-mobile-screen-button"></i>
+                <i class="fa-solid fa-envelope"></i>
             </div>
 
-            <h2>Verify your Phone Number</h2>
+            <h2>Verify your Email</h2>
 
             <p>
-                Please verify your phone number to continue.
+                Please verify your email address to continue.
             </p>
 
             <div class="notice">
                 <i class="fa-solid fa-circle-info"></i>
-                A verification code will be sent to your registered mobile number.
+                A verification code will be sent to your registered email address.
             </div>
 
             <form action="{{ url_for('send_otp') }}" method="POST">
 
-                <input type="hidden" name="phone" value="{{ phone }}">
-
-                <label>Choose Verification Method</label>
-
                 <div class="method active">
 
                     <div class="left">
-                        <i class="fa-solid fa-message"></i>
+                            <i class="fa-solid fa-envelope"></i>
 
                         <div>
-                            <h4>SMS Verification</h4>
-                            <small>Receive OTP via text message</small>
+                            <h4>Email Verification</h4>
+                            <small>Receive the OTP in your email inbox</small>
                         </div>
 
                     </div>
 
                     <input type="radio"
                            name="method"
-                           value="sms"
+                           value="email"
                            checked>
 
                 </div>
 
-                <div class="method">
-
-                    <div class="left">
-                        <i class="fa-solid fa-phone"></i>
-
-                        <div>
-                            <h4>Call Verification</h4>
-                            <small>Receive OTP via phone call</small>
-                        </div>
-
-                    </div>
-
-                    <input type="radio"
-                           name="method"
-                           value="call">
-
-                </div>
-
                 <button type="submit">
-                    Continue
+                    Send email code
                 </button>
 
             </form>
 
             <div class="footer">
-                We never share your phone number.
+                We only use your email to verify your account.
             </div>
 
         </div>

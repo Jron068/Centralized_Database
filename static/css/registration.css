@@ -197,6 +197,29 @@ form{
     margin-top:5px;
 }
 
+.form-messages{
+    margin:0 0 16px;
+}
+
+.form-message{
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:14px;
+}
+
+.form-message.error,
+.form-message.warning{
+    color:#842029;
+    background:#f8d7da;
+    border:1px solid #f5c2c7;
+}
+
+.form-message.success{
+    color:#0f5132;
+    background:#d1e7dd;
+    border:1px solid #badbcc;
+}
+
 .row{
     display:flex;
     gap:20px;
