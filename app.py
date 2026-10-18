@@ -13,6 +13,7 @@ app = Flask(__name__)
 
 # Set FLASK_SECRET_KEY in .env to keep sessions valid after restarts.
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
 
 
 # ============================

@@ -58,6 +58,7 @@
   .rcard.selected{border-color:var(--leaf);box-shadow:0 0 0 2px var(--leaf-light);}
   .rcard .thumb{height:130px;position:relative;background:var(--leaf-light);overflow:hidden;}
   .rcard .thumb svg{width:100%;height:100%;}
+  .rcard .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
   .heart{position:absolute;top:9px;right:9px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.92);border:none;display:flex;align-items:center;justify-content:center;color:var(--slate);}
   .heart.active{color:var(--danger);}
   .rcard .body{padding:13px 14px 15px;}
@@ -99,6 +100,7 @@
 
   .heroimg{position:relative;width:100%;height:360px;border-radius:12px;overflow:hidden;background:var(--leaf-light);}
   .heroimg svg{width:100%;height:100%;}
+  .heroimg img.resort-photo{width:100%;height:100%;object-fit:cover;display:block;}
   .tour3d{position:absolute;bottom:12px;left:12px;background:rgba(8,47,31,.85);color:#fff;border:none;border-radius:100px;padding:8px 14px 8px 11px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
   .tour3d svg{width:14px;height:14px;}
   .heroimg .heart{top:12px;right:12px;}
@@ -156,6 +158,7 @@
   .gal6{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px;}
   .gal6 div{height:56px;border-radius:8px;overflow:hidden;background:var(--leaf-light);}
   .gal6 svg{width:100%;height:100%;}
+  .gal6 img{width:100%;height:100%;object-fit:cover;display:block;}
   .ghostbtn{width:100%;background:transparent;border:1px solid var(--line);color:var(--forest);border-radius:9px;padding:9px 0;font-size:12.5px;font-weight:700;}
   .ghostbtn:hover{background:var(--leaf-light);}
   .minimap{height:130px;border-radius:9px;overflow:hidden;margin-bottom:11px;background:var(--leaf-light);}
@@ -986,4 +989,3 @@
           padding-right: 28px;
         }
       }
-  

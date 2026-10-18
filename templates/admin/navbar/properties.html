@@ -134,11 +134,12 @@
              data-property-amenities="{{ property.amenities|default('', true) }}"
              data-property-description="{{ property.description|default('', true) }}">
           <div class="property-img">
-            {% if property.logo %}<img src="{{ property.logo }}" alt="{{ property.resort_name }}">{% else %}{{ property.resort_name }}{% endif %}
+            <img src="{{ property.logo or url_for('static', filename='images/default-resort.svg') }}" alt="{{ property.resort_name }}">
           </div>
           <div class="property-body">
             <h4>{{ property.resort_name }}</h4>
             <p>{{ property.address or 'No address provided' }}</p>
+            <p class="property-description">{{ property.description or 'No description available yet.' }}</p>
             <div class="property-meta"><span>{{ property.email or property.phone or 'No contact details' }}</span><span class="pill {{ 'pill-active' if property.status == 'Active' else 'pill-cancelled' }}">{{ property.status }}</span></div>
             <div class="action-group">
               <a class="btn btn-primary btn-sm" href="{{ url_for('admin_property_detail', resort_id=property.resort_id) }}">Manage</a>

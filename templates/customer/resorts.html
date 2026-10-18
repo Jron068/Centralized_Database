@@ -876,6 +876,9 @@
       address: dbResort.address || defaults.address || "Address to be confirmed",
       desc: dbResort.description || "",
       logo: dbResort.logo || "",
+      photos: (dbResort.photos || []).length
+        ? dbResort.photos.map(photo => photo.url)
+        : (dbResort.logo ? [dbResort.logo] : []),
       email: dbResort.email || "",
       phone: dbResort.phone || "",
       variant: defaults.variant || "villa",
@@ -906,7 +909,7 @@
     cardRow.innerHTML = resorts.map(r => `
       <div class="rcard ${r.id === currentId ? 'selected' : ''}" onclick="selectResort('${r.id}')">
         <div class="thumb">
-          ${scene(r.variant, 20)}
+          ${r.logo ? `<img src="${r.logo}" alt="${r.name}">` : scene(r.variant, 20)}
           <button class="heart ${favs.has(r.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav('${r.id}')">
             <svg viewBox="0 0 24 24" fill="${favs.has(r.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z"/>
@@ -950,8 +953,10 @@
     if (!currentId) return;
     const r = resorts.find(x => x.id === currentId);
     if (!r) return;
-    document.getElementById('heroImg').querySelector('svg')?.remove();
-    document.getElementById('heroImg').insertAdjacentHTML('afterbegin', scene(r.variant, 10));
+    document.getElementById('heroImg').querySelector('svg, img.resort-photo')?.remove();
+    document.getElementById('heroImg').insertAdjacentHTML('afterbegin', r.logo
+      ? `<img class="resort-photo" src="${r.logo}" alt="${r.name}">`
+      : scene(r.variant, 10));
     document.getElementById('heroHeart').classList.toggle('active', favs.has(r.id));
     document.getElementById('d-name').textContent = r.name;
     document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
@@ -969,7 +974,9 @@
       <div>${ic.clock} Day Tour &nbsp; <b>8:00 AM - 5:00 PM</b></div>
       <div>${ic.moon} Overnight &nbsp; <b>2:00 PM - 11:00 AM</b></div>
     `;
-    document.getElementById('ov-gallery').innerHTML = [30, 90, 150, 210, 270, 330].map(a => `<div>${scene(r.variant, a)}</div>`).join('');
+    document.getElementById('ov-gallery').innerHTML = r.photos.length
+      ? r.photos.slice(0, 6).map(src => `<div><img src="${src}" alt="${r.name} photo"></div>`).join('')
+      : [30, 90, 150, 210, 270, 330].map(a => `<div>${scene(r.variant, a)}</div>`).join('');
     document.getElementById('ov-map').innerHTML = miniMap(r);
     document.getElementById('am-grid').innerHTML = r.amenitiesFull.map(a => `
       <div class="amcard"><div class="ic">${ic[a.icon] || ''}</div><div><b>${a.n}</b><span>${a.d}</span></div></div>
@@ -1036,18 +1043,22 @@
   function openGallery() {
     const resort = resorts.find(item => item.id === currentId);
     if (!resort) return;
-    const angles = [30, 90, 150, 210, 270, 330];
     let index = 0;
+    const photos = resort.photos || [];
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
     overlay.innerHTML = `<div style="width:min(900px,100%);position:relative;color:#fff;text-align:center;"><button aria-label="Close gallery" style="position:absolute;right:0;top:-42px;font-size:28px;background:none;border:0;color:#fff;cursor:pointer;">&times;</button><h3>${resort.name} Gallery</h3><div id="galleryImage" style="background:#fff;border-radius:10px;overflow:hidden;"></div><div style="margin-top:14px;"><button id="galleryPrev">&larr; Previous</button> <span id="galleryCount"></span> <button id="galleryNext">Next &rarr;</button></div></div>`;
     const render = () => {
-      overlay.querySelector('#galleryImage').innerHTML = scene(resort.variant, angles[index]);
-      overlay.querySelector('#galleryCount').textContent = `${index + 1} / ${angles.length}`;
+      overlay.querySelector('#galleryImage').innerHTML = photos.length
+        ? `<img src="${photos[index]}" alt="${resort.name} photo ${index + 1}" style="display:block;width:100%;max-height:70vh;object-fit:contain;">`
+        : `<p style="padding:40px;color:#333;">No photos have been added for this resort yet.</p>`;
+      overlay.querySelector('#galleryCount').textContent = photos.length ? `${index + 1} / ${photos.length}` : '0 photos';
+      overlay.querySelector('#galleryPrev').disabled = photos.length < 2;
+      overlay.querySelector('#galleryNext').disabled = photos.length < 2;
     };
     overlay.querySelector('[aria-label="Close gallery"]').onclick = () => overlay.remove();
-    overlay.querySelector('#galleryPrev').onclick = () => { index = (index + angles.length - 1) % angles.length; render(); };
-    overlay.querySelector('#galleryNext').onclick = () => { index = (index + 1) % angles.length; render(); };
+    overlay.querySelector('#galleryPrev').onclick = () => { index = (index + photos.length - 1) % photos.length; render(); };
+    overlay.querySelector('#galleryNext').onclick = () => { index = (index + 1) % photos.length; render(); };
     overlay.onclick = event => { if (event.target === overlay) overlay.remove(); };
     document.body.appendChild(overlay);
     render();

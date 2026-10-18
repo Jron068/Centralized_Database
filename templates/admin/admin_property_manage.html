@@ -66,10 +66,11 @@
       <div class="grid-3">
         {% for c in cards %}
         <div class="property-card pm-card" data-name="{{ c.name|lower }}">
-          <div class="property-img">{{ c.name }}</div>
+          <div class="property-img"><img src="{{ c.logo }}" alt="{{ c.name }}"></div>
           <div class="property-body">
             <h4>{{ c.name }}</h4>
             <p>{{ c.address }}</p>
+            <p>{{ c.description or 'No description available yet.' }}</p>
             <div class="property-meta"><span>{{ c.contact }}</span><span class="pill {{ 'pill-active' if c.status == 'Active' else 'pill-cancelled' }}">{{ c.status }}</span></div>
             <div class="mini">
               <div><b>{{ c.bookings }}</b><span>Bookings</span></div>

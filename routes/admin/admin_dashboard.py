@@ -5,6 +5,7 @@ from flask import render_template, request, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash
 from app import app
 from config import get_connection
+from models.resort import enrich_resorts
 from models.decorators import role_required
 
 @app.route("/admin_dashboard", endpoint="admin_dashboard")
@@ -336,15 +337,16 @@ def properties():
 
         cursor.execute(
             """
-            SELECT resort_id, resort_name, address, description, email, phone,
-                   amenities, status, logo
-            FROM resorts
-            WHERE owner_id = %s
-            ORDER BY created_at DESC, resort_name ASC
-            """,
-            (owner_id,),
+            SELECT r.resort_id, r.owner_id, r.resort_name, r.address, r.description,
+                   r.email, r.phone, r.amenities, r.status, r.logo,
+                   a.fullname AS owner_name
+            FROM resorts r
+            LEFT JOIN owners o ON o.owner_id = r.owner_id
+            LEFT JOIN accounts a ON a.account_id = o.account_id
+            ORDER BY r.created_at DESC, r.resort_name ASC
+            """
         )
-        properties = cursor.fetchall()
+        properties = enrich_resorts(cursor.fetchall())
         return render_template(
             "admin/navbar/properties.html",
             properties=properties,
@@ -357,12 +359,9 @@ def properties():
 @app.route("/properties/<int:resort_id>/edit", methods=["POST"])
 @role_required("owner")
 def edit_property(resort_id):
-    owner_id = session.get("owner_id")
     resort_name = request.form.get("resort_name", "").strip()
     status = request.form.get("status", "Active")
 
-    if not owner_id:
-        return redirect(url_for("login"))
     if not resort_name:
         flash("Property name is required.", "warning")
         return redirect(url_for("properties"))
@@ -378,7 +377,7 @@ def edit_property(resort_id):
             UPDATE resorts
             SET resort_name = %s, address = %s, description = %s,
                 email = %s, phone = %s, amenities = %s, status = %s
-            WHERE resort_id = %s AND owner_id = %s
+            WHERE resort_id = %s
             """,
             (
                 resort_name,
@@ -389,13 +388,12 @@ def edit_property(resort_id):
                 request.form.get("amenities", "").strip() or None,
                 status,
                 resort_id,
-                owner_id,
             ),
         )
         updated = cursor.rowcount
         conn.commit()
         flash(
-            "Property updated successfully." if updated else "Property was not found or is not yours.",
+            "Property updated successfully." if updated else "Property was not found.",
             "success" if updated else "warning",
         )
     finally:
@@ -407,20 +405,16 @@ def edit_property(resort_id):
 @app.route("/properties/<int:resort_id>/delete", methods=["POST"])
 @role_required("owner")
 def delete_property(resort_id):
-    owner_id = session.get("owner_id")
-    if not owner_id:
-        return redirect(url_for("login"))
-
     conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "DELETE FROM resorts WHERE resort_id = %s AND owner_id = %s",
-            (resort_id, owner_id),
+            "DELETE FROM resorts WHERE resort_id = %s",
+            (resort_id,),
         )
         conn.commit()
         flash(
-            "Property deleted successfully." if cursor.rowcount else "Property was not found or is not yours.",
+            "Property deleted successfully." if cursor.rowcount else "Property was not found.",
             "success" if cursor.rowcount else "warning",
         )
     finally:

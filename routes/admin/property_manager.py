@@ -3,19 +3,25 @@ Per property: reports, bookings, maintenance requests, edit details/prices/ameni
 Uses only existing tables/columns (resorts, reservations, payments, customers, accounts, caretakers, owners,
 notifications, and `reviews` if it exists). Nothing is created or altered in the database."""
 import re
+import os
+import uuid
 import calendar as _calendar
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from werkzeug.routing import BuildError
+from werkzeug.utils import secure_filename
 
 from app import app
 from config import get_connection
+from models.resort import enrich_resort, gallery_photos
+from models.resort_photos import ensure_resort_photos_table
 from models.decorators import role_required
 from routes.caretaker import _walkin_schema, _stay_status, _as_date, _table_columns, _owner_account_id
 
 _MAINT_RE = re.compile(r"Resort: (.*?) \| Location: (.*?) \| Priority: (.*?) \| Reported by: (.*?)\n(.*)", re.S)
+_PHOTO_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 TEXT_FIELDS = ("resort_name", "address", "email", "phone", "amenities", "description")
 
 
@@ -29,7 +35,8 @@ def _owner_id(cursor):
 
 
 def _owned_resort(cursor, resort_id):
-    cursor.execute("SELECT * FROM resorts WHERE resort_id = %s AND owner_id = %s", (resort_id, _owner_id(cursor)))
+    # Owner-role accounts manage the shared resort directory.
+    cursor.execute("SELECT * FROM resorts WHERE resort_id = %s", (resort_id,))
     return cursor.fetchone()
 
 
@@ -223,12 +230,14 @@ def admin_properties_manage():
     cursor = conn.cursor(dictionary=True)
     try:
         first, nxt = _month(None)
-        cursor.execute("SELECT * FROM resorts WHERE owner_id = %s ORDER BY resort_name", (_owner_id(cursor),))
+        cursor.execute("SELECT * FROM resorts ORDER BY resort_name")
         cards = []
         for r in cursor.fetchall():
+            r = enrich_resort(r)
             rep = _reports(cursor, r["resort_id"], first, nxt)
             cards.append({
                 "id": r["resort_id"], "name": r["resort_name"], "address": r.get("address") or "No address provided",
+                "logo": r["logo"], "description": r["description"],
                 "contact": r.get("email") or r.get("phone") or "No contact details", "status": r.get("status") or "Active",
                 "bookings": rep["bookings"], "pending": rep["pending"], "revenue": rep["revenue"], "occupancy": rep["occupancy"],
                 "open_maintenance": sum(1 for m in _maintenance(cursor, r) if not m["seen"]),
@@ -251,6 +260,14 @@ def admin_property_detail(resort_id):
             flash("Property not found.", "warning")
             return redirect(url_for("admin_properties_manage"))
         cols = _table_columns(cursor, "resorts")
+        ensure_resort_photos_table(cursor)
+        cursor.execute(
+            "SELECT photo_id, photo_path, caption, created_at FROM resort_photos WHERE resort_id = %s ORDER BY created_at DESC, photo_id DESC",
+            (resort_id,),
+        )
+        photos = cursor.fetchall()
+        display_resort = enrich_resort({k: (_f(v) if isinstance(v, Decimal) else v) for k, v in resort.items()})
+        photos = [{"url": photo_url} for photo_url in gallery_photos(display_resort, photos)]
         urls = {}
         for key, ep in (("review", "reservation_detail"), ("walkin", "admin_review_walkin"), ("walkins", "admin_walkins")):
             try:
@@ -259,15 +276,71 @@ def admin_property_detail(resort_id):
                 urls[key] = None
         return render_template(
             "admin/admin_property_detail.html", username=session.get("fullname", "Owner"),
-            resort={k: (_f(v) if isinstance(v, Decimal) else v) for k, v in resort.items() if k != "logo"},
+            resort=display_resort,
             text_fields=[c for c in TEXT_FIELDS if c in cols], price_fields=_price_columns(cursor),
             state=_detail_state(cursor, resort, request.args.get("month")), urls=urls,
+            photos=photos,
             tab=request.args.get("tab", "overview"),
             seen_url=url_for("admin_maintenance_seen", notification_id=0),
         )
     finally:
         cursor.close()
         conn.close()
+
+
+@app.route("/admin/manage-properties/<int:resort_id>/photos", methods=["POST"])
+@role_required("owner")
+def admin_resort_photos_upload(resort_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    saved_files = []
+    try:
+        if not _owned_resort(cursor, resort_id):
+            flash("Property not found.", "warning")
+            return redirect(url_for("admin_properties_manage"))
+        ensure_resort_photos_table(cursor)
+        files = [f for f in request.files.getlist("photos") if f and f.filename]
+        if not files:
+            flash("Choose at least one image to upload.", "warning")
+            return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
+        if len(files) > 20:
+            flash("Upload up to 20 images at a time.", "warning")
+            return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
+
+        upload_dir = os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
+        os.makedirs(upload_dir, exist_ok=True)
+        for image in files:
+            original_name = secure_filename(image.filename)
+            extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
+            if extension not in _PHOTO_EXTENSIONS or not (image.mimetype or "").startswith("image/"):
+                raise ValueError("Only JPG, PNG, WEBP, and GIF images are accepted.")
+            filename = f"{uuid.uuid4().hex}.{extension}"
+            full_path = os.path.join(upload_dir, filename)
+            image.save(full_path)
+            saved_files.append(full_path)
+            photo_path = f"uploads/resort_photos/{resort_id}/{filename}"
+            cursor.execute(
+                "INSERT INTO resort_photos (resort_id, photo_path, caption) VALUES (%s, %s, %s)",
+                (resort_id, photo_path, os.path.splitext(original_name)[0][:255] or None),
+            )
+        conn.commit()
+        flash(f"Uploaded {len(files)} resort photo(s).", "success")
+    except ValueError as exc:
+        conn.rollback()
+        for path in saved_files:
+            if os.path.exists(path):
+                os.remove(path)
+        flash(str(exc), "warning")
+    except Exception:
+        conn.rollback()
+        for path in saved_files:
+            if os.path.exists(path):
+                os.remove(path)
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
 
 
 @app.route("/admin/manage-properties/<int:resort_id>/data")
@@ -326,8 +399,8 @@ def admin_property_save(resort_id):
                 return _back(resort_id, "edit")
             sets.append(f"{col} = %s"); vals.append(price)
         if sets:
-            cursor.execute(f"UPDATE resorts SET {', '.join(sets)} WHERE resort_id = %s AND owner_id = %s",
-                           (*vals, resort_id, resort["owner_id"]))
+            cursor.execute(f"UPDATE resorts SET {', '.join(sets)} WHERE resort_id = %s",
+                           (*vals, resort_id))
             conn.commit()
         flash("Property details saved. Customers and the caretaker now see the new details.", "success")
     except Exception as e:
@@ -352,7 +425,7 @@ def admin_property_status(resort_id):
         if not resort or status not in ("Active", "Inactive"):
             flash("Invalid property or status.", "warning")
             return redirect(url_for("admin_properties_manage"))
-        cursor.execute("UPDATE resorts SET status = %s WHERE resort_id = %s AND owner_id = %s", (status, resort_id, resort["owner_id"]))
+        cursor.execute("UPDATE resorts SET status = %s WHERE resort_id = %s", (status, resort_id))
         _notify_caretakers(cursor, resort_id, f"Resort update: {resort['resort_name']} is now {status}",
                            f"The admin set {resort['resort_name']} to {status}."
                            + (" It is hidden from customers and cannot be booked." if status == "Inactive" else " It is visible to customers again."),

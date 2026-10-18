@@ -240,40 +240,32 @@
         </form>
       </div>
 
-      <!-- ===== Pick the picture for this resort ===== -->
-      {% if resort.resort_name == 'Sunscape Resort' %}
-        {% set resort_image = url_for('static', filename='images/pdf_resorts/resort_3_1.png') %}
-      {% elif resort.resort_name == 'Triple Z Resort' %}
-        {% set resort_image = url_for('static', filename='images/pdf_resorts/resort_6_1.png') %}
-      {% elif resort.resort_name == 'Magic Kingdom Resort' %}
-        {% set resort_image = url_for('static', filename='images/pdf_resorts/resort_8_1.png') %}
-      {% elif resort.resort_name == 'Lucky Miels Resort' %}
-        {% set resort_image = url_for('static', filename='images/pdf_resorts/resort_11_1.png') %}
-      {% else %}
-        {# any other resort: use its own logo, or a default picture #}
-        {% set resort_image = resort.logo or url_for('static', filename='images/default-resort.svg') %}
-      {% endif %}
-
-      <!-- ===== Pick the description for this resort ===== -->
-      {% if resort.resort_name == 'Sunscape Resort' %}
-        {% set resort_description = 'Sunscape Resort is one of the selected resorts included in the study. It is located at South Spring Villas Subdivision, Barangay Bucal, Calamba, Laguna 4027. The resort has a clean, attractive, and relaxing appearance, with a spacious outdoor area that provides a suitable setting for swimming and group activities. The overall design of the place gives a comfortable and private resort atmosphere for guests. It has one adult pool and one kiddie pool, three air-conditioned rooms, a videoke machine, billiard table, parking area, CCTV, and pet-friendly facilities. The resort also provides a refrigerator, water dispenser, gas stove, and basic cooking tools for guest convenience.' %}
-      {% elif resort.resort_name == 'Triple Z Resort' %}
-        {% set resort_description = 'Triple Z Resort is located at 55JF+6WG, Barretto Compound, Barangay Pansol, Calamba, Laguna 4027. It offers a private and comfortable setting for guests with swimming, recreation, relaxation, and group activity spaces. The property includes one adult pool, one kiddie pool, four air-conditioned rooms, free Wi-Fi, videoke, billiard table, pet-friendly policies, and convenient food preparation facilities such as a refrigerator, water dispenser, gas stove, cooking tools, and grill.' %}
-      {% elif resort.resort_name == 'Magic Kingdom Resort' %}
-        {% set resort_description = 'Magic Kingdom Resort is located at Indigo Subdivision, Barangay Bagong Kalsada, Calamba, Laguna 4027. The resort provides a private and comfortable environment for guests, with facilities intended for swimming, recreation, relaxation, and group activities. It includes one adult pool, one kiddie pool, four air-conditioned rooms, free Wi-Fi, videoke, a billiard table, pet-friendly access, and a safe parking area.' %}
-      {% elif resort.resort_name == 'Lucky Miels Resort' %}
-        {% set resort_description = 'Lucky Miels Resort is located at Indigo Subdivision, Barangay Bagong Kalsada, Calamba, Laguna 4027. The resort provides a private and comfortable environment with a wide range of facilities for swimming, accommodation, recreation, and group activities. It features an adult hot spring pool, a kiddie hot spring pool, fully air-conditioned rooms, free Wi-Fi, a videoke machine, billiard table, dart board, arcade, soccer table, kitchen area, shower rooms, CCTV, safe parking, and pet-friendly spaces.' %}
-      {% else %}
-        {% set resort_description = resort.description or 'No description available for this resort yet.' %}
-      {% endif %}
-
       <div class="resort-hero">
-        <img src="{{ resort_image }}" alt="{{ resort.resort_name }} photo">
+        <img src="{{ resort.logo or url_for('static', filename='images/default-resort.svg') }}" alt="{{ resort.resort_name }} photo">
         <div class="resort-hero-copy">
           <h3>About this resort</h3>
-          <p>{{ resort_description }}</p>
+          <p>{{ resort.description or 'No description available for this resort yet.' }}</p>
         </div>
       </div>
+
+      <section class="card" style="padding:20px;margin-top:18px;">
+        <h3 style="margin-top:0;">Resort photos</h3>
+        <p class="muted">Upload JPG, PNG, WEBP, or GIF photos. They are saved for this resort and shown in the customer gallery.</p>
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('admin_resort_photos_upload', resort_id=resort.resort_id) }}" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0;">
+          <input type="file" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+          <button class="btn btn-primary" type="submit">Upload photos</button>
+        </form>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">
+          {% for photo in photos %}
+          <figure style="margin:0;">
+            <img src="{{ photo.url }}" alt="{{ photo.caption or resort.resort_name }}" style="width:100%;height:110px;object-fit:cover;border-radius:8px;">
+            {% if photo.caption %}<figcaption class="muted" style="font-size:12px;margin-top:4px;">{{ photo.caption }}</figcaption>{% endif %}
+          </figure>
+          {% else %}
+          <p class="muted">No additional photos uploaded yet.</p>
+          {% endfor %}
+        </div>
+      </section>
 
       <!-- Flash messages from Flask (flash("...")) -->
       {% with messages = get_flashed_messages(with_categories=true) %}
