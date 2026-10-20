@@ -298,3 +298,69 @@ tbody tr:last-child td{border-bottom:none;}
 }
 .cal-event.alt{background:#fdf3d8; color:var(--warn);}
 .cal-event.reserved{background:#f7d8d4; color:#a93226;}
+
+/* Owner portal finish: one consistent, responsive property-management UI. */
+:root{
+  --forest:#123d2e;
+  --forest-dark:#0d3024;
+  --forest-light:#1c5940;
+  --accent:#26734e;
+  --bg:#f5f7f6;
+  --border:#e5ece7;
+  --active-bg:#eaf4ee;
+}
+.app{min-height:100vh;}
+.sidebar{position:sticky;top:0;height:100vh;min-height:620px;box-shadow:5px 0 24px rgba(12,44,30,.08);}
+.brand{min-height:76px;}
+.side-link{min-height:44px;transition:background .16s ease,color .16s ease;}
+.side-link.active{border-left-color:#a8d9ba;background:rgba(255,255,255,.1);}
+.topnav{position:sticky;top:0;z-index:30;height:66px;box-shadow:0 3px 14px rgba(20,50,35,.045);}
+.content{width:100%;max-width:1680px;margin:0 auto;padding:32px clamp(20px,3vw,44px);}
+.page-title{font-size:clamp(24px,2.5vw,30px);letter-spacing:-.55px;}
+.page-sub{line-height:1.55;}
+.card,.stat-card,.property-card,.chart-card,.stat-box,.resort-stat-section,.owner-section,.create-caretaker-card{
+  border-color:var(--border);border-radius:14px;box-shadow:0 5px 18px rgba(26,59,41,.045);
+}
+.card h3{font-size:16px;}
+.stat-card,.stat-box{transition:transform .18s ease,box-shadow .18s ease;}
+.stat-card:hover,.stat-box:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(26,59,41,.08);}
+table{font-variant-numeric:tabular-nums;}
+thead th{padding:12px 10px;background:#f8faf9;color:#65766c;font-size:11px;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap;}
+tbody td{padding:13px 10px;}
+tbody tr:hover{background:#f9fbfa;}
+.table-wrap,.caretaker-table-wrap{max-width:100%;overflow-x:auto;}
+.btn{transition:transform .15s ease,background .15s ease,border-color .15s ease;}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:#26734e;box-shadow:0 4px 10px rgba(38,115,78,.15);}
+.btn-primary:hover{background:#185b3b;}
+.btn,.search-input,.select-input,input,select,textarea{border-radius:8px;}
+.search-input,.select-input{min-height:40px;border-color:#dce6df;}
+.search-input:focus,.select-input:focus,input:focus,select:focus,textarea:focus{outline:3px solid rgba(38,115,78,.14);border-color:#39835d;}
+.profile{white-space:nowrap;}
+.avatar{display:inline-flex;align-items:center;justify-content:center;color:var(--forest);font-size:11px;font-weight:800;}
+.empty-row td{text-align:center;padding:28px 12px;}
+@media(max-width:900px){
+  .sidebar{position:static;width:100%;height:auto;min-height:0;}
+  .side-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
+  .side-link{justify-content:center;padding:10px 8px;border-left:0;border-bottom:2px solid transparent;font-size:12px;text-align:center;}
+  .side-link.active{border-bottom-color:#a8d9ba;}
+  .logout{display:inline-block;margin:6px 14px 12px;}
+  .topnav{position:static;padding:0 18px;}
+  .content{padding:26px 20px;}
+  .grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:620px){
+  .app{display:block;}
+  .side-nav{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .topnav{height:auto;min-height:58px;gap:10px;padding:10px 14px;}
+  .topnav-links{gap:12px;overflow-x:auto;}
+  .topnav-link{font-size:12px;white-space:nowrap;}
+  .profile{font-size:12px;}
+  .content{padding:22px 14px;}
+  .grid-2,.grid-3,.grid-4,.form-cols{grid-template-columns:1fr;}
+  .toolbar{align-items:stretch;}
+  .toolbar .btn,.toolbar .search-input,.toolbar .select-input{max-width:100%;}
+  .messages-layout{grid-template-columns:1fr;}
+  .calendar-grid{gap:3px;}
+  .cal-cell{min-height:58px;padding:4px;}
+}

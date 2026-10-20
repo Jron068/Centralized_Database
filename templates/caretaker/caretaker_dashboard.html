@@ -32,34 +32,15 @@
 .bk-btn.reject{background:#fff;color:#a12a2a;border-color:#e3b9b9}.bk-btn.reject:hover{background:#fdeaea}
 .bk-empty{padding:32px;text-align:center;opacity:.6}
 </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
 <div class="layout">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
-
-    <div class="brand">
-      <i class="fa-solid fa-leaf brand-icon"></i>
-      <div>
-        <h2>PANSOL RESORTS</h2>
-        <span>Centralized Reservation Hub</span>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <a href="{{ url_for('caretaker_dashboard') }}" class="nav-item active"><i class="fa-solid fa-grip"></i> Dashboard</a>
-      <a href="{{ url_for('caretaker_updates') }}" class="nav-item"><i class="fa-solid fa-arrows-rotate"></i> Updates</a>
-      <a href="{{ url_for('caretaker_guests') }}" class="nav-item"><i class="fa-solid fa-users"></i> Guests</a>
-      <a href="{{ url_for('caretaker_inventory') }}" class="nav-item"><i class="fa-solid fa-calendar-check"></i> Reservations</a>
-      <a href="{{ url_for('caretaker_maintenance') }}" class="nav-item"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</a>
-      <a href="{{ url_for('caretaker_reports') }}" class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</a>
-    </nav>
-
-    <a href="{{ url_for('login') }}" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
-
-  </aside>
+  {% include 'caretaker/_sidebar.html' %}
 
   <!-- MAIN -->
   <div class="main">
@@ -80,112 +61,72 @@
       </nav>
 
       <div class="topbar-user">
-        <i class="fa-regular fa-bell"></i>
-        <div class="avatar"></div>
+        <a class="notification-link" href="{{ url_for('caretaker_notifications') }}" aria-label="Notifications, {{ unread_notifications }} unread">
+          <i class="fa-regular fa-bell"></i>{% if unread_notifications %}<span>{{ unread_notifications }}</span>{% endif %}
+        </a>
+        {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "C")[:1]|upper }}</div>{% endif %}
         <span>{{ fullname }}</span>
       </div>
 
     </header>
 
     <!-- CONTENT -->
-    <main class="content">
-
-      <h1>Dashboard Overview</h1>
-      <p class="subtitle">Welcome back! Here is what is happening at your assigned resort today.</p>
+    <main class="content caretaker-content">
+      <header class="caretaker-welcome">
+        <div><p class="ops-eyebrow">RESORT OPERATIONS</p><h1>Welcome back, {{ fullname }}.</h1><p class="subtitle">Here’s today’s overview for {{ resort.resort_name }}.</p></div>
+        <a href="{{ url_for('caretaker_guests') }}" class="ops-primary"><i class="fa-solid fa-calendar-check"></i> Manage reservations</a>
+      </header>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-        <div class="panel" style="margin-bottom:16px;">{{ message }}</div>
+        <div class="ops-flash {{ category }}">{{ message }}</div>
         {% endfor %}
       {% endwith %}
 
-      <!-- TOP GRID -->
-      <section class="grid-2x2">
-
-        <!-- Resort Status -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Resort Status</h3>
-            <span class="badge {{ 'available' if resort.status == 'Active' else 'pending' }}">{{ resort.status }}</span>
-          </div>
-            <p class="resort-name">{{ resort.resort_name }}</p>
-          <div class="resort-image"></div>
-            <p>{{ resort.address or 'No address provided' }}</p>
-            <p>{{ resort.description or 'No resort description available.' }}</p>
-        </div>
-
-        <!-- Recent Updates -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Recent Updates</h3>
-            <a href="{{ url_for('caretaker_updates') }}" class="view-all">View All</a>
-          </div>
-
-          {% for notification in notifications %}
-          <div class="update-row">
-            <div class="update-thumb"></div>
-            <div class="update-info">
-              <h4>{{ notification.title }}</h4>
-              <p>{{ notification.message }}</p>
-            </div>
-            <span class="update-date">{{ notification.created_at.strftime('%b %d, %Y') }}</span>
-          </div>
-          {% else %}
-          <p>No recent updates.</p>
-          {% endfor %}
-
-        </div>
-
-        <!-- Messages -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Messages</h3>
-            <a href="{{ url_for('caretaker_messages') }}" class="view-all">View All</a>
-          </div>
-
-          {% for notification in notifications %}
-          <div class="message-row">
-            <div class="msg-avatar"></div>
-            <div class="message-info">
-              <h4>{{ notification.title }}</h4>
-              <p>{{ notification.message }}</p>
-            </div>
-            <span class="msg-time">{{ notification.created_at.strftime('%b %d') }}</span>
-          </div>
-          {% else %}
-          <p>No messages or notifications.</p>
-          {% endfor %}
-
-        </div>
-
-        <!-- Upload Resort Updates -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Upload Resort Updates</h3>
-          </div>
-          <p class="resort-name">{{ resort.resort_name }}</p>
-          <p>{{ resort.description or 'No resort updates have been added yet.' }}</p>
-          <a class="btn-primary" href="{{ url_for('caretaker_updates') }}">View Resort Updates</a>
-
-        </div>
-
+      <section class="ops-metrics" aria-label="Booking overview">
+        <a class="ops-metric" href="{{ url_for('caretaker_guests') }}"><span class="metric-icon amber"><i class="fa-regular fa-hourglass-half"></i></span><span class="metric-label">Pending review</span><strong>{{ pending_count }}</strong><small>Bookings awaiting action</small></a>
+        <a class="ops-metric" href="{{ url_for('caretaker_guests') }}"><span class="metric-icon green"><i class="fa-solid fa-circle-check"></i></span><span class="metric-label">Confirmed stays</span><strong>{{ confirmed_count }}</strong><small>Approved reservations</small></a>
+        <a class="ops-metric" href="{{ url_for('caretaker_guests') }}"><span class="metric-icon blue"><i class="fa-regular fa-calendar"></i></span><span class="metric-label">Upcoming stays</span><strong>{{ upcoming_count }}</strong><small>Arrivals from today onward</small></a>
+        <a class="ops-metric" href="{{ url_for('caretaker_notifications') }}"><span class="metric-icon violet"><i class="fa-regular fa-bell"></i></span><span class="metric-label">Unread notifications</span><strong>{{ unread_notifications }}</strong><small>Updates that may need attention</small></a>
       </section>
 
+      <section class="ops-overview-grid">
+        <article class="property-hero">
+          <img src="{{ resort.display_image or url_for('static', filename='images/default-resort.svg') }}" alt="{{ resort.resort_name }}">
+          <div class="property-hero-shade"></div>
+          <div class="property-hero-content">
+            <span class="property-live"><i class="fa-solid fa-circle"></i> {{ resort.status }}</span>
+            <p class="ops-eyebrow">YOUR ASSIGNED PROPERTY</p>
+            <h2>{{ resort.resort_name }}</h2>
+            <p><i class="fa-solid fa-location-dot"></i> {{ resort.address or 'Location not provided' }}</p>
+            <a href="{{ url_for('caretaker_updates') }}" class="hero-link">Manage resort updates <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </article>
+
+        <article class="panel notification-panel">
+          <div class="ops-panel-heading"><div><p class="ops-eyebrow">STAY INFORMED</p><h2>Recent notifications</h2></div><a href="{{ url_for('caretaker_notifications') }}" class="ops-text-link">View all <i class="fa-solid fa-arrow-right"></i></a></div>
+          {% for notification in notifications %}
+          <div class="notification-item"><span class="notification-icon"><i class="fa-regular fa-bell"></i></span><div><strong>{{ notification.title }}</strong><p>{{ notification.message }}</p><small>{{ notification.created_at.strftime('%b %d, %Y') if notification.created_at else '' }}</small></div></div>
+          {% else %}
+          <div class="ops-empty"><i class="fa-regular fa-bell-slash"></i><p>You’re all caught up. New booking reminders will appear here.</p></div>
+          {% endfor %}
+        </article>
+      </section>
       <!-- BOTTOM GRID -->
-      <section class="grid-2col">
+      <section class="ops-lower-grid">
 
         <!-- Upcoming Reservations -->
         <div class="panel">
           <div class="panel-head">
             <h3>Upcoming Reservations</h3>
-            <a href="{{ url_for('caretaker_inventory') }}" class="view-all">View All</a>
+            <a href="{{ url_for('caretaker_guests') }}" class="view-all">View All</a>
           </div>
 
           {% for reservation in upcoming %}
           <div class="reservation">
             <div class="reservation-thumb thumb-1"></div>
             <div class="reservation-info">
-              <h4>{{ resort.resort_name }} · {{ reservation.guest_name or 'Guest' }}</h4>
+              <h4>{{ reservation.guest_name or 'Guest' }}</h4>
               <p>{{ reservation.check_in.strftime('%b %d') }} - {{ reservation.check_out.strftime('%b %d, %Y') }} &nbsp;&middot;&nbsp; {{ reservation.guests }} Guests</p>
             </div>
             <span class="badge {{ 'confirmed' if reservation.reservation_status == 'Confirmed' else 'pending' }}">{{ reservation.reservation_status }}</span>
@@ -196,19 +137,14 @@
 
         </div>
 
-        <!-- Property Status -->
+        <!-- Quick actions -->
         <div class="panel">
           <div class="panel-head">
-            <h3>Property Status</h3>
+            <h3>Quick actions</h3>
           </div>
-          <p class="panel-note">Current status of your assigned resort</p>
-          <div class="property-row">
-            <span>{{ resort.resort_name }}</span>
-            <div class="status-toggle">
-              <span class="status-label {{ 'on' if resort.status == 'Active' else 'off' }}">{{ resort.status }}</span>
-            </div>
-          </div>
-
+          <a class="quick-action" href="{{ url_for('caretaker_guests') }}"><span><i class="fa-solid fa-users"></i></span><div><strong>Guests &amp; reservations</strong><small>Review bookings and guest details</small></div><i class="fa-solid fa-chevron-right"></i></a>
+          <a class="quick-action" href="{{ url_for('caretaker_updates') }}"><span><i class="fa-solid fa-bullhorn"></i></span><div><strong>Post a resort update</strong><small>Share useful information with guests</small></div><i class="fa-solid fa-chevron-right"></i></a>
+          <a class="quick-action" href="{{ url_for('caretaker_reports') }}"><span><i class="fa-solid fa-chart-line"></i></span><div><strong>View resort reports</strong><small>Review booking and stay activity</small></div><i class="fa-solid fa-chevron-right"></i></a>
         </div>
 
       </section>
@@ -258,6 +194,8 @@
   </div>
 
 </div>
+
+
 
 </body>
 </html>

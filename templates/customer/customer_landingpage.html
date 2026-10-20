@@ -6,6 +6,8 @@
 <title>Pansol Resorts | Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
@@ -15,38 +17,12 @@
   <aside class="sidebar">
 
     <div class="brand">
-      <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo" style="width: 220px; height: auto;">          
+      <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo" style="width: 220px; height: auto;">
     </div>
 
-    <nav class="nav">
+    {% include 'customer/_sidebar_nav.html' %}
 
-      <a href="#" class="nav-item active">
-        <i class="fa-solid fa-grip"></i> DASHBOARD
-      </a>
-
-      <p class="nav-label">My Bookings</p>
-      <a href="{{ url_for('customer_reservation') }}" class="nav-item">
-        <i class="fa-regular fa-calendar-check"></i> My Reservation
-      </a>
-      <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
-        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
-      </a>
-
-      <p class="nav-label">My Account</p>
-      <a href="{{ url_for('customer_profileSetting') }}" class="nav-item">
-        <i class="fa-solid fa-gear"></i> Profile Setting
-      </a>
-      <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
-        <i class="fa-solid fa-lock"></i> Change Password
-      </a>
-
-      <p class="nav-label">Support</p>
-      <a href="#" class="nav-item">
-        <i class="fa-regular fa-circle-question"></i> Contact Support
-      </a>
-    </nav>
-
-    <a class="logout" href="{{ url_for('login') }}" 
+    <a class="logout" href="{{ url_for('logout') }}"
     style="margin-left:0px;
     display:flex;
     align-items:center;
@@ -54,9 +30,9 @@
     color:#fff;
     text-decoration:none;
     opacity:.9;
-      "> &#8592; Log Out</a>  
+      "> &#8592; Log Out</a>
   </aside>
-      
+
 
   <!-- MAIN -->
   <div class="main">
@@ -64,8 +40,8 @@
     <!-- TOP NAV -->
     <header class="topbar">
 
-      <div class="logo"> 
-        <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo">      
+      <div class="logo">
+        <img src={{ url_for('static', filename='images/logo.png') }} alt="Logo">
       </div>
 
       <nav class="topbar-links">
@@ -77,67 +53,35 @@
 
       <div class="topbar-user">
         <i class="fa-regular fa-bell"></i>
-        <div class="avatar"></div>
+        {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "U")[:1]|upper }}</div>{% endif %}
         <span>{{ username }}</span>
       </div>
 
     </header>
 
     <!-- CONTENT -->
-    <main class="content">
-
-      <h1>Welcome back, {{username}}!</h1>
-      <p class="subtitle">Here's what happening with your reservation</p>
-
-      <!-- STAT CARDS -->
-      <section class="stats">
-
-        <button type="button" class="stat-card action-card" data-title="All Bookings" data-message="You clicked View All Bookings. You currently have {{ total_bookings }} booking record(s) in your account.">
-          <div class="stat-top">
-            <span class="stat-icon blue"><i class="fa-regular fa-calendar"></i></span>
-            <span class="stat-label">Total Bookings</span>
-          </div>
-          <div class="stat-value">{{ total_bookings }}</div>
-          <span class="stat-link">View All Bookings</span>
-        </button>
-
-        <button type="button" class="stat-card action-card" data-title="Upcoming Stays" data-message="You clicked View Upcoming. You currently have {{ upcoming_stays }} upcoming stay(s) scheduled.">
-          <div class="stat-top">
-            <span class="stat-icon orange"><i class="fa-regular fa-clock"></i></span>
-            <span class="stat-label">Upcoming Stays</span>
-          </div>
-          <div class="stat-value">{{ upcoming_stays }}</div>
-          <span class="stat-link">View Upcoming</span>
-        </button>
-
-        <button type="button" class="stat-card action-card" data-title="Completed Steps" data-message="You clicked View History. You have completed {{ completed_steps }} reservation step(s) so far.">
-          <div class="stat-top">
-            <span class="stat-icon green"><i class="fa-solid fa-circle-check"></i></span>
-            <span class="stat-label">Completed Steps</span>
-          </div>
-          <div class="stat-value">{{ completed_steps }}</div>
-          <span class="stat-link">View History</span>
-        </button>
-
-        <button type="button" class="stat-card action-card" data-title="Pending Payment" data-message="You clicked View Payment. You currently have {{ pending_payment }} pending payment item(s) that need attention.">
-          <div class="stat-top">
-            <span class="stat-icon gray"><i class="fa-regular fa-circle-question"></i></span>
-            <span class="stat-label">Pending Payment</span>
-          </div>
-          <div class="stat-value">{{ pending_payment }}</div>
-          <span class="stat-link">View Payment</span>
-        </button>
-        
+    <main class="content dashboard-content">
+      <section class="dashboard-heading">
+        <div>
+          <p class="eyebrow">YOUR RESORT GETAWAY, AT A GLANCE</p>
+          <h1>Welcome back, {{ username }}!</h1>
+          <p class="subtitle">Manage your stays, payments, and upcoming plans.</p>
+        </div>
       </section>
 
-      <div id="actionModal" class="action-modal" aria-hidden="true">
-        <div class="action-modal-content">
-          <button type="button" class="modal-close" aria-label="Close popup">&times;</button>
-          <div class="modal-badge">Dashboard Action</div>
-          <h3 id="modalTitle">Action</h3>
-          <p id="modalMessage">Details will appear here.</p>
+      <section class="booking-search-panel" aria-labelledby="booking-search-title">
+        <div class="booking-search-copy">
+          <span class="search-kicker"><i class="fa-solid fa-sparkles"></i> YOUR NEXT GETAWAY STARTS HERE</span>
+          <h2 id="booking-search-title">Find your stay in Pansol</h2>
+          <p>Compare all our partner resorts in one place and choose the stay that works for you.</p>
         </div>
-      </div>
+        <a class="dashboard-search-link" href="{{ url_for('resorts') }}">
+          <span class="search-location-icon"><i class="fa-solid fa-location-dot"></i></span>
+          <span class="search-link-copy"><strong>Explore resorts in Pansol</strong><small>View resorts, amenities, prices, and available dates</small></span>
+          <span class="search-link-button"><i class="fa-solid fa-magnifying-glass"></i> Browse stays</span>
+        </a>
+        <div class="search-benefits"><span><i class="fa-solid fa-check"></i> All partner resorts in one place</span><span><i class="fa-solid fa-check"></i> Check availability</span><span><i class="fa-solid fa-check"></i> Book in a few steps</span></div>
+      </section>
 
       <!-- BOTTOM PANELS -->
       <section class="panels">
@@ -145,7 +89,7 @@
         <!-- UPCOMING RESERVATIONS -->
         <div class="panel">
 
-          <h3>Upcoming Reservations</h3>
+          <div class="panel-heading"><div><p class="eyebrow">PLAN AHEAD</p><h2>Upcoming stays</h2></div><a href="{{ url_for('customer_reservation') }}" class="text-action">All reservations <i class="fa-solid fa-arrow-right"></i></a></div>
 
           <div class="reservations-container">
 
@@ -154,39 +98,37 @@
                   {% for reservation in upcoming_reservations %}
 
                   <div class="reservation-card">
-                      <h4>{{ reservation.resort_name }}</h4>
+                      <div class="stay-icon"><i class="fa-solid fa-umbrella-beach"></i></div>
+                      <div class="stay-details">
+                      <div class="stay-title"><h3>{{ reservation.resort_name }}</h3>
+                        <span class="badge status-{{ reservation.reservation_status|lower }}">{{ reservation.reservation_status }}</span>
+                      </div>
 
-                      <p>{{ reservation.check_in }}
-                          -
-                          {{ reservation.check_out }}
-                      </p>
+                      <p class="stay-dates"><i class="fa-regular fa-calendar"></i> {{ reservation.check_in.strftime('%b %d, %Y') if reservation.check_in else 'Date pending' }} <span>→</span> {{ reservation.check_out.strftime('%b %d, %Y') if reservation.check_out else '' }}</p>
 
-                      <p>
-                          {{ reservation.guests }} Guests
-                      </p>
+                      <p class="stay-meta">{{ reservation.guests }} guests <span>·</span> Booking #{{ reservation.reservation_id }}</p>
 
                       <p>
                           ₱{{ "{:,.2f}".format(reservation.total_amount) }}
                       </p>
 
-                      <span class="badge {{ reservation.reservation_status|lower }}">
-                          {{ reservation.reservation_status }}
-                      </span>
+                      </div>
+                      <div class="stay-amount"><strong>₱{{ "{:,.2f}".format(reservation.total_amount or 0) }}</strong><span>{{ reservation.payment_status or 'Payment not submitted' }}</span></div>
                   </div>
                   {% endfor %}
               {% else %}
-                  <p>You don't have any upcoming reservations.</p>
+                  <div class="empty-bookings"><span class="empty-icon"><i class="fa-regular fa-calendar-check"></i></span><h3>Your next getaway starts here</h3><p>You don’t have an upcoming stay yet. Browse resorts and find a place for your next trip.</p><a class="secondary-action" href="{{ url_for('resorts') }}">Browse resorts <i class="fa-solid fa-arrow-right"></i></a></div>
               {% endif %}
           </div>
-          
-          <a href="#" class="view-all">View All Reservation</a>
+
+          <a href="{{ url_for('customer_reservation') }}" class="view-all">View All Reservations</a>
 
         </div>
 
         <!-- RECENT ACTIVITY -->
         <div class="panel">
 
-          <h3>Recent Activity</h3>
+          <div class="panel-heading"><div><p class="eyebrow">YOUR BOOKINGS</p><h2>Recent activity</h2></div></div>
 
           <div class="recent-activity">
 
@@ -194,34 +136,23 @@
 
                 {% for reservation in recent_reservations %}
 
-                <div class="activity-item">
-
-                    <div>
-                        <strong>{{ reservation.resort_name }}</strong>
-
-                        <p>
-                            Reservation status:
-                            {{ reservation.reservation_status }}
-                        </p>
-
-                        <small>
-                            {{ reservation.created_at }}
-                        </small>
-                    </div>
-
-                </div>
+                <article class="activity-item">
+                  <span class="activity-icon"><i class="fa-solid fa-receipt"></i></span>
+                  <div class="activity-copy"><strong>{{ reservation.resort_name }}</strong><p>Reservation {{ reservation.reservation_status|lower }}</p><small>{{ reservation.created_at.strftime('%b %d, %Y') if reservation.created_at else '' }}</small></div>
+                  <span class="badge status-{{ reservation.reservation_status|lower }}">{{ reservation.reservation_status }}</span>
+                </article>
 
                 {% endfor %}
 
             {% else %}
 
-                <p>No recent activity.</p>
+                <div class="empty-activity"><i class="fa-regular fa-folder-open"></i><p>Your booking updates will appear here.</p></div>
 
             {% endif %}
 
         </div>
 
-          <a href="#" class="view-all">View All Activity</a>
+          <a href="{{ url_for('customer_reservation') }}" class="view-all">View All Activity</a>
 
         </div>
 
@@ -233,36 +164,10 @@
 
 </div>
 
-<script>
-  const modal = document.getElementById('actionModal');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalMessage = document.getElementById('modalMessage');
-  const closeBtn = document.querySelector('.modal-close');
 
-  document.querySelectorAll('.action-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      modalTitle.textContent = card.dataset.title || 'Dashboard Action';
-      modalMessage.textContent = card.dataset.message || 'No details available.';
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden', 'false');
-    });
-  });
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden', 'true');
-    });
-  }
-
-  if (modal) {
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
-    });
-  }
-</script>
+{% if session.get('role') == 'customer' %}
+<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
+{% endif %}
 </body>
 </html>

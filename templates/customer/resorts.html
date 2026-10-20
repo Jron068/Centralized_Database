@@ -9,39 +9,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/resorts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}"> {% block extra_head %}{% endblock %}
-  </head>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
+</head>
   <body>
     <div class="app">
       <aside class="sidebar">
-        <div class="brand">
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width:220px;height:auto;">
-        </div>
-        <nav class="nav">
-          <a href="/customer_landingpage" class="nav-item">
-            <i class="fa-solid fa-grip"></i> DASHBOARD </a>
-          <p class="nav-label"> My Bookings </p>
-          <a href="{{ url_for('customer_reservation') }}" class="nav-item">
-            <i class="fa-regular fa-calendar-check"></i> My Reservation </a>
-          <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
-            <i class="fa-solid fa-file-invoice-dollar"></i> Payment History </a>
-          <p class="nav-label"> My Account </p>
-          <a href="{{ url_for('customer_profileSetting') }}" class="nav-item">
-            <i class="fa-solid fa-gear"></i> Profile Setting </a>
-          <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
-            <i class="fa-solid fa-lock"></i> Change Password </a>
-          <p class="nav-label"> Support </p>
-          <a href="#" class="nav-item">
-            <i class="fa-regular fa-circle-question"></i> Contact Support </a>
-        </nav>
-        <a class="logout" href="{{ url_for('login') }}" style="
-                margin-left:0;
-                display:flex;
-                align-items:center;
-                margin-top:170%;
-                color:#fff;
-                text-decoration:none;
-                opacity:.9;
-           "> &#8592; Log Out </a>
+        <div class="brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts" style="width:220px;height:auto;"></div>
+        {% include 'customer/_sidebar_nav.html' %}
+        <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
       </aside>
       <div class="main">
         <header class="topbar">
@@ -56,7 +32,7 @@
           </nav>
           <div class="topbar-user">
             <i class="fa-regular fa-bell"></i>
-            <div class="avatar"></div>
+            {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "U")[:1]|upper }}</div>{% endif %}
             <span>
               {{ username }}
             </span>
@@ -73,7 +49,7 @@
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <input type="text" placeholder="Search resort name or location...">
+              <input type="text" placeholder="Search resort name or location..." value="{{ search_query }}">
             </div>
             <div class="sfield">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,7 +147,7 @@
             <div class="drow">
               <div>
                 <div class="heroimg" id="heroImg">
-                  <button class="heart active" id="heroHeart" onclick="toggleFav(currentId,true)">
+                  <button class="heart" id="heroHeart" onclick="toggleFav(currentId,true)" aria-label="Save resort to favorites">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 21s-8-4.5-8-11a5 5 0 019-3 5 5 0 019 3c0 6.5-8 11-8 11z" />
                     </svg>
@@ -180,7 +156,7 @@
                 </div>
                 <div class="thumbstrip" id="thumbStrip"></div>
               </div>
-              
+
             </div>
             <div class="idblock">
               <div class="idtop">
@@ -882,8 +858,10 @@
       email: dbResort.email || "",
       phone: dbResort.phone || "",
       variant: defaults.variant || "villa",
-      price: Number(dbResort.price) || defaults.price || 0,
-      maxPax: Number(dbResort.max_pax) || defaults.maxPax || 15,
+      price: dbResort.price !== null && dbResort.price !== undefined && dbResort.price !== ''
+        ? Number(dbResort.price) : (defaults.price || 0),
+      maxPax: dbResort.max_pax !== null && dbResort.max_pax !== undefined && dbResort.max_pax !== ''
+        ? Number(dbResort.max_pax) : (defaults.maxPax || 15),
       rating: defaults.rating || 0,
       reviews: defaults.reviews || 0,
       satisfaction: defaults.satisfaction || 0,
@@ -898,7 +876,7 @@
     };
   });
   let currentId = resorts.length ? resorts[0].id : null;
-  let favs = new Set();
+  let favs = new Set(({{ favorite_resort_ids | tojson }} || []).map(id => String(id)));
 
   function renderCards() {
     const cardRow = document.getElementById('cardRow');
@@ -934,11 +912,32 @@
     updateCarouselButtons();
   }
 
-  function toggleFav(id, fromHero = false) {
-    if (favs.has(id)) { favs.delete(id); } else { favs.add(id); }
-    renderCards();
-    if (currentId === id) {
-      document.getElementById('heroHeart').classList.toggle('active', favs.has(id));
+  async function toggleFav(id, fromHero = false) {
+    if (!id) return;
+    const resortId = String(id);
+    const button = fromHero ? document.getElementById('heroHeart') : null;
+    if (button) button.disabled = true;
+    try {
+      const response = await fetch(`/customer_favorites/${encodeURIComponent(resortId)}/toggle`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (response.status === 401) {
+        window.location.href = {{ url_for('login') | tojson }};
+        return;
+      }
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.message || 'Could not update favorites.');
+      if (result.saved) favs.add(resortId); else favs.delete(resortId);
+    } catch (error) {
+      window.alert(error.message || 'Could not update favorites. Please try again.');
+    } finally {
+      if (button) button.disabled = false;
+      renderCards();
+      if (currentId === resortId) {
+        document.getElementById('heroHeart').classList.toggle('active', favs.has(resortId));
+      }
     }
   }
 
@@ -976,7 +975,7 @@
     `;
     document.getElementById('ov-gallery').innerHTML = r.photos.length
       ? r.photos.slice(0, 6).map(src => `<div><img src="${src}" alt="${r.name} photo"></div>`).join('')
-      : [30, 90, 150, 210, 270, 330].map(a => `<div>${scene(r.variant, a)}</div>`).join('');
+      : `<p class="gallery-empty">No additional resort photos available.</p>`;
     document.getElementById('ov-map').innerHTML = miniMap(r);
     document.getElementById('am-grid').innerHTML = r.amenitiesFull.map(a => `
       <div class="amcard"><div class="ic">${ic[a.icon] || ''}</div><div><b>${a.n}</b><span>${a.d}</span></div></div>
@@ -1214,9 +1213,15 @@
   }
 
   renderCards();
+  if (searchInput && searchInput.value.trim()) searchInput.dispatchEvent(new Event('input', { bubbles: true }));
   renderDetail();
   updateCarouselButtons();
   window.addEventListener('resize', () => updateCarouselButtons());
 </script>
-  </body>
+
+
+{% if session.get('role') == 'customer' %}
+<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
+{% endif %}
+</body>
 </html>

@@ -1,8 +1,9 @@
 from config import get_connection
-from flask import jsonify, render_template, session
+from flask import jsonify, render_template, request, session
 from app import app
 from models.resort import enrich_resorts, gallery_photos
 from models.resort_photos import get_resort_photos
+from models.customer_favorites import ensure_customer_favorites_table
 
 @app.route("/resorts")
 def resorts():
@@ -35,11 +36,21 @@ def resorts():
                 resort, photos_by_resort.get(resort["resort_id"], [])
             )
         ]
+    favorite_resort_ids = []
+    if session.get("role") == "customer" and session.get("account_id"):
+        ensure_customer_favorites_table(cursor)
+        cursor.execute(
+            "SELECT resort_id FROM customer_favorites WHERE account_id = %s",
+            (session["account_id"],),
+        )
+        favorite_resort_ids = [row["resort_id"] for row in cursor.fetchall()]
     cursor.close()
     connection.close()
     
     return render_template(
-        "customer/resorts.html", username=fullname, resort_rows=resort_rows
+        "customer/resorts.html", username=fullname, resort_rows=resort_rows,
+        favorite_resort_ids=favorite_resort_ids,
+        search_query=request.args.get("q", "").strip()
     )
 
 @app.route('/LuckyMielsResort')
@@ -60,8 +71,8 @@ def MagicKingdomResort():
 
 @app.route('/RenalynsResort')
 def RenalynsResort():
-    return render_template('resorts/RenalynsResort.html')
+    return render_template('resorts/RenalynResort.html')
 
 @app.route('/GallelysResort')
 def GallelysResort():
-    return render_template('resorts/GallelysResort.html')
+    return render_template('resorts/GallelyResort.html')

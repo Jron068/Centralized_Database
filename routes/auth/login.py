@@ -3,6 +3,12 @@ from werkzeug.security import check_password_hash
 from app import app
 from config import get_connection
 
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
@@ -114,7 +120,7 @@ def login():
         session["role"] = role
 
         if role == "customer":
-            return redirect(url_for("customer_aboutpage"))
+            return redirect(url_for("customer_aboutpage", welcome_music="1"))
         elif role == "caretaker":
             return redirect(url_for("caretaker_dashboard"))
         elif role == "owner":

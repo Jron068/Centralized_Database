@@ -176,6 +176,8 @@
   }
 }
 </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 
 <body>
@@ -187,8 +189,7 @@
 
     <div class="side-nav">
       <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
-      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
-      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
       <a class="side-link active" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
@@ -197,7 +198,7 @@
       <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
     </div>
 
-    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
   </div>
 
   <!-- ================= MAIN AREA ================= -->
@@ -211,12 +212,13 @@
         <a class="topnav-link active" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> {{ username }}</div>
+      <div class="profile">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar"></span>{% endif %} {{ username }}</div>
     </div>
 
     <div class="content">
 
       <a class="btn btn-outline btn-sm" href="{{ url_for('admin_properties_manage') }}">&larr; All properties</a>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('reservation', resort_id=resort.resort_id) }}">View this resort's reservations</a>
 
       <!-- Resort name, address and the Active / Inactive switch -->
       <div class="card-row" style="margin-top:16px;">
@@ -250,9 +252,9 @@
 
       <section class="card" style="padding:20px;margin-top:18px;">
         <h3 style="margin-top:0;">Resort photos</h3>
-        <p class="muted">Upload JPG, PNG, WEBP, or GIF photos. They are saved for this resort and shown in the customer gallery.</p>
+        <p class="muted">Upload JPG, PNG, or WEBP photos up to 8 MB each. Each photo is content-scanned before it is saved and shown in the customer gallery.</p>
         <form method="post" enctype="multipart/form-data" action="{{ url_for('admin_resort_photos_upload', resort_id=resort.resort_id) }}" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0;">
-          <input type="file" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+          <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple required>
           <button class="btn btn-primary" type="submit">Upload photos</button>
         </form>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">
@@ -439,8 +441,18 @@
         <div class="grid-2">
 
           <!-- Form to post a new update for the caretaker -->
-          <form class="card" method="post" action="{{ url_for('admin_property_post_update', resort_id=resort.resort_id) }}" style="padding:22px;">
-            <h3>Post an update to the caretaker</h3>
+          <form class="card" method="post" enctype="multipart/form-data" action="{{ url_for('admin_property_post_update', resort_id=resort.resort_id) }}" style="padding:22px;">
+            <h3>Post a resort update</h3>
+
+            <div class="form-row">
+              <label>Post to</label>
+              <select name="target_resort_id">
+                <option value="all">All resorts</option>
+                {% for item in all_resorts %}
+                <option value="{{ item.resort_id }}" {% if item.resort_id == resort.resort_id %}selected{% endif %}>{{ item.resort_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
             <div class="form-row">
               <label>Title</label>
@@ -449,7 +461,20 @@
 
             <div class="form-row">
               <label>Details</label>
-              <textarea name="message" rows="5" maxlength="1000" required></textarea>
+              <textarea name="message" rows="5" maxlength="2000" required></textarea>
+            </div>
+
+            <div class="form-row">
+              <label>Category</label>
+              <select name="category">
+                <option value="notice">Notice</option><option value="event">Event</option>
+                <option value="promotion">Promotion</option><option value="facility">Facility</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label>Picture (optional, JPG/PNG/WEBP, up to 8 MB; scanned before upload)</label>
+              <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
             </div>
 
             <button class="btn btn-primary" type="submit">Post update</button>
@@ -806,6 +831,8 @@ function showUpdates() {
     html += '<div class="upd">';
     html += '  <b>' + safeText(u.title) + '</b><br>';
     html += safeText(u.message) + '<br>';
+    if (u.image_url) html += '<img src="' + safeText(u.image_url) + '" alt="Update picture" style="display:block;max-width:100%;max-height:220px;margin:10px 0;border-radius:8px">';
+    html += '<span class="muted">' + safeText(u.scope || '') + '</span><br>';
     html += '  <span class="muted">' + safeText(u.date) + '</span>';
     html += '</div>';
   }
@@ -851,5 +878,7 @@ async function refreshData() {
 }
 setInterval(refreshData, 20000);   // 20000 milliseconds = 20 seconds
 </script>
+
+
 </body>
 </html>

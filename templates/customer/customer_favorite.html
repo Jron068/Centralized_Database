@@ -3,120 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pansol Resorts — Favorite Resorts</title>
-  <link rel="stylesheet" href="../static/css/customer_style/favorites.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Pansol Resorts | Saved Resorts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
-
-  <!-- Top Navigation Bar -->
-  <header class="topbar">
-    <div class="logo-area">
-      <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
-      <div class="logo-text">
-        <h1>PANSOL RESORTS</h1>
-        <span>Your Escape, Our Priority</span>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></div>
+    {% include 'customer/_sidebar_nav.html' %}
+    <a class="logout" href="{{ url_for('logout') }}">Log out</a>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <a class="logo" href="{{ url_for('customer_dashboard') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></a>
+      <nav class="topbar-links">
+        <a href="{{ url_for('customer_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('resorts') }}">Resorts</a>
+        <a href="{{ url_for('customer_reservation') }}">My reservations</a>
+        <a href="{{ url_for('customer_messages') }}">Updates</a>
+      </nav>
+      <div class="topbar-user">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar">{{ session.get("fullname", "U")[:1]|upper }}</span>{% endif %}<span>{{ username }}</span></div>
+    </header>
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}<div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>{% endfor %}
+      {% endwith %}
+      <div class="customer-page-heading">
+        <div><p class="eyebrow">YOUR SHORTLIST</p><h1>Saved resorts</h1><p class="subtitle">Keep the places you like close while you plan your stay.</p></div>
+        <a class="primary-action" href="{{ url_for('resorts') }}"><i class="fa-solid fa-magnifying-glass"></i> Explore resorts</a>
       </div>
-    </div>
-    <nav class="top-nav">
-      <a href="home.html">Home</a>
-      <a href="resorts.html">Resorts</a>
-      <a href="deals.html">Deals</a>
-      <a href="favorites.html" class="active">Favorites</a>
-    </nav>
-    <div class="user-profile">
-      <i class="fa-regular fa-bell icon-btn"></i>
-      <div class="avatar">AJ</div>
-      <div class="user-info">
-        <span class="user-name">Aron-John C.</span>
-        <span class="user-role">Customer</span>
-      </div>
-      <i class="fa-solid fa-chevron-down dropdown-icon"></i>
-    </div>
-  </header>
-
-  <div class="app-container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <a href="#" class="sidebar-item active-dash"><i class="fa-solid fa-house"></i> Dashboard</a>
-      
-      <div class="sidebar-group">
-        <span class="group-title">BOOKINGS</span>
-        <a href="#" class="sidebar-item"><i class="fa-regular fa-bookmark"></i> My Bookings</a>
-        <a href="#" class="sidebar-item"><i class="fa-solid fa-clock-rotate-left"></i> Booking History</a>
-      </div>
-
-      <div class="sidebar-group">
-        <span class="group-title">ACCOUNT</span>
-        <a href="#" class="sidebar-item"><i class="fa-regular fa-user"></i> Profile Settings</a>
-        <a href="#" class="sidebar-item"><i class="fa-regular fa-credit-card"></i> Payment Methods</a>
-      </div>
-
-      <div class="sidebar-group">
-        <span class="group-title">SUPPORT</span>
-        <a href="#" class="sidebar-item"><i class="fa-regular fa-circle-question"></i> Help Center</a>
-        <a href="#" class="sidebar-item"><i class="fa-regular fa-comment"></i> Contact Support</a>
-      </div>
-
-      <div class="sidebar-footer">
-        <a href="#" class="sidebar-item"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a>
-      </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <div class="content-header">
-        <h2>Your Saved Favorites</h2>
-        <p>Quick access to all the resort getaways you saved for later</p>
-      </div>
-
-      <div class="cards-grid">
-        <!-- Favorite Card 1 -->
-        <div class="resort-card">
-          <div class="card-image-placeholder">
-            <button class="favorite-btn active"><i class="fa-solid fa-heart"></i></button>
+      {% if favorites %}
+      <section class="customer-resort-grid" aria-label="Your saved resorts">
+        {% for resort in favorites %}
+        <article class="customer-resort-card">
+          <a class="customer-resort-image" href="{{ url_for('resorts') }}" aria-label="Explore {{ resort.resort_name }}">
+            <img src="{{ resort.logo or url_for('static', filename='images/default-resort.svg') }}" alt="{{ resort.resort_name }}">
+          </a>
+          <div class="customer-resort-body">
+            <p class="customer-resort-location"><i class="fa-solid fa-location-dot"></i> {{ resort.address or 'Pansol, Calamba, Laguna' }}</p>
+            <h2>{{ resort.resort_name }}</h2>
+            <p class="customer-resort-description">{{ resort.description or 'View resort details, amenities, and available dates.' }}</p>
+            <div class="customer-resort-footer">
+              <div><small>Starting price</small><strong>{% if resort.price %}₱{{ '{:,.2f}'.format(resort.price|float) }}{% else %}See resort details{% endif %}</strong></div>
+              <form method="post" action="{{ url_for('toggle_customer_favorite', resort_id=resort.resort_id) }}">
+                <button class="icon-action" type="submit" aria-label="Remove {{ resort.resort_name }} from saved resorts"><i class="fa-solid fa-heart"></i></button>
+              </form>
+            </div>
+            <a class="secondary-action customer-resort-link" href="{{ url_for('resorts') }}">View resort details <i class="fa-solid fa-arrow-right"></i></a>
           </div>
-          <div class="card-body">
-            <div class="card-title-row">
-              <h3>Lucky Miels Resort</h3>
-              <span class="rating"><i class="fa-solid fa-star"></i> 4.6 <span>(128)</span></span>
-            </div>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
-            <div class="schedules">
-              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
-              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
-            </div>
-            <div class="pricing">
-              <span class="price">₱1,200</span> <span class="unit">/ Day Tour</span>
-            </div>
-            <button class="btn-primary">View Details</button>
-          </div>
-        </div>
-
-        <!-- Favorite Card 2 -->
-        <div class="resort-card">
-          <div class="card-image-placeholder">
-            <button class="favorite-btn active"><i class="fa-solid fa-heart"></i></button>
-          </div>
-          <div class="card-body">
-            <div class="card-title-row">
-              <h3>Sunscape Resort</h3>
-              <span class="rating"><i class="fa-solid fa-star"></i> 4.7 <span>(142)</span></span>
-            </div>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
-            <div class="schedules">
-              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
-              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
-            </div>
-            <div class="pricing">
-              <span class="price">₱1,300</span> <span class="unit">/ Day Tour</span>
-            </div>
-            <button class="btn-primary">View Details</button>
-          </div>
-        </div>
-      </div>
+        </article>
+        {% endfor %}
+      </section>
+      {% else %}
+      <section class="panel customer-empty-state">
+        <span class="empty-icon"><i class="fa-regular fa-heart"></i></span>
+        <h2>Your shortlist is ready</h2>
+        <p>Save resorts from the resort directory and they’ll appear here for your next visit.</p>
+        <a class="primary-action" href="{{ url_for('resorts') }}">Browse available resorts <i class="fa-solid fa-arrow-right"></i></a>
+      </section>
+      {% endif %}
     </main>
   </div>
+</div>
 
+
+{% if session.get('role') == 'customer' %}
+<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
+{% endif %}
 </body>
 </html>

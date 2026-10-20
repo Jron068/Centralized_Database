@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reservation review</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
   <div class="app">
     <div class="sidebar">
       <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
       <div class="side-nav">
-        <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
+        <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
       </div>
-      <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+      <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
     </div>
     <div class="main">
       <div class="content">
@@ -24,7 +26,8 @@
         {% endwith %}
         <div class="card" style="margin-top:20px; padding:24px;">
           <p><strong>Guest:</strong> {{ reservation.guest_name }}</p>
-          <p><strong>Email:</strong> {{ reservation.guest_email }}</p>
+          <p><strong>Booking source:</strong> {{ reservation.booking_source }}</p>
+          <p><strong>Email:</strong> {{ reservation.guest_email or 'Not provided' }}</p>
           <p><strong>Phone:</strong> {{ reservation.guest_phone or 'Not provided' }}</p>
           <p><strong>Resort:</strong> {{ reservation.resort_name }}</p>
           <p><strong>Stay:</strong> {{ reservation.check_in }} to {{ reservation.check_out }} ({{ reservation.guests }} guests)</p>
@@ -39,7 +42,9 @@
           {% else %}
             <p class="page-sub">The customer has not submitted a payment screenshot.</p>
           {% endif %}
-          {% if reservation.payment_status == 'Pending' %}
+          {% if reservation.booking_source == 'Walk-in' and reservation.reservation_status == 'Pending' %}
+            <a class="btn btn-primary" href="{{ url_for('admin_walkins') }}" style="margin-top:20px;">Review in Walk-in Approvals</a>
+          {% elif reservation.booking_source == 'Online' and reservation.payment_status == 'Pending' %}
             <form action="{{ url_for('review_reservation', reservation_id=reservation.reservation_id) }}" method="post" style="display:inline-block; margin-top:20px;">
               <button class="btn btn-primary" name="action" value="approve" type="submit">Approve</button>
               <button class="btn btn-outline" name="action" value="reject" type="submit" style="margin-left:8px;">Reject</button>
@@ -49,5 +54,7 @@
       </div>
     </div>
   </div>
+
+
 </body>
 </html>

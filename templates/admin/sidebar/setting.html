@@ -15,6 +15,8 @@
   .settings-list-item:last-child{border-bottom:none;}
   .settings-muted{color:var(--muted); font-size:13px;}
 </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
@@ -40,8 +42,7 @@
     <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
     <div class="side-nav">
       <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
-      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
-      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
       <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
@@ -49,7 +50,7 @@
       <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
       <a class="side-link active" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
     </div>
-    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
   </div>
 
   <!-- MAIN -->
@@ -61,7 +62,7 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> {{ username }}</div>
+      <div class="profile">{% if profile_photo %}<img class="avatar" src="{{ profile_photo }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar"></span>{% endif %}{% endif %} {{ username }}</div>
     </div>
 
     <div class="content">
@@ -87,7 +88,8 @@
         <div class="card">
           <section class="settings-panel active" data-settings-panel="account">
             <h3>Account Details</h3>
-            <form method="post" action="{{ url_for('settings') }}">
+            <form method="post" action="{{ url_for('settings') }}" enctype="multipart/form-data">
+              <div class="form-row"><label for="profile_picture">Profile Photo</label>{% if profile_photo %}<img src="{{ profile_photo }}" alt="Current profile photo" style="width:88px;height:88px;display:block;object-fit:cover;border-radius:50%;margin:8px 0 12px;">{% endif %}<input id="profile_picture" name="profile_picture" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"><span class="settings-muted">JPG, PNG, or WEBP · up to 5 MB</span></div>
               <div class="form-cols">
                 <div class="form-row"><label for="fullname">Full Name</label><input id="fullname" name="fullname" value="{{ account.fullname }}" required maxlength="150"></div>
                 <div class="form-row"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ account.email }}" required maxlength="150"></div>
@@ -151,5 +153,7 @@
     });
   });
 </script>
+
+
 </body>
 </html>

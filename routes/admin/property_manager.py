@@ -17,11 +17,13 @@ from app import app
 from config import get_connection
 from models.resort import enrich_resort, gallery_photos
 from models.resort_photos import ensure_resort_photos_table
+from models.image_moderation import ImageModerationError, MAX_IMAGE_BYTES, scan_resort_image
+from models.resort_updates import ensure_resort_updates_table, update_image_url
 from models.decorators import role_required
 from routes.caretaker import _walkin_schema, _stay_status, _as_date, _table_columns, _owner_account_id
 
 _MAINT_RE = re.compile(r"Resort: (.*?) \| Location: (.*?) \| Priority: (.*?) \| Reported by: (.*?)\n(.*)", re.S)
-_PHOTO_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
+_PHOTO_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 TEXT_FIELDS = ("resort_name", "address", "email", "phone", "amenities", "description")
 
 
@@ -94,6 +96,24 @@ def _notify_caretakers(cursor, resort_id, title, message, ntype):
     for acc in ids:
         cursor.execute(
             "INSERT INTO notifications (account_id, title, message, type) VALUES (%s, %s, %s, %s)", (acc, title, message, t)
+        )
+    return len(ids)
+
+
+def _notify_resort_customers(cursor, resort_id, title, message, ntype):
+    """Notify customers with a reservation for this resort about profile changes."""
+    cursor.execute(
+        "SELECT DISTINCT c.account_id FROM customers c "
+        "JOIN reservations r ON r.customer_id = c.customer_id "
+        "WHERE r.resort_id = %s AND c.account_id IS NOT NULL",
+        (resort_id,),
+    )
+    ids = [row["account_id"] for row in cursor.fetchall()]
+    notification_type = _notification_type(cursor, ntype)
+    for account_id in ids:
+        cursor.execute(
+            "INSERT INTO notifications (account_id, title, message, type) VALUES (%s, %s, %s, %s)",
+            (account_id, title, message, notification_type),
         )
     return len(ids)
 
@@ -209,11 +229,27 @@ def _reports(cursor, resort_id, first, nxt):
 
 
 def _updates(cursor, resort_id):
+    ensure_resort_updates_table(cursor)
+    cursor.execute(
+        "SELECT u.title, u.message, u.category, u.image_path, u.created_at, r.resort_name "
+        "FROM resort_updates u LEFT JOIN resorts r ON r.resort_id = u.resort_id "
+        "WHERE u.resort_id IS NULL OR u.resort_id = %s ORDER BY u.created_at DESC, u.update_id DESC LIMIT 30",
+        (resort_id,),
+    )
+    rows = [{"title": r["title"], "message": r["message"], "category": r["category"],
+             "image_url": update_image_url(r["image_path"]),
+             "scope": r["resort_name"] or "All resorts",
+             "date": r["created_at"].strftime("%b %d, %Y %I:%M %p") if r["created_at"] else ""}
+            for r in cursor.fetchall()]
+    # Keep older caretaker notices visible after the shared feed is introduced.
     cursor.execute(
         "SELECT DISTINCT n.title, n.message, n.created_at FROM notifications n JOIN caretakers c ON c.account_id = n.account_id "
         "WHERE c.resort_id = %s AND n.title LIKE %s ORDER BY n.created_at DESC LIMIT 10", (resort_id, "Resort update:%"))
-    return [{"title": r["title"].replace("Resort update: ", "", 1), "message": r["message"],
-             "date": r["created_at"].strftime("%b %d, %Y %I:%M %p") if r["created_at"] else ""} for r in cursor.fetchall()]
+    for r in cursor.fetchall():
+        rows.append({"title": r["title"].replace("Resort update: ", "", 1), "message": r["message"],
+                     "category": "notice", "image_url": None, "scope": "Assigned resort",
+                     "date": r["created_at"].strftime("%b %d, %Y %I:%M %p") if r["created_at"] else ""})
+    return sorted(rows, key=lambda row: row["date"], reverse=True)[:30]
 
 
 def _detail_state(cursor, resort, month_arg):
@@ -242,7 +278,7 @@ def admin_properties_manage():
                 "bookings": rep["bookings"], "pending": rep["pending"], "revenue": rep["revenue"], "occupancy": rep["occupancy"],
                 "open_maintenance": sum(1 for m in _maintenance(cursor, r) if not m["seen"]),
             })
-        return render_template("admin/admin_properties_manage.html", cards=cards, username=session.get("fullname", "Owner"),
+        return render_template("admin/admin_property_manage.html", cards=cards, username=session.get("fullname", "Owner"),
                                month_label=first.strftime("%B %Y"))
     finally:
         cursor.close()
@@ -280,6 +316,7 @@ def admin_property_detail(resort_id):
             text_fields=[c for c in TEXT_FIELDS if c in cols], price_fields=_price_columns(cursor),
             state=_detail_state(cursor, resort, request.args.get("month")), urls=urls,
             photos=photos,
+            all_resorts=_all_resorts(cursor),
             tab=request.args.get("tab", "overview"),
             seen_url=url_for("admin_maintenance_seen", notification_id=0),
         )
@@ -295,7 +332,8 @@ def admin_resort_photos_upload(resort_id):
     cursor = conn.cursor(dictionary=True)
     saved_files = []
     try:
-        if not _owned_resort(cursor, resort_id):
+        resort = _owned_resort(cursor, resort_id)
+        if not resort:
             flash("Property not found.", "warning")
             return redirect(url_for("admin_properties_manage"))
         ensure_resort_photos_table(cursor)
@@ -307,24 +345,42 @@ def admin_resort_photos_upload(resort_id):
             flash("Upload up to 20 images at a time.", "warning")
             return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
 
-        upload_dir = os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
-        os.makedirs(upload_dir, exist_ok=True)
+        scanned_images = []
         for image in files:
             original_name = secure_filename(image.filename)
             extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
-            if extension not in _PHOTO_EXTENSIONS or not (image.mimetype or "").startswith("image/"):
-                raise ValueError("Only JPG, PNG, WEBP, and GIF images are accepted.")
+            if extension not in _PHOTO_EXTENSIONS:
+                raise ImageModerationError("Only JPG, PNG, and WEBP images are accepted.")
+            image_data = image.stream.read(MAX_IMAGE_BYTES + 1)
+            if len(image_data) > MAX_IMAGE_BYTES:
+                raise ImageModerationError("Each image must be 8 MB or smaller.")
+            scan_resort_image(image_data, extension)
+            scanned_images.append((original_name, extension, image_data))
+
+        upload_dir = os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
+        os.makedirs(upload_dir, exist_ok=True)
+        for original_name, extension, image_data in scanned_images:
             filename = f"{uuid.uuid4().hex}.{extension}"
             full_path = os.path.join(upload_dir, filename)
-            image.save(full_path)
+            with open(full_path, "wb") as destination:
+                destination.write(image_data)
             saved_files.append(full_path)
             photo_path = f"uploads/resort_photos/{resort_id}/{filename}"
             cursor.execute(
                 "INSERT INTO resort_photos (resort_id, photo_path, caption) VALUES (%s, %s, %s)",
                 (resort_id, photo_path, os.path.splitext(original_name)[0][:255] or None),
             )
+        update_message = f"New resort photos were added to {resort['resort_name']} and are now visible in the resort gallery."
+        _notify_caretakers(cursor, resort_id, "Resort photos updated", update_message, "resort_update")
+        _notify_resort_customers(cursor, resort_id, "Resort photos updated", update_message, "resort_update")
         conn.commit()
-        flash(f"Uploaded {len(files)} resort photo(s).", "success")
+        flash(f"Scanned and uploaded {len(files)} resort photo(s).", "success")
+    except ImageModerationError as exc:
+        conn.rollback()
+        for path in saved_files:
+            if os.path.exists(path):
+                os.remove(path)
+        flash(str(exc), "warning")
     except ValueError as exc:
         conn.rollback()
         for path in saved_files:
@@ -401,6 +457,15 @@ def admin_property_save(resort_id):
         if sets:
             cursor.execute(f"UPDATE resorts SET {', '.join(sets)} WHERE resort_id = %s",
                            (*vals, resort_id))
+            changes = ", ".join(
+                label for label, col in (("name", "resort_name"), ("address", "address"),
+                                         ("description", "description"), ("contact details", "email"),
+                                         ("phone", "phone"), ("amenities", "amenities"))
+                if any(sql_col.startswith(f"{col} =") for sql_col in sets)
+            ) or "details or rates"
+            message = f"{resort['resort_name']} updated its {changes}. The latest information is available in the resort listings."
+            _notify_caretakers(cursor, resort_id, "Resort profile updated", message, "resort_update")
+            _notify_resort_customers(cursor, resort_id, "Resort information updated", message, "resort_update")
             conn.commit()
         flash("Property details saved. Customers and the caretaker now see the new details.", "success")
     except Exception as e:
@@ -452,7 +517,11 @@ def admin_property_status(resort_id):
 @role_required("owner")
 def admin_property_post_update(resort_id):
     title = request.form.get("title", "").strip()[:100]
-    message = request.form.get("message", "").strip()[:1000]
+    message = request.form.get("message", "").strip()[:2000]
+    category = request.form.get("category", "notice").strip()[:30] or "notice"
+    target_value = request.form.get("target_resort_id", "assigned").strip()
+    image = request.files.get("image")
+    saved_path = None
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -460,22 +529,60 @@ def admin_property_post_update(resort_id):
         if not resort:
             flash("Property not found.", "warning")
             return redirect(url_for("admin_properties_manage"))
-        if not title or not message:
+        target_resort_id = resort_id if target_value == "assigned" else (int(target_value) if target_value.isdigit() else None)
+        target = None
+        if target_resort_id is not None:
+            target = _owned_resort(cursor, target_resort_id)
+        if target_value != "all" and not target:
+            flash("Choose a valid resort for this update.", "warning")
+        elif not title or not message:
             flash("Update title and details are required.", "warning")
-        elif not _caretaker_accounts(cursor, resort_id):
-            flash("No active caretaker is assigned to this property, so nobody would receive the update.", "warning")
         else:
-            n = _notify_caretakers(cursor, resort_id, f"Resort update: {title}", message, "resort_update")
+            image_path = None
+            if image and image.filename:
+                original_name = secure_filename(image.filename)
+                extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
+                if extension not in _PHOTO_EXTENSIONS:
+                    raise ImageModerationError("Only JPG, PNG, and WEBP images are accepted.")
+                image_data = image.stream.read(MAX_IMAGE_BYTES + 1)
+                if len(image_data) > MAX_IMAGE_BYTES:
+                    raise ImageModerationError("The update image must be 8 MB or smaller.")
+                scan_resort_image(image_data, extension)
+                directory = os.path.join(app.static_folder, "uploads", "resort_updates")
+                os.makedirs(directory, exist_ok=True)
+                filename = f"{uuid.uuid4().hex}.{extension}"
+                saved_path = os.path.join(directory, filename)
+                with open(saved_path, "wb") as output:
+                    output.write(image_data)
+                image_path = f"uploads/resort_updates/{filename}"
+            ensure_resort_updates_table(cursor)
+            cursor.execute(
+                "INSERT INTO resort_updates (author_account_id, author_role, resort_id, title, category, message, image_path) "
+                "VALUES (%s, 'admin', %s, %s, %s, %s, %s)",
+                (session.get("account_id"), target_resort_id, title, category, message, image_path),
+            )
             conn.commit()
-            flash(f"Update posted. {n} caretaker(s) will see it on their Updates page.", "success")
+            flash("Update posted and is now available on the selected resort feed.", "success")
+    except ImageModerationError as exc:
+        conn.rollback()
+        if saved_path and os.path.exists(saved_path):
+            os.remove(saved_path)
+        flash(str(exc), "warning")
     except Exception as e:
         conn.rollback()
+        if saved_path and os.path.exists(saved_path):
+            os.remove(saved_path)
         print("UPDATE POST ERROR:", e)
         flash("The update could not be posted.", "danger")
     finally:
         cursor.close()
         conn.close()
     return _back(resort_id, "updates")
+
+
+def _all_resorts(cursor):
+    cursor.execute("SELECT resort_id, resort_name FROM resorts ORDER BY resort_name")
+    return cursor.fetchall()
 
 
 @app.route("/admin/maintenance/<int:notification_id>/seen", methods=["POST"])

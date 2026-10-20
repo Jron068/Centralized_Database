@@ -115,7 +115,10 @@ a {
   background: var(--sidebar-active);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .14);
 }
+
+.sidebar-nav a.active .icon { color:#fff; }
 
 .sidebar-nav .icon {
   width: 18px;
@@ -877,4 +880,83 @@ tbody tr:hover {
   .sidebar { display: none; }
   .topbar-nav { display: none; }
   .stat-row { grid-template-columns: 1fr; }
+}
+
+/* Caretaker operations pages: consistent, touch-friendly visual system. */
+:root{
+  --sidebar-bg:#153b2d;--sidebar-active:#286b49;--accent-green:#26734e;
+  --page-bg:#f5f7f6;--border-color:#e4ece7;--radius:14px;
+  --shadow:0 5px 18px rgba(26,59,41,.05);
+}
+.sidebar{box-shadow:5px 0 24px rgba(12,44,30,.08);}
+.sidebar-brand{min-height:72px;}
+.sidebar-nav a{min-height:42px;transition:background .16s ease,transform .16s ease;}
+.sidebar-nav a.active{box-shadow:inset 3px 0 #a8d9ba;}
+.main{min-height:100vh;}
+.topbar{min-height:66px;box-shadow:0 3px 14px rgba(20,50,35,.04);}
+.content{width:100%;max-width:1580px;margin:0 auto;padding:32px clamp(18px,3vw,42px);}
+.page-header{align-items:center;gap:18px;margin-bottom:22px;}
+.page-header h1{font-size:clamp(23px,2.5vw,30px);letter-spacing:-.45px;color:#173d2b;}
+.page-header p{line-height:1.55;}
+.card,.stat-card,.panel{border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow);}
+.card,.stat-card,.panel{transition:box-shadow .18s ease,transform .18s ease;}
+.card:hover,.stat-card:hover,.panel:hover{box-shadow:0 9px 24px rgba(26,59,41,.075);}
+.stat-card{padding:19px 20px;}
+.stat-value{font-variant-numeric:tabular-nums;}
+.toolbar{gap:10px;}
+.search-box,.select-filter,input,select,textarea{border-radius:9px;}
+.search-box,.select-filter{min-height:42px;border-color:#dce6df;}
+input:focus,select:focus,textarea:focus,.search-box:focus-within,.select-filter:focus{outline:3px solid rgba(38,115,78,.13);border-color:#39835d;}
+.table-wrap,.data-table-wrap{max-width:100%;overflow-x:auto;}
+table{font-variant-numeric:tabular-nums;}
+thead th{padding:12px 11px;background:#f7faf8;color:#65766c;font-size:11px;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap;}
+tbody td{padding:13px 11px;}
+tbody tr:hover{background:#f9fbfa;}
+.btn{transition:transform .15s ease,background .15s ease;}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:#26734e;box-shadow:0 4px 10px rgba(38,115,78,.14);}
+.btn-primary:hover{background:#185b3b;}
+.modal{border-radius:16px;}
+.empty-state{border-radius:12px;}
+.messages-records{padding:0 22px;}
+.messages-records-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 14px;border-bottom:1px solid var(--border-color);}
+.messages-records-heading h2{color:#173d2b;font-size:16px;}
+.messages-records-heading span{color:var(--text-muted);font-size:11px;}
+.message-record{position:relative;padding:17px 16px;margin:13px 0;border:1px solid var(--border-color);border-radius:12px;background:#fff;}
+.message-record.message-sent{margin-left:clamp(0px,8vw,95px);background:#f2f8f4;}
+.message-record-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}
+.message-record-meta strong{color:#254333;font-size:12px;}
+.message-record-meta time{color:#829087;font-size:10px;white-space:nowrap;}
+.message-record p{color:#46574c;font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;}
+.message-unread{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:999px;background:#e8f1fa;color:#2c6ea3;font-size:10px;font-weight:700;}
+.messages-empty{padding:38px 16px;text-align:center;}
+a:focus-visible,button:focus-visible{outline:3px solid #98c9a9;outline-offset:2px;}
+@media(max-width:800px){
+  body{display:block;}
+  .sidebar{display:flex;position:static;width:100%;height:auto;padding:12px 14px;}
+  .sidebar-brand{padding:4px 8px 12px;}
+  .sidebar-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+  .sidebar-nav a{justify-content:center;padding:9px 6px;font-size:11px;text-align:center;}
+  .sidebar-nav .icon{display:none;}
+  .sidebar-footer{display:none;}
+  .topbar{position:static;padding:12px 16px;}
+  .topbar-nav{display:flex;gap:14px;overflow-x:auto;}
+  .topbar-nav a{white-space:nowrap;font-size:12px;}
+  .content{padding:24px 18px;}
+  .stat-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:560px){
+  .topbar-brand{display:none;}
+  .topbar-right{margin-left:auto;}
+  .content{padding:20px 13px;}
+  .page-header{align-items:flex-start;flex-direction:column;}
+  .header-actions{width:100%;}
+  .header-actions .btn{width:100%;}
+  .stat-row{grid-template-columns:1fr 1fr;gap:9px;}
+  .stat-card{padding:13px;}
+  .stat-label{font-size:11px;}
+  .stat-value{font-size:22px;}
+  .sidebar-nav{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .topbar-nav{display:none;}
+  .messages-layout{grid-template-columns:1fr;}
 }

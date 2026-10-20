@@ -3,6 +3,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import app
 from config import get_connection
 from flask import jsonify
+from models.resort_updates import ensure_resort_updates_table, update_image_url
+from models.customer_favorites import ensure_customer_favorites_table
+from models.account_profile import ensure_account_profiles_table, save_profile_photo
 
 def get_customer_row(cursor):
     """Fetch the customers row linked to the logged-in account, if any."""
@@ -14,17 +17,29 @@ def get_customer_row(cursor):
 
 @app.route("/customer_landingpage")
 def customer_landingpage():
-    return render_template(
-        "customer/customer_landingpage.html",
-        username=session.get("fullname", "Guest"),
-    )
+    # Keep the legacy URL used by the customer top navigation connected to
+    # the authenticated dashboard and its live reservation data.
+    return redirect(url_for("customer_dashboard"))
 
 @app.route("/customer_messages")
 def customer_messages():
-    return render_template(
-        "customer/customer_message.html",
-        username=session.get("fullname", "Guest"),
-    )
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        ensure_resort_updates_table(cursor)
+        cursor.execute(
+            "SELECT u.update_id, u.title, u.category, u.message, u.image_path, u.created_at, "
+            "r.resort_name FROM resort_updates u LEFT JOIN resorts r ON r.resort_id = u.resort_id "
+            "WHERE u.resort_id IS NULL OR r.status = 'Active' "
+            "ORDER BY u.created_at DESC, u.update_id DESC LIMIT 100"
+        )
+        updates = cursor.fetchall()
+        for update in updates:
+            update["image_url"] = update_image_url(update.pop("image_path", None))
+        return render_template("customer/customer_message.html", username=session.get("fullname", "Guest"), updates=updates)
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/customer_aboutpage")
@@ -40,7 +55,7 @@ def customer_howitworks():
 
 @app.route("/customer_reservation")
 def customer_reservation():
-    if "account_id" not in session:
+    if session.get("role") != "customer" or "account_id" not in session:
         return redirect(url_for("login"))
 
     fullname = session.get("fullname", "Guest")
@@ -96,7 +111,7 @@ def customer_reservation():
 
 @app.route("/customer_paymentHistory")
 def customer_paymentHistory():
-    if "account_id" not in session:
+    if session.get("role") != "customer" or "account_id" not in session:
         return redirect(url_for("login"))
 
     conn = get_connection()
@@ -126,18 +141,108 @@ def customer_paymentHistory():
         
 @app.route("/customer_deal")
 def customer_deal():
-    fullname = session.get("fullname", "Guest")
-    return render_template("customer/customer_deal.html", username=fullname)
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT resort_id, resort_name, address, description, logo, price, max_pax
+            FROM resorts WHERE status = 'Active' ORDER BY resort_name
+        """)
+        resorts = cursor.fetchall()
+        return render_template(
+            "customer/customer_deal.html",
+            username=session.get("fullname", "Guest"),
+            resorts=resorts,
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/customer_favorites")
 def customer_favorites():
-    fullname = session.get("fullname", "Guest")
-    return render_template("customer/customer_favorite.html", username=fullname)
+    if session.get("role") != "customer" or "account_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        ensure_customer_favorites_table(cursor)
+        cursor.execute("""
+            SELECT r.resort_id, r.resort_name, r.address, r.description,
+                   r.logo, r.price, r.max_pax, f.created_at
+            FROM customer_favorites f
+            JOIN resorts r ON r.resort_id = f.resort_id
+            WHERE f.account_id = %s AND r.status = 'Active'
+            ORDER BY f.created_at DESC, r.resort_name
+        """, (session["account_id"],))
+        favorites = cursor.fetchall()
+        return render_template(
+            "customer/customer_favorite.html",
+            username=session.get("fullname", "Guest"),
+            favorites=favorites,
+        )
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/customer_favorites/<int:resort_id>/toggle", methods=["POST"])
+def toggle_customer_favorite(resort_id):
+    wants_json = "application/json" in request.headers.get("Accept", "")
+    if session.get("role") != "customer" or "account_id" not in session:
+        if wants_json:
+            return jsonify({"ok": False, "login_required": True}), 401
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        ensure_customer_favorites_table(cursor)
+        cursor.execute(
+            "SELECT resort_id FROM resorts WHERE resort_id = %s AND status = 'Active'",
+            (resort_id,),
+        )
+        if not cursor.fetchone():
+            if wants_json:
+                return jsonify({"ok": False, "message": "That resort is no longer available."}), 404
+            flash("That resort is no longer available.", "warning")
+            return redirect(url_for("customer_favorites"))
+
+        cursor.execute(
+            "SELECT resort_id FROM customer_favorites WHERE account_id = %s AND resort_id = %s",
+            (session["account_id"], resort_id),
+        )
+        if cursor.fetchone():
+            cursor.execute(
+                "DELETE FROM customer_favorites WHERE account_id = %s AND resort_id = %s",
+                (session["account_id"], resort_id),
+            )
+            saved = False
+            flash("Resort removed from your saved list.", "success")
+        else:
+            cursor.execute(
+                "INSERT INTO customer_favorites (account_id, resort_id) VALUES (%s, %s)",
+                (session["account_id"], resort_id),
+            )
+            saved = True
+            flash("Resort saved to your favorites.", "success")
+        conn.commit()
+        if wants_json:
+            return jsonify({"ok": True, "saved": saved})
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for("customer_favorites"))
 
 
 # ================= PROFILE SETTING =================
 @app.route("/customer_profileSetting", methods=["GET", "POST"])
 def customer_profileSetting():
+    if session.get("role") != "customer" or "account_id" not in session:
+        return redirect(url_for("login"))
     fullname = session.get("fullname", "Guest")
 
     conn = get_connection()
@@ -148,6 +253,7 @@ def customer_profileSetting():
             email = request.form.get("email", "").strip()
             contact_email = request.form.get("contact_email", "").strip()
             phone = request.form.get("phone", "").strip()
+            profile_upload = request.files.get("profile_picture")
 
             if not new_fullname or not email:
                 flash("Full name and email are required.", "warning")
@@ -166,6 +272,21 @@ def customer_profileSetting():
                 (new_fullname, email, session.get("account_id"))
             )
 
+            profile_path = None
+            if profile_upload and profile_upload.filename:
+                try:
+                    profile_path = save_profile_photo(profile_upload)
+                except ValueError as exc:
+                    conn.rollback()
+                    flash(str(exc), "warning")
+                    return redirect(url_for("customer_profileSetting"))
+                ensure_account_profiles_table(cursor)
+                cursor.execute(
+                    "INSERT INTO account_profiles (account_id, profile_photo_path) VALUES (%s, %s) "
+                    "ON DUPLICATE KEY UPDATE profile_photo_path = VALUES(profile_photo_path)",
+                    (session.get("account_id"), profile_path),
+                )
+
             existing = get_customer_row(cursor)
             if existing:
                 cursor.execute(
@@ -182,6 +303,8 @@ def customer_profileSetting():
 
             # Keep session fullname in sync since the navbar reads it directly
             session["fullname"] = new_fullname
+            if profile_path:
+                session["profile_photo"] = "/static/" + profile_path
 
             flash("Profile updated successfully.", "success")
             return redirect(url_for("customer_profileSetting"))
@@ -192,13 +315,23 @@ def customer_profileSetting():
             (session.get("account_id"),)
         )
         account = cursor.fetchone()
+        ensure_account_profiles_table(cursor)
+        cursor.execute(
+            "SELECT profile_photo_path FROM account_profiles WHERE account_id = %s",
+            (session.get("account_id"),),
+        )
+        photo = cursor.fetchone()
+        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        if profile_photo:
+            session["profile_photo"] = profile_photo
         customer = get_customer_row(cursor) or {}
 
         return render_template(
             "customer/customer_profileSetting.html",
             username=fullname,
             account=account,
-            customer=customer
+            customer=customer,
+            profile_photo=profile_photo,
         )
     finally:
         cursor.close()
@@ -208,6 +341,8 @@ def customer_profileSetting():
 # ================= CHANGE PASSWORD =================
 @app.route("/customer_changePassword", methods=["GET", "POST"])
 def customer_changePassword():
+    if session.get("role") != "customer" or "account_id" not in session:
+        return redirect(url_for("login"))
     fullname = session.get("fullname", "Guest")
 
     conn = get_connection()

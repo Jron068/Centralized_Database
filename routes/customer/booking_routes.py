@@ -47,6 +47,8 @@ def resort_availability(resort_id):
             SELECT check_in, check_out
             FROM reservations
             WHERE resort_id = %s
+              AND check_in IS NOT NULL AND check_out IS NOT NULL
+              AND check_out > check_in
               AND reservation_status IN ('Pending', 'Confirmed')
         """, (resort_id,))
         rows = cursor.fetchall()
@@ -67,7 +69,7 @@ def resort_availability(resort_id):
 # ---------- CREATE RESERVATION ----------
 @app.route('/book_resort', methods=['POST'])
 def book_resort():
-    if "account_id" not in session:
+    if session.get("role") != "customer" or "account_id" not in session:
         return jsonify({"success": False, "message": "Please log in to book."}), 401
 
     try:
@@ -92,8 +94,6 @@ def book_resort():
         return jsonify({"success": False, "message": "Invalid mineral water quantity."}), 400
     if tour_type not in TOUR_TYPES:
         return jsonify({"success": False, "message": "Select a valid tour package."}), 400
-    if resort_id not in RESORT_RATES:
-        return jsonify({"success": False, "message": "This resort does not have a price set yet."}), 400
     if check_out <= check_in:
         return jsonify({"success": False, "message": "Check-out must be after check-in."}), 400
     minimum_check_in = datetime.now().date() + timedelta(days=3)
@@ -125,12 +125,26 @@ def book_resort():
             customer_id = cursor.lastrowid
 
         cursor.execute(
-            "SELECT resort_id FROM resorts WHERE resort_id = %s AND status = 'Active'",
+            "SELECT resort_id, price, max_pax FROM resorts WHERE resort_id = %s AND status = 'Active'",
             (resort_id,)
         )
-        if not cursor.fetchone():
+        resort = cursor.fetchone()
+        if not resort:
             conn.rollback()
             return jsonify({"success": False, "message": "That resort is not available."}), 404
+
+        # Use the same saved price and included guest count shown on the customer listing.
+        # Legacy defaults support older rows whose database fields are still empty.
+        fallback_rate = RESORT_RATES.get(resort_id)
+        saved_price = resort.get("price")
+        saved_max_pax = resort.get("max_pax")
+        if saved_price is None and not fallback_rate:
+            conn.rollback()
+            return jsonify({"success": False, "message": "This resort does not have a price set yet."}), 400
+        rate = {
+            "price": Decimal(str(saved_price if saved_price is not None else fallback_rate["price"])),
+            "max_pax": int(saved_max_pax if saved_max_pax is not None else (fallback_rate["max_pax"] if fallback_rate else 15)),
+        }
 
         cursor.execute(
             "SELECT role, is_verified, account_status FROM accounts WHERE account_id = %s",
@@ -141,9 +155,22 @@ def book_resort():
             conn.rollback()
             return jsonify({"success": False, "message": "Please log in with an active, verified customer account to book."}), 403
 
+        cursor.execute("""
+            SELECT reservation_id
+            FROM reservations
+            WHERE resort_id = %s
+              AND reservation_status IN ('Pending', 'Confirmed')
+              AND check_in IS NOT NULL AND check_out IS NOT NULL
+              AND check_in < %s AND check_out > %s
+            LIMIT 1
+            FOR UPDATE
+        """, (resort_id, check_out, check_in))
+        if cursor.fetchone():
+            conn.rollback()
+            return jsonify({"success": False, "message": "Those dates are no longer available. Please choose another stay."}), 409
+
         # Total = fixed resort price + extra pax + LPG + mineral water.
         # Always computed on the server; the browser total is never trusted.
-        rate = RESORT_RATES[resort_id]
         extra_pax = max(0, guests - rate['max_pax'])
         total_amount = (rate['price']
                         + EXTRA_PAX_RATE * extra_pax
@@ -176,7 +203,7 @@ def book_resort():
 # ---------- PAYMENT PROOF ----------
 @app.route('/submit_payment', methods=['POST'])
 def submit_payment():
-    if "account_id" not in session:
+    if session.get("role") != "customer" or "account_id" not in session:
         return jsonify({"success": False, "message": "Please log in to submit payment."}), 401
 
     proof = request.files.get('proof')
@@ -186,7 +213,8 @@ def submit_payment():
     except (TypeError, ValueError, InvalidOperation):
         return jsonify({"success": False, "message": "Invalid payment details."}), 400
 
-    if not proof or not proof.filename or not allowed_file(proof.filename) or amount_paid < 0:
+    if (not proof or not proof.filename or not allowed_file(proof.filename)
+            or not amount_paid.is_finite() or amount_paid <= 0):
         return jsonify({"success": False, "message": "Upload a PNG, JPG, JPEG, or WEBP payment screenshot."}), 400
 
     conn = get_connection()

@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
@@ -17,34 +19,9 @@
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width: 220px; height: auto;">
     </div>
 
-    <nav class="nav">
-      <a href="{{ url_for('customer_landingpage') }}" class="nav-item">
-        <i class="fa-solid fa-grip"></i> DASHBOARD
-      </a>
+    {% include 'customer/_sidebar_nav.html' %}
 
-      <p class="nav-label">My Bookings</p>
-      <a href="{{ url_for('customer_reservation') }}" class="nav-item">
-        <i class="fa-regular fa-calendar-check"></i> My Reservation
-      </a>
-      <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item">
-        <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
-      </a>
-
-      <p class="nav-label">My Account</p>
-      <a href="{{ url_for('customer_profileSetting') }}" class="nav-item active">
-        <i class="fa-solid fa-gear"></i> Profile Setting
-      </a>
-      <a href="{{ url_for('customer_changePassword') }}" class="nav-item">
-        <i class="fa-solid fa-lock"></i> Change Password
-      </a>
-
-      <p class="nav-label">Support</p>
-      <a href="#" class="nav-item">
-        <i class="fa-regular fa-circle-question"></i> Contact Support
-      </a>
-    </nav>
-
-    <a class="logout" href="{{ url_for('login') }}"
+    <a class="logout" href="{{ url_for('logout') }}"
     style="margin-left:0px;
     display:flex;
     align-items:center;
@@ -70,7 +47,7 @@
 
       <div class="topbar-user">
         <i class="fa-regular fa-bell"></i>
-        <div class="avatar"></div>
+        {% if profile_photo %}<img class="avatar" src="{{ profile_photo }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "U")[:1]|upper }}</div>{% endif %}{% endif %}
         <span>{{ username }}</span>
       </div>
     </header>
@@ -92,7 +69,13 @@
         <h3>Personal Information</h3>
         <p class="subtitle" style="margin-bottom:16px;">This information is stored on your account.</p>
 
-        <form method="POST" action="{{ url_for('customer_profileSetting') }}">
+        <form method="POST" action="{{ url_for('customer_profileSetting') }}" enctype="multipart/form-data">
+          <div class="field" style="margin-bottom:18px;">
+            <label for="profile_picture">Profile Photo</label>
+            {% if profile_photo %}<img src="{{ profile_photo }}" alt="Current profile photo" style="width:88px;height:88px;display:block;object-fit:cover;border-radius:50%;margin:8px 0 12px;">{% endif %}
+            <input type="file" id="profile_picture" name="profile_picture" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <small>JPG, PNG, or WEBP · up to 5 MB</small>
+          </div>
           <div class="form-grid">
             <div class="field">
               <label for="fullname">Full Name</label>
@@ -124,5 +107,10 @@
   </div>
 </div>
 
+
+
+{% if session.get('role') == 'customer' %}
+<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
+{% endif %}
 </body>
 </html>

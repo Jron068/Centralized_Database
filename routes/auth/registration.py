@@ -237,8 +237,8 @@ def customer_dashboard():
             SELECT COUNT(*) AS upcoming_stays
             FROM reservations
             WHERE customer_id = %s
-              AND check_in >= CURDATE()
-              AND reservation_status IN ('Pending', 'Confirmed', 'Approved')
+              AND check_out >= CURDATE()
+              AND reservation_status IN ('Pending', 'Confirmed')
             """,
             (customer_id,),
         )
@@ -261,6 +261,7 @@ def customer_dashboard():
             FROM reservations r
             LEFT JOIN payments p ON p.reservation_id = r.reservation_id
             WHERE r.customer_id = %s
+              AND r.reservation_status IN ('Pending', 'Confirmed')
               AND (p.payment_status = 'Pending' OR p.payment_status IS NULL)
             """,
             (customer_id,),
@@ -270,12 +271,15 @@ def customer_dashboard():
         cursor.execute(
             """
             SELECT r.reservation_id, res.resort_name, r.check_in, r.check_out,
-                   r.guests, r.total_amount, r.reservation_status, r.created_at
+                   r.guests, r.total_amount, r.reservation_status, r.created_at,
+                   (SELECT p.payment_status FROM payments p
+                    WHERE p.reservation_id = r.reservation_id
+                    ORDER BY p.payment_date DESC, p.payment_id DESC LIMIT 1) AS payment_status
             FROM reservations r
             JOIN resorts res ON res.resort_id = r.resort_id
             WHERE r.customer_id = %s
-              AND r.check_in >= CURDATE()
-              AND r.reservation_status IN ('Pending', 'Confirmed', 'Approved')
+              AND r.check_out >= CURDATE()
+              AND r.reservation_status IN ('Pending', 'Confirmed')
             ORDER BY r.check_in ASC
             LIMIT 3
             """,

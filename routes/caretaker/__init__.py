@@ -6,11 +6,91 @@ from decimal import Decimal, InvalidOperation
 from flask import redirect, flash, session, url_for, render_template
 from flask import request, jsonify
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 
 from app import app, mail
 from config import get_connection
+from models.resort import enrich_resort, gallery_photos
+from models.resort_photos import get_resort_photos
 from flask_mail import Message
 from models.decorators import role_required
+from models.image_moderation import ImageModerationError, MAX_IMAGE_BYTES, scan_resort_image
+from models.resort_updates import ensure_resort_updates_table, update_image_url
+from models.reservation_reminders import create_upcoming_reservation_reminders
+from models.account_profile import ensure_account_profiles_table, save_profile_photo
+
+
+@app.route("/caretaker/settings", methods=["GET", "POST"])
+@role_required("caretaker")
+def caretaker_settings():
+    account_id = session.get("account_id")
+    if not account_id:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        ensure_account_profiles_table(cursor)
+        if request.method == "POST":
+            fullname = request.form.get("fullname", "").strip()
+            email = request.form.get("email", "").strip()
+            upload = request.files.get("profile_picture")
+            if not fullname or not email:
+                flash("Name and email are required.", "warning")
+                return redirect(url_for("caretaker_settings"))
+            cursor.execute(
+                "SELECT account_id FROM accounts WHERE email = %s AND account_id <> %s",
+                (email, account_id),
+            )
+            if cursor.fetchone():
+                flash("That email is already in use.", "warning")
+                return redirect(url_for("caretaker_settings"))
+
+            profile_path = None
+            if upload and upload.filename:
+                try:
+                    profile_path = save_profile_photo(upload)
+                except ValueError as exc:
+                    flash(str(exc), "warning")
+                    return redirect(url_for("caretaker_settings"))
+                cursor.execute(
+                    "INSERT INTO account_profiles (account_id, profile_photo_path) VALUES (%s, %s) "
+                    "ON DUPLICATE KEY UPDATE profile_photo_path = VALUES(profile_photo_path)",
+                    (account_id, profile_path),
+                )
+            cursor.execute(
+                "UPDATE accounts SET fullname = %s, email = %s WHERE account_id = %s AND role = 'caretaker'",
+                (fullname, email, account_id),
+            )
+            conn.commit()
+            session["fullname"] = fullname
+            if profile_path:
+                session["profile_photo"] = "/static/" + profile_path
+            flash("Profile settings saved.", "success")
+            return redirect(url_for("caretaker_settings"))
+
+        cursor.execute(
+            "SELECT fullname, email FROM accounts WHERE account_id = %s AND role = 'caretaker'",
+            (account_id,),
+        )
+        account = cursor.fetchone()
+        if not account:
+            return redirect(url_for("login"))
+        cursor.execute(
+            "SELECT profile_photo_path FROM account_profiles WHERE account_id = %s",
+            (account_id,),
+        )
+        photo = cursor.fetchone()
+        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        if profile_photo:
+            session["profile_photo"] = profile_photo
+        return render_template(
+            "caretaker/caretaker_settings.html",
+            fullname=account["fullname"], account=account, profile_photo=profile_photo,
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 def caretaker_page(template_name):
     if session.get("role") != "caretaker":
@@ -39,7 +119,7 @@ def caretaker_page(template_name):
         cursor.close()
         conn.close()
 
-@app.route("/caretaker/updates")
+@app.route("/caretaker/updates", methods=["GET", "POST"])
 @role_required("caretaker")
 def caretaker_updates():
     conn = get_connection()
@@ -47,7 +127,7 @@ def caretaker_updates():
     try:
         cursor.execute(
             """
-            SELECT r.resort_name
+            SELECT r.resort_id, r.resort_name
             FROM resorts r
             JOIN caretakers c ON c.resort_id = r.resort_id
             WHERE c.account_id = %s AND c.status = 'Active'
@@ -58,22 +138,138 @@ def caretaker_updates():
         if not resort:
             return redirect(url_for("login"))
 
+        if request.method == "POST":
+            title = request.form.get("title", "").strip()[:100]
+            message = request.form.get("message", "").strip()[:2000]
+            category = request.form.get("category", "notice").strip()[:30] or "notice"
+            scope = request.form.get("target_scope", "assigned")
+            target_resort_id = None if scope == "all" else resort["resort_id"]
+            saved_path = None
+            try:
+                if not title or not message:
+                    flash("Update title and details are required.", "warning")
+                else:
+                    image = request.files.get("image")
+                    image_path = None
+                    if image and image.filename:
+                        original_name = secure_filename(image.filename)
+                        extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
+                        if extension not in {"jpg", "jpeg", "png", "webp"}:
+                            raise ImageModerationError("Only JPG, PNG, and WEBP images are accepted.")
+                        image_data = image.stream.read(MAX_IMAGE_BYTES + 1)
+                        if len(image_data) > MAX_IMAGE_BYTES:
+                            raise ImageModerationError("The update image must be 8 MB or smaller.")
+                        scan_resort_image(image_data, extension)
+                        directory = os.path.join(app.static_folder, "uploads", "resort_updates")
+                        os.makedirs(directory, exist_ok=True)
+                        filename = f"{uuid.uuid4().hex}.{extension}"
+                        saved_path = os.path.join(directory, filename)
+                        with open(saved_path, "wb") as output:
+                            output.write(image_data)
+                        image_path = f"uploads/resort_updates/{filename}"
+                    ensure_resort_updates_table(cursor)
+                    cursor.execute(
+                        "INSERT INTO resort_updates (author_account_id, author_role, resort_id, title, category, message, image_path) "
+                        "VALUES (%s, 'caretaker', %s, %s, %s, %s, %s)",
+                        (session.get("account_id"), target_resort_id, title, category, message, image_path),
+                    )
+                    conn.commit()
+                    flash("Update posted to the selected resort feed.", "success")
+            except ImageModerationError as exc:
+                conn.rollback()
+                if saved_path and os.path.exists(saved_path):
+                    os.remove(saved_path)
+                flash(str(exc), "warning")
+            except Exception:
+                conn.rollback()
+                if saved_path and os.path.exists(saved_path):
+                    os.remove(saved_path)
+                raise
+            return redirect(url_for("caretaker_updates"))
+
+        ensure_resort_updates_table(cursor)
         cursor.execute(
             """
-            SELECT title, message, type, created_at
-            FROM notifications
-            WHERE account_id = %s
-            ORDER BY created_at DESC
+            SELECT u.update_id AS notification_id, u.title, u.message, u.category AS type,
+                   u.created_at, 0 AS is_read, u.image_path, u.resort_id, r.resort_name
+            FROM resort_updates u LEFT JOIN resorts r ON r.resort_id = u.resort_id
+            WHERE u.resort_id IS NULL OR u.resort_id = %s
+            ORDER BY u.created_at DESC, u.update_id DESC LIMIT 100
             """,
-            (session.get("account_id"),),
+            (resort["resort_id"],),
         )
         updates = cursor.fetchall()
+        for item in updates:
+            item["image_url"] = update_image_url(item.pop("image_path", None))
+        cursor.execute(
+            "SELECT notification_id, title, message, type, created_at, is_read FROM notifications "
+            "WHERE account_id = %s ORDER BY created_at DESC, notification_id DESC LIMIT 50",
+            (session.get("account_id"),),
+        )
+        for note in cursor.fetchall():
+            note.update({"image_url": None, "resort_name": resort["resort_name"]})
+            updates.append(note)
+        updates.sort(key=lambda item: item.get("created_at") or datetime.min, reverse=True)
+        updates = updates[:100]
         return render_template(
             "caretaker/caretaker_updates.html",
             fullname=session.get("fullname", "Caretaker"),
             resort=resort,
             updates=updates,
         )
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/caretaker/updates/data")
+@role_required("caretaker")
+def caretaker_updates_data():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT resort_id FROM caretakers WHERE account_id = %s AND status = 'Active' LIMIT 1",
+            (session.get("account_id"),),
+        )
+        assignment = cursor.fetchone()
+        if not assignment:
+            return jsonify({"error": "No active resort assignment."}), 403
+        ensure_resort_updates_table(cursor)
+        cursor.execute(
+            """
+            SELECT u.update_id AS notification_id, u.title, u.message, u.category AS type,
+                   u.created_at, 0 AS is_read, u.image_path, u.resort_id, r.resort_name
+            FROM resort_updates u LEFT JOIN resorts r ON r.resort_id = u.resort_id
+            WHERE u.resort_id IS NULL OR u.resort_id = %s
+            ORDER BY u.created_at DESC, u.update_id DESC LIMIT 100
+            """,
+            (assignment["resort_id"],),
+        )
+        updates = cursor.fetchall()
+        result = [{
+            "id": row["notification_id"],
+            "title": row["title"] or "Update",
+            "message": row["message"] or "",
+            "type": row["type"] or "notice",
+            "created_at": row["created_at"].strftime("%b %d, %Y %I:%M %p") if row["created_at"] else "",
+            "is_read": bool(row["is_read"]),
+            "image_url": update_image_url(row.get("image_path")),
+            "scope": row.get("resort_name") or "All resorts",
+        } for row in updates]
+        cursor.execute(
+            "SELECT notification_id, title, message, type, created_at, is_read FROM notifications "
+            "WHERE account_id = %s ORDER BY created_at DESC, notification_id DESC LIMIT 50",
+            (session.get("account_id"),),
+        )
+        result.extend({
+            "id": row["notification_id"], "title": row["title"] or "Notification",
+            "message": row["message"] or "", "type": row["type"] or "notice",
+            "created_at": row["created_at"].strftime("%b %d, %Y %I:%M %p") if row["created_at"] else "",
+            "is_read": bool(row["is_read"]), "image_url": None, "scope": "Resort notification",
+        } for row in cursor.fetchall())
+        result.sort(key=lambda item: item["created_at"], reverse=True)
+        return jsonify({"updates": result[:100]})
     finally:
         cursor.close()
         conn.close()
@@ -189,12 +385,14 @@ def _guest_overview(cursor, account_id):
     contact_expr = "r.guest_contact" if schema["contact"] else "NULL"
     cursor.execute(
         f"""
-        SELECT r.reservation_id, r.guest_name, {contact_expr} AS guest_contact,
+        SELECT r.reservation_id, r.guest_name, a.email AS customer_email, {contact_expr} AS guest_contact,
                r.check_in, r.check_out, r.guests, r.reservation_status,
                CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source,
-               p.amount_paid, p.payment_status, {schema['proof_expr']} AS proof_of_payment
+               p.amount_paid, p.payment_status, p.payment_id, {schema['proof_expr']} AS proof_of_payment
         FROM reservations r
         JOIN caretakers c ON c.resort_id = r.resort_id
+        LEFT JOIN customers cu ON cu.customer_id = r.customer_id
+        LEFT JOIN accounts a ON a.account_id = cu.account_id
         LEFT JOIN payments p ON p.payment_id = (
             SELECT p2.payment_id FROM payments p2
             WHERE p2.reservation_id = r.reservation_id
@@ -207,8 +405,9 @@ def _guest_overview(cursor, account_id):
     )
     today = date.today()
     guests = []
-    stats = {"today_guests": 0, "checked_in": 0, "checked_out": 0, "upcoming": 0, "pending": 0}
+    stats = {"total": 0, "today_guests": 0, "checked_in": 0, "checked_out": 0, "upcoming": 0, "pending": 0}
     for r in cursor.fetchall():
+        stats["total"] += 1
         status = _stay_status(r, today)
         if status == "Checked In":
             stats["checked_in"] += 1
@@ -224,6 +423,7 @@ def _guest_overview(cursor, account_id):
                 "id": r["reservation_id"],
                 "booking": f"#RSV-{r['reservation_id']}",
                 "guest": r["guest_name"] or "Guest",
+                "email": "" if r["customer_email"] == WALKIN_PLACEHOLDER_EMAIL else (r["customer_email"] or ""),
                 "contact": r["guest_contact"] or "",
                 "check_in": str(r["check_in"]),
                 "check_out": str(r["check_out"]),
@@ -232,6 +432,9 @@ def _guest_overview(cursor, account_id):
                 "amount": float(r["amount_paid"]) if r["amount_paid"] is not None else None,
                 "proof": url_for("static", filename=r["proof_of_payment"]) if r["proof_of_payment"] else None,
                 "status": status,
+                "payment_status": r["payment_status"],
+                "can_review": r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
+                    and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
             }
         )
     return {"stats": stats, "guests": guests}
@@ -365,7 +568,11 @@ def caretaker_dashboard():
     cursor = conn.cursor(dictionary=True)
     try:
         account_id = session.get("account_id")
-        extra = ", r.description" if "description" in _table_columns(cursor, "resorts") else ""
+        create_upcoming_reservation_reminders(cursor)
+        conn.commit()
+        resort_columns = _table_columns(cursor, "resorts")
+        extra_columns = [f"r.{column}" for column in ("description", "logo") if column in resort_columns]
+        extra = ", " + ", ".join(extra_columns) if extra_columns else ""
         cursor.execute(
             f"""
             SELECT r.resort_id, r.resort_name, r.address, r.status{extra}
@@ -377,29 +584,64 @@ def caretaker_dashboard():
         resort = cursor.fetchone()
         if not resort:
             return redirect(url_for("login"))
+        resort = enrich_resort(resort)
+        photos_by_resort = get_resort_photos(cursor, [resort["resort_id"]])
+        resort["photos"] = gallery_photos(
+            resort, photos_by_resort.get(resort["resort_id"], [])
+        )
+        resort["display_image"] = resort["photos"][0] if resort["photos"] else resort["logo"]
+        booking_schema = _walkin_schema(cursor)
+        cursor.execute(
+            f"""
+            SELECT
+                COUNT(CASE WHEN r.reservation_status = 'Pending' THEN 1 END) AS pending_count,
+                COUNT(CASE WHEN r.reservation_status = 'Confirmed' THEN 1 END) AS confirmed_count,
+                COUNT(CASE WHEN r.reservation_status IN ('Pending', 'Confirmed')
+                           AND r.check_in >= CURDATE() THEN 1 END) AS upcoming_count,
+                COUNT(CASE WHEN r.reservation_status IN ('Pending', 'Confirmed')
+                           AND r.check_in = CURDATE() THEN 1 END) AS arrivals_today
+            FROM reservations r
+            JOIN caretakers c ON c.resort_id = r.resort_id
+            WHERE c.account_id = %s AND c.status = 'Active'
+              AND {_customer_visible_clause(booking_schema)}
+            """,
+            (account_id,),
+        )
+        booking_summary = cursor.fetchone()
         cursor.execute(
             "SELECT title, message, type, created_at FROM notifications "
             "WHERE account_id = %s ORDER BY created_at DESC LIMIT 5",
             (account_id,),
         )
         notifications = cursor.fetchall()
+        cursor.execute(
+            "SELECT COUNT(*) AS unread_count FROM notifications WHERE account_id = %s AND is_read = 0",
+            (account_id,),
+        )
+        unread_notifications = cursor.fetchone()["unread_count"] or 0
         rows = caretaker_visible_reservations(cursor, account_id, limit=30)
         today = date.today()
         for r in rows:
             r["nights"] = max((_as_date(r["check_out"]) - _as_date(r["check_in"])).days, 1)
             r["proof_url"] = url_for("static", filename=r["proof_of_payment"]) if r["proof_of_payment"] else None
             r["can_review"] = r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
-        upcoming = [r for r in rows if r["reservation_status"] in ("Pending", "Confirmed")
-                    and _as_date(r["check_out"]) >= today][:5]
+        upcoming = sorted(
+            [r for r in rows if r["reservation_status"] in ("Pending", "Confirmed")
+             and _as_date(r["check_out"]) >= today],
+            key=lambda row: _as_date(row["check_in"]),
+        )[:5]
         return render_template(
             "caretaker/caretaker_dashboard.html",
             fullname=session.get("fullname", "Caretaker"),
             resort=resort,
             notifications=notifications,
+            unread_notifications=unread_notifications,
             reservations=rows,
             upcoming=upcoming,
-            pending_count=sum(1 for r in rows if r["reservation_status"] == "Pending"),
-            confirmed_count=sum(1 for r in rows if r["reservation_status"] == "Confirmed"),
+            pending_count=booking_summary["pending_count"] or 0,
+            confirmed_count=booking_summary["confirmed_count"] or 0,
+            upcoming_count=booking_summary["upcoming_count"] or 0,
+            arrivals_today=booking_summary["arrivals_today"] or 0,
         )
     finally:
         cursor.close()
@@ -472,21 +714,7 @@ def _reservation_overview(cursor, account_id):
 @app.route("/caretaker/inventory")
 @role_required("caretaker")
 def caretaker_inventory():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        resort = _walkin_resort(cursor)
-        if not resort:
-            return redirect(url_for("login"))
-        return render_template(
-            "caretaker/caretaker_inventory.html",
-            fullname=session.get("fullname", "Caretaker"),
-            resort=resort,
-            data=_reservation_overview(cursor, session.get("account_id")),
-        )
-    finally:
-        cursor.close()
-        conn.close()
+    return redirect(url_for("caretaker_guests"))
 
 
 @app.route("/caretaker/inventory/data")
@@ -631,7 +859,36 @@ def caretaker_maintenance_data():
 @app.route("/caretaker/messages")
 @role_required("caretaker")
 def caretaker_messages():
-    return caretaker_page("caretaker/caretaker_messages.html")
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        resort = _walkin_resort(cursor)
+        if not resort:
+            return redirect(url_for("login"))
+        account_id = session.get("account_id")
+        cursor.execute("""
+            SELECT m.message_id, m.sender_account, m.receiver_account, m.message,
+                   m.is_read, m.sent_at,
+                   sender.fullname AS sender_name,
+                   receiver.fullname AS receiver_name,
+                   CASE WHEN m.sender_account = %s THEN 1 ELSE 0 END AS sent_by_me
+            FROM messages m
+            LEFT JOIN accounts sender ON sender.account_id = m.sender_account
+            LEFT JOIN accounts receiver ON receiver.account_id = m.receiver_account
+            WHERE m.sender_account = %s OR m.receiver_account = %s
+            ORDER BY m.sent_at DESC, m.message_id DESC
+            LIMIT 100
+        """, (account_id, account_id, account_id))
+        messages = cursor.fetchall()
+        return render_template(
+            "caretaker/caretaker_messages.html",
+            fullname=session.get("fullname", "Caretaker"),
+            resort=resort,
+            messages=messages,
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/caretaker/notifications")
 @role_required("caretaker")
@@ -639,6 +896,8 @@ def caretaker_notifications():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        create_upcoming_reservation_reminders(cursor)
+        conn.commit()
         cursor.execute(
             """
             SELECT title, message, type, is_read, created_at
@@ -1409,13 +1668,12 @@ def admin_walkins():
                 WHERE p2.reservation_id = r.reservation_id
                 ORDER BY p2.payment_id DESC LIMIT 1
             )
-            WHERE rs.owner_id = %s AND {schema['walkin_expr']}
+            WHERE {schema['walkin_expr']}
             ORDER BY (r.reservation_status = 'Pending') DESC, r.created_at DESC
-            """,
-            (session.get("owner_id") or session.get("user_id"),),
+            """
         )
         return render_template(
-            "admin/admin_walkins.html",
+            "admin/admin_walkin.html",
             walkins=cursor.fetchall(),
             placeholder_id=schema["placeholder"]["customer_id"] if schema["placeholder"] else None,
         )
@@ -1448,10 +1706,10 @@ def admin_review_walkin(reservation_id):
                 WHERE p2.reservation_id = r.reservation_id
                 ORDER BY p2.payment_id DESC LIMIT 1
             )
-            WHERE r.reservation_id = %s AND rs.owner_id = %s AND {schema['walkin_expr']}
+            WHERE r.reservation_id = %s AND {schema['walkin_expr']}
             FOR UPDATE
             """,
-            (reservation_id, session.get("owner_id") or session.get("user_id")),
+            (reservation_id,),
         )
         booking = cursor.fetchone()
         if not booking:

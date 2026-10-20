@@ -3,169 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pansol Resorts — Exclusive Deals</title>
-  <link rel="stylesheet" href="../static/css/customer_style/deals.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* ===== unified sidebar & topbar — matches customer_landingpage.html / customer.css ===== */
-    .layout{display:flex;min-height:100vh;}
+  <title>Pansol Resorts | Resort Picks</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
 
-    .sidebar, .sidebar *, .topbar, .topbar *{box-sizing:border-box;}
-
-    .sidebar{
-      width:250px;flex-shrink:0;background:#163a2b;color:#fff;
-      padding:24px 20px;display:flex;flex-direction:column;
-      font-family:'Segoe UI',Arial,sans-serif;
-    }
-    .sidebar .brand{display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
-    .sidebar .brand img{max-width:100%;height:auto;}
-    .sidebar .nav{flex:1;}
-    .sidebar .nav-label{font-size:11px;text-transform:uppercase;color:#7fa08c;margin:22px 0 8px 12px;letter-spacing:.5px;}
-    .sidebar .nav-item{display:flex;align-items:center;gap:10px;color:#d7e6dc;text-decoration:none;font-size:14px;padding:10px 12px;border-radius:8px;margin-bottom:2px;transition:background .2s;}
-    .sidebar .nav-item i{width:16px;text-align:center;}
-    .sidebar .nav-item:hover{background:#1f4d38;}
-    .sidebar .nav-item.active{background:#2f855a;color:#fff;font-weight:600;}
-    .sidebar .logout{color:#d7e6dc;text-decoration:none;font-size:14px;padding:10px 12px;margin-top:auto;display:block;}
-    .sidebar .logout:hover{color:#fff;}
-
-    .main{flex:1;display:flex;flex-direction:column;min-width:0;}
-
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;
-      background:#fff;padding:16px 32px;border-bottom:1px solid #e7ece9;min-height:65px;
-      font-family:'Segoe UI',Arial,sans-serif;
-    }
-    .topbar .logo{display:flex;align-items:center;gap:10px;}
-    .topbar .logo img{width:180px;}
-    .topbar-links{display:flex;gap:32px;}
-    .topbar-links a{color:#445248;text-decoration:none;font-size:14px;font-weight:500;position:relative;padding-bottom:4px;}
-    .topbar-links a:hover{color:#2f855a;}
-    .topbar-links a.active{color:#2f855a;font-weight:700;}
-    .topbar-links a.active::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;background-color:#2f855a;border-radius:2px;}
-    .topbar-user{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:600;color:#163a2b;}
-    .topbar-user i{font-size:16px;color:#445248;cursor:pointer;}
-    .topbar-user .avatar{width:32px;height:32px;border-radius:50%;background:#d1e2d8;color:#163a2b;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
-  </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
-
-  <div class="layout">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="brand">
-        <img src="../static/images/logo.png" alt="Logo" style="width: 220px; height: auto;">
-      </div>
-
-      <nav class="nav">
-        <a href="/customer_landingpage" class="nav-item">
-          <i class="fa-solid fa-grip"></i> DASHBOARD
-        </a>
-
-        <p class="nav-label">My Bookings</p>
-        <a href="#" class="nav-item">
-          <i class="fa-regular fa-calendar-check"></i> My Reservation
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fa-solid fa-file-invoice-dollar"></i> Payment History
-        </a>
-
-        <p class="nav-label">My Account</p>
-        <a href="#" class="nav-item">
-          <i class="fa-solid fa-gear"></i> Profile Setting
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fa-solid fa-lock"></i> Change Password
-        </a>
-
-        <p class="nav-label">Support</p>
-        <a href="#" class="nav-item">
-          <i class="fa-regular fa-circle-question"></i> Contact Support
-        </a>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></div>
+    {% include 'customer/_sidebar_nav.html' %}
+    <a class="logout" href="{{ url_for('logout') }}">Log out</a>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <a class="logo" href="{{ url_for('customer_dashboard') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></a>
+      <nav class="topbar-links">
+        <a href="{{ url_for('customer_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('resorts') }}">Resorts</a>
+        <a href="{{ url_for('customer_reservation') }}">My reservations</a>
+        <a href="{{ url_for('customer_messages') }}">Updates</a>
       </nav>
-
-      <a class="logout" href="#">&#8592; Log Out</a>
-    </aside>
-
-    <div class="main">
-      <!-- Top Navigation Bar -->
-      <header class="topbar">
-        <div class="logo">
-          <img src="../static/images/logo.png" alt="Logo">
-        </div>
-
-        <nav class="topbar-links">
-          <a href="/customer_landingpage">Home</a>
-          <a href="/customer_aboutpage">About</a>
-          <a href="/resorts">Resorts</a>
-          <a href="/customer_howitworks">How it Works</a>
-        </nav>
-
-        <div class="topbar-user">
-          <i class="fa-regular fa-bell"></i>
-          <div class="avatar"></div>
-          <span>Aron-John C.</span>
-        </div>
-      </header>
-
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <div class="content-header">
-        <h2>Exclusive Deals & Packages</h2>
-        <p>Save big on your next Pansol resort escape with these limited-time offers</p>
+      <div class="topbar-user">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar">{{ session.get("fullname", "U")[:1]|upper }}</span>{% endif %}<span>{{ username }}</span></div>
+    </header>
+    <main class="content">
+      <div class="customer-page-heading">
+        <div><p class="eyebrow">STAYS IN PANSOL</p><h1>Resort picks</h1><p class="subtitle">Explore available resorts, compare details, and find a stay that suits your group.</p></div>
+        <a class="primary-action" href="{{ url_for('resorts') }}"><i class="fa-solid fa-magnifying-glass"></i> Browse all resorts</a>
       </div>
-
-      <div class="cards-grid">
-        <!-- Deal Card 1 -->
-        <div class="resort-card">
-          <div class="card-image-placeholder">
-            <span class="badge promo-badge">20% OFF</span>
-            <button class="favorite-btn"><i class="fa-regular fa-heart"></i></button>
+      {% if resorts %}
+      <section class="customer-resort-grid" aria-label="Available resorts">
+        {% for resort in resorts %}
+        <article class="customer-resort-card">
+          <a class="customer-resort-image" href="{{ url_for('resorts') }}" aria-label="Explore {{ resort.resort_name }}">
+            <img src="{{ resort.logo or url_for('static', filename='images/default-resort.svg') }}" alt="{{ resort.resort_name }}">
+          </a>
+          <div class="customer-resort-body">
+            <p class="customer-resort-location"><i class="fa-solid fa-location-dot"></i> {{ resort.address or 'Pansol, Calamba, Laguna' }}</p>
+            <h2>{{ resort.resort_name }}</h2>
+            <p class="customer-resort-description">{{ resort.description or 'Review amenities, pricing, and available dates for your stay.' }}</p>
+            <div class="customer-resort-footer">
+              <div><small>Starting price</small><strong>{% if resort.price %}₱{{ '{:,.2f}'.format(resort.price|float) }}{% else %}See resort details{% endif %}</strong></div>
+              {% if session.get('role') == 'customer' %}
+              <form method="post" action="{{ url_for('toggle_customer_favorite', resort_id=resort.resort_id) }}">
+                <button class="icon-action" type="submit" aria-label="Save {{ resort.resort_name }}"><i class="fa-regular fa-heart"></i></button>
+              </form>
+              {% endif %}
+            </div>
+            <a class="secondary-action customer-resort-link" href="{{ url_for('resorts') }}">Check resort and availability <i class="fa-solid fa-arrow-right"></i></a>
           </div>
-          <div class="card-body">
-            <div class="card-title-row">
-              <h3>Lucky Miels Resort</h3>
-              <span class="rating"><i class="fa-solid fa-star"></i> 4.6 <span>(128)</span></span>
-            </div>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
-            <div class="schedules">
-              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
-              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
-            </div>
-            <div class="pricing">
-              <span class="old-price">₱1,500</span>
-              <span class="price">₱1,200</span> <span class="unit">/ Day Tour</span>
-            </div>
-            <button class="btn-primary">Claim Deal</button>
-          </div>
-        </div>
-
-        <!-- Deal Card 2 -->
-        <div class="resort-card">
-          <div class="card-image-placeholder">
-            <span class="badge promo-badge">FLASH SALE</span>
-            <button class="favorite-btn"><i class="fa-regular fa-heart"></i></button>
-          </div>
-          <div class="card-body">
-            <div class="card-title-row">
-              <h3>Magic Kingdom Resort</h3>
-              <span class="rating"><i class="fa-solid fa-star"></i> 4.5 <span>(95)</span></span>
-            </div>
-            <p class="location"><i class="fa-solid fa-location-dot"></i> Pansol, Calamba, Laguna</p>
-            <div class="schedules">
-              <p><i class="fa-regular fa-clock"></i> Day Tour <strong>8:00 AM - 5:00 PM</strong></p>
-              <p><i class="fa-regular fa-moon"></i> Overnight <strong>2:00 PM - 11:00 AM</strong></p>
-            </div>
-            <div class="pricing">
-              <span class="old-price">₱1,800</span>
-              <span class="price">₱1,500</span> <span class="unit">/ Day Tour</span>
-            </div>
-            <button class="btn-primary">Claim Deal</button>
-          </div>
-        </div>
-      </div>
+        </article>
+        {% endfor %}
+      </section>
+      {% else %}
+      <section class="panel customer-empty-state"><span class="empty-icon"><i class="fa-solid fa-umbrella-beach"></i></span><h2>No resorts are available right now</h2><p>Please check back soon for available stays in Pansol.</p></section>
+      {% endif %}
     </main>
-    </div>
   </div>
+</div>
 
+
+{% if session.get('role') == 'customer' %}
+<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
+{% endif %}
 </body>
 </html>

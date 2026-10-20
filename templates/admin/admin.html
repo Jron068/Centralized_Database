@@ -22,7 +22,7 @@
   .legend-dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
   .legend-label{color:var(--text); min-width:60px;}
   .legend-pct{color:var(--muted); margin-left:auto; padding-left:16px;}
-  .create-caretaker-card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:22px;}
+  .create-caretaker-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 22px; margin-bottom:22px; box-shadow:0 4px 16px rgba(20,40,30,.04);}
   .create-caretaker-card h3{margin:0 0 14px; font-size:14.5px; color:var(--text); font-weight:700;}
   .create-caretaker-form{display:grid; grid-template-columns:1.2fr 1.2fr 1.1fr 1.2fr auto; gap:10px; align-items:end;}
   .form-field{display:flex; flex-direction:column; gap:6px;}
@@ -31,16 +31,62 @@
   .btn{display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:none; cursor:pointer; text-decoration:none; font-weight:700;}
   .btn-primary{background:var(--forest); color:#fff; padding:10px 16px; min-height:42px; box-shadow:0 1px 0 rgba(0,0,0,.04);}
   .btn-primary:hover{background:var(--forest-dark);}
-  .resort-stat-section{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px; margin-bottom:22px;}
-  .resort-stat-header{display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;}
-  .resort-stat-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px;}
-  .resort-mini-card{background:#f6f7f7; border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
-  .resort-mini-card h4{margin:0 0 8px; font-size:14px; color:var(--text); font-weight:700;}
-  .resort-mini-card .mini-value{font-size:26px; font-weight:800; color:var(--text); margin:0;}
+  .resort-stat-section{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:22px; box-shadow:0 4px 16px rgba(20,40,30,.04);}
+  .resort-stat-header{display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; flex-wrap:wrap;}
+  .resort-stat-heading p{margin:5px 0 0;color:var(--muted);font-size:12px;}
+  .resort-stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px;}
+  .resort-mini-card{background:linear-gradient(145deg,#fff,#f8faf9); border:1px solid var(--border); border-radius:12px; padding:17px; transition:transform .18s ease,box-shadow .18s ease;}
+  .resort-mini-card:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(20,40,30,.08);}
+  .resort-mini-title{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:17px;}
+  .resort-mini-card h4{margin:0; font-size:14px; line-height:1.4;color:var(--text); font-weight:750;}
+  .resort-status{flex:none;padding:4px 8px;border-radius:999px;background:#e6f4eb;color:#24734d;font-size:10px;font-weight:700;}
+  .resort-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:15px;border-bottom:1px solid var(--border);}
+  .resort-metric-label{display:block;margin-bottom:5px;font-size:10px;color:var(--muted);font-weight:600;}
+  .resort-mini-card .mini-value{font-size:21px; font-weight:800; color:var(--text); margin:0;}
+  .resort-mini-card .mini-value.revenue{font-size:17px;}
   .resort-mini-card .mini-label{font-size:12px; color:var(--muted); margin-top:4px; display:block;}
-  @media (max-width: 900px){.create-caretaker-form{grid-template-columns:1fr 1fr;}.resort-stat-grid{grid-template-columns:1fr 1fr;}}
-  @media (max-width: 640px){.create-caretaker-form{grid-template-columns:1fr;}.resort-stat-grid{grid-template-columns:1fr;}}
+  .resort-caretaker{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;color:var(--muted);font-size:11px;}
+  .pending-count{flex:none;padding:4px 7px;border-radius:999px;background:#fff4e2;color:#94631c;font-size:10px;font-weight:700;}
+  .arrival-alerts{display:grid;gap:8px;margin:0 0 18px;}
+  .arrival-alert{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #f0d9a8;border-radius:10px;background:#fff9eb;color:#5c4824;}
+  .arrival-alert-icon{display:flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border-radius:8px;background:#f8e9c8;color:#8e641a;font-weight:800;}
+  .arrival-alert strong{display:block;font-size:12px;}
+  .arrival-alert p{margin:4px 0 0;font-size:11px;line-height:1.5;}
+  .resort-caretaker i{color:var(--forest);}
+  @media (max-width: 900px){.create-caretaker-form{grid-template-columns:1fr 1fr;}}
+  .owner-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 4px 16px rgba(20,40,30,.04);}
+  .owner-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:17px;}
+  .owner-section-heading h3{margin:0;color:var(--text);font-size:17px;font-weight:750;}
+  .owner-section-heading p{margin:5px 0 0;color:var(--muted);font-size:12px;}
+  .section-count{padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;}
+  .my-resort-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .my-resort-card{overflow:hidden;border:1px solid var(--border);border-radius:12px;background:#fff;transition:transform .18s ease,box-shadow .18s ease;}
+  .my-resort-card:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(20,40,30,.08);}
+  .my-resort-image{height:112px;background:#eef3ef;}
+  .my-resort-image img{width:100%;height:100%;object-fit:cover;}
+  .my-resort-body{padding:14px 15px;}
+  .my-resort-title{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .my-resort-title h4{margin:0;color:var(--text);font-size:14px;line-height:1.4;}
+  .my-resort-body p{min-height:30px;margin:7px 0 13px;color:var(--muted);font-size:11px;line-height:1.4;}
+  .my-resort-actions{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:11px;}
+  .caretaker-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+  .caretaker-table-wrap table{min-width:900px;margin:0;}
+  .caretaker-table-wrap th{background:#f6f8f7;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.45px;}
+  .caretaker-table-wrap td{vertical-align:top;}
+  .caretaker-person{display:flex;align-items:center;gap:10px;min-width:150px;}
+  .caretaker-avatar{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#e5f1e9;color:var(--forest);font-size:12px;font-weight:800;}
+  .caretaker-person strong{display:block;color:var(--text);font-size:12px;}
+  .caretaker-person small{display:block;margin-top:3px;color:var(--muted);font-size:10px;}
+  .caretaker-actions{min-width:190px;}
+  .caretaker-actions input{width:100%;padding:8px 9px;border:1px solid var(--border);border-radius:7px;font:inherit;font-size:11px;}
+  .caretaker-actions input:focus{outline:2px solid rgba(47,133,90,.2);border-color:var(--forest);}
+  .caretaker-action-buttons{display:flex;gap:7px;margin-top:7px;}
+  .caretaker-reset{display:flex;gap:6px;margin-top:8px;}
+  .caretaker-reset input{max-width:140px;padding:6px 8px;border:1px solid var(--border);border-radius:7px;font:inherit;font-size:11px;}
+  @media (max-width: 640px){.create-caretaker-form{grid-template-columns:1fr;}.resort-stat-grid,.my-resort-grid{grid-template-columns:1fr;}.owner-section-heading{align-items:flex-start;flex-direction:column;}}
 </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
@@ -68,8 +114,7 @@
     <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
     <div class="side-nav">
       <a class="side-link active" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
-      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
-      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
       <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
@@ -77,7 +122,7 @@
       <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
       <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
     </div>
-    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
   </div>
 
   <!-- MAIN -->
@@ -89,12 +134,19 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> {{ username | default('Owner') }}</div>
+      <div class="profile">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar"></span>{% endif %} {{ username | default('Owner') }}</div>
     </div>
 
     <div class="content">
       <h1 class="page-title">Dashboard Overview</h1>
       <p class="page-sub">Welcome back! Here's what happening with your resorts today</p>
+      {% if reservation_reminders %}
+      <div class="arrival-alerts" aria-label="Upcoming reservation reminders">
+        {% for reminder in reservation_reminders %}
+        <div class="arrival-alert"><span class="arrival-alert-icon">!</span><div><strong>{{ reminder.title }}</strong><p>{{ reminder.message }}</p></div></div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
       <!-- STAT CARDS -->
       <div class="stat-cards">
@@ -158,7 +210,10 @@
 
       <div class="resort-stat-section">
         <div class="resort-stat-header">
-          <h3 style="margin:0; font-size:14.5px; color:var(--text); font-weight:700;">Resort Statistics</h3>
+          <div class="resort-stat-heading">
+            <h3 style="margin:0; font-size:17px; color:var(--text); font-weight:750;">Resort Statistics</h3>
+            <p>{{ resort_stats|length }} active partner resorts · Bookings, verified revenue, and caretaker assignments</p>
+          </div>
           <form method="get" action="{{ url_for('dashboard') }}" style="margin:0;">
             <select name="resort_id" style="padding:10px 12px; border:1px solid var(--border); border-radius:8px; min-width:220px; background:#fff; font:inherit;">
               <option value="">All resorts</option>
@@ -176,14 +231,12 @@
           <div class="resort-stat-grid">
             {% for s in visible_stats %}
             <div class="resort-mini-card">
-              <h4>{{ s.resort_name }}</h4>
-              <p class="mini-value">{{ s.total_bookings or 0 }}</p>
-              <span class="mini-label">Bookings</span>
-              <p class="mini-value" style="font-size:20px; margin-top:10px;">&#8369;{{ '%.2f'|format(s.total_revenue|float) }}</p>
-              <span class="mini-label">Revenue</span>
-              <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:8px; font-size:12px; color:var(--muted);">
-                Caretaker: <strong style="color:var(--text);">{{ s.caretaker_name }}</strong>
+              <div class="resort-mini-title"><h4>{{ s.resort_name }}</h4><span class="resort-status">{{ s.status }}</span></div>
+              <div class="resort-metrics">
+                <div><span class="resort-metric-label">TOTAL BOOKINGS</span><p class="mini-value">{{ s.total_bookings or 0 }}</p></div>
+                <div><span class="resort-metric-label">VERIFIED REVENUE</span><p class="mini-value revenue">&#8369;{{ '%.2f'|format(s.total_revenue|float) }}</p></div>
               </div>
+              <div class="resort-caretaker"><span>Caretaker: <strong style="color:var(--text);">{{ s.caretaker_name }}</strong></span><span class="pending-count">{{ s.pending_payments or 0 }} pending payment{{ '' if s.pending_payments == 1 else 's' }}</span></div>
             </div>
             {% endfor %}
           </div>
@@ -195,22 +248,26 @@
         {% endif %}
       </div>
 
-      <div class="card">
-        <h3>My Resorts</h3>
-        <table>
-          <thead><tr><th>Resort</th><th>Status</th></tr></thead>
-          <tbody>
-            {% for r in resorts | default([]) %}
-            <tr>
-              <td>{{ r.resort_name }}</td>
-              <td><span class="pill {{ 'pill-active' if r.status == 'Active' else 'pill-cancelled' }}">{{ r.status }}</span></td>
-            </tr>
-            {% else %}
-            <tr class="empty-row"><td colspan="2">No resorts yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      <section class="owner-section">
+        <div class="owner-section-heading">
+          <div><h3>My Resorts</h3><p>Review resort details and open a property workspace.</p></div>
+          <span class="section-count">{{ resorts|length }} properties</span>
+        </div>
+        <div class="my-resort-grid">
+          {% for r in resorts | default([]) %}
+          <article class="my-resort-card">
+            <div class="my-resort-image"><img src="{{ r.logo or url_for('static', filename='images/default-resort.svg') }}" alt="{{ r.resort_name }}"></div>
+            <div class="my-resort-body">
+              <div class="my-resort-title"><h4>{{ r.resort_name }}</h4><span class="pill {{ 'pill-active' if r.status == 'Active' else 'pill-cancelled' }}">{{ r.status }}</span></div>
+              <p>{{ r.address or 'Location details have not been added.' }}</p>
+              <div class="my-resort-actions"><span class="mini-label">Resort #{{ r.resort_id }}</span><a class="btn btn-outline btn-sm" href="{{ url_for('admin_property_detail', resort_id=r.resort_id) }}">Manage resort</a></div>
+            </div>
+          </article>
+          {% else %}
+          <p class="empty-row">No resorts yet. Add your first property to get started.</p>
+          {% endfor %}
+        </div>
+      </section>
 
       <div class="create-caretaker-card">
         <h3>Create Caretaker Account</h3>
@@ -247,31 +304,34 @@
         </form>
       </div>
 
-      <div class="card">
-        <h3>Assigned Caretakers</h3>
-        <table>
+      <section class="owner-section">
+        <div class="owner-section-heading">
+          <div><h3>Assigned Caretakers</h3><p>Manage caretaker accounts and the resorts they look after.</p></div>
+          <span class="section-count">{{ assigned_caretakers|length }} team members</span>
+        </div>
+        <div class="caretaker-table-wrap"><table>
           <thead><tr><th>Caretaker</th><th>Email</th><th>Resort</th><th>Status</th><th>Assigned On</th><th>Update / Delete</th></tr></thead>
           <tbody>
             {% for c in assigned_caretakers | default([]) %}
             <tr>
-              <td>{{ c.fullname }}</td>
+              <td><div class="caretaker-person"><span class="caretaker-avatar">{{ c.fullname[:1]|upper }}</span><span><strong>{{ c.fullname }}</strong><small>Resort caretaker</small></span></div></td>
               <td>{{ c.email }}</td>
               <td>{{ c.resort_name }}</td>
               <td><span class="pill {{ 'pill-active' if c.status == 'Active' else 'pill-cancelled' if c.status == 'Inactive' else 'pill-pending' }}">{{ c.status }}</span></td>
               <td>{{ c.assigned_date.strftime('%b %d, %Y') if c.assigned_date else 'Not assigned' }}</td>
               <td>
-                <form method="post" action="{{ url_for('update_caretaker_account', account_id=c.account_id) }}" style="display:flex; flex-direction:column; gap:8px; min-width:220px;" onsubmit="return confirm('Update this caretaker profile?');">
-                  <input name="fullname" type="text" value="{{ c.fullname }}" required style="padding:6px 8px; border:1px solid var(--border); border-radius:6px;">
-                  <input name="email" type="email" value="{{ c.email }}" required style="padding:6px 8px; border:1px solid var(--border); border-radius:6px;">
-                  <input name="new_password" type="password" minlength="8" placeholder="New password (optional)" style="padding:6px 8px; border:1px solid var(--border); border-radius:6px;">
-                  <div style="display:flex; gap:8px;">
+                <form class="caretaker-actions" method="post" action="{{ url_for('update_caretaker_account', account_id=c.account_id) }}" onsubmit="return confirm('Update this caretaker profile?');">
+                  <input name="fullname" type="text" value="{{ c.fullname }}" aria-label="Caretaker name" required>
+                  <input name="email" type="email" value="{{ c.email }}" aria-label="Caretaker email" required style="margin-top:6px;">
+                  <input name="new_password" type="password" minlength="8" placeholder="New password (optional)" aria-label="Optional new password" style="margin-top:6px;">
+                  <div class="caretaker-action-buttons">
                     <button class="btn btn-primary btn-sm" type="submit">Update</button>
                     <button class="btn btn-outline btn-sm" type="button" onclick="if(confirm('Delete this caretaker?')) { document.getElementById('delete-caretaker-{{ c.account_id }}').submit(); }">Delete</button>
                   </div>
                 </form>
                 <form id="delete-caretaker-{{ c.account_id }}" method="post" action="{{ url_for('delete_caretaker_account', account_id=c.account_id) }}" style="display:none;"></form>
-                <form method="post" action="{{ url_for('reset_caretaker_password', account_id=c.account_id) }}" onsubmit="return confirm('Reset this caretaker password?');" style="margin-top:8px;">
-                  <input name="new_password" type="password" minlength="8" placeholder="New password" required style="max-width:150px; padding:5px 8px; border:1px solid var(--border); border-radius:6px;">
+                <form class="caretaker-reset" method="post" action="{{ url_for('reset_caretaker_password', account_id=c.account_id) }}" onsubmit="return confirm('Reset this caretaker password?');">
+                  <input name="new_password" type="password" minlength="8" placeholder="New password" aria-label="Reset password" required>
                   <button class="btn btn-outline btn-sm" type="submit">Reset</button>
                 </form>
               </td>
@@ -280,8 +340,8 @@
             <tr class="empty-row"><td colspan="6">No caretakers assigned yet.</td></tr>
             {% endfor %}
           </tbody>
-        </table>
-      </div>
+        </table></div>
+      </section>
     </div>
   </div>
 </div>
@@ -341,6 +401,8 @@
   }
 
 </script>
+
+
 
 </body>
 </html>

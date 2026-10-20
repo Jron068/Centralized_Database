@@ -3,34 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pansol Resorts — Reservations</title>
+<title>Pansol Resorts | Reservations & Calendar</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style/admin.css') }}">
+<style>
+.booking-tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee9fb;color:#594398;font-size:11px;font-weight:700}
+.booking-tag.online{background:#e6effb;color:#1d5ba6}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:16px}
+.cal-head{text-align:center;font-size:12px;font-weight:700;color:#67756d;padding:8px 2px}
+.cal-cell{min-height:110px;padding:8px;border:1px solid #e7ece8;border-radius:8px;background:#fff;overflow:hidden}
+.cal-cell.muted{opacity:.45;background:#f7f8f7}.cal-cell.today{border:2px solid #2d8059}
+.cal-date{font-size:12px;font-weight:700;margin-bottom:6px}
+.cal-event{display:block;margin:4px 0;padding:4px 6px;border-radius:5px;background:#e4f2e9;color:#205c3a;font-size:10px;line-height:1.3;text-decoration:none;overflow-wrap:anywhere}
+.cal-event.walkin{background:#eee9fb;color:#594398}
+.table-wrap{overflow-x:auto}.source-cell{white-space:nowrap}
+@media(max-width:700px){.cal-cell{min-height:74px;padding:4px}.cal-event{font-size:9px}.cal-head{font-size:10px}}
+</style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
-
-<!--
-  NOTES FOR THIS PAGE (reservation.html)
-  --------------------------------------------------
-  Sidebar-only page (no matching top nav item).
-  'New Reservation' button and row 'View' links are placeholders —
-  wire them to your actual booking detail route.
-
-  All pages share styles.css — do not fork styles per page.
-  Sidebar / top nav links are plain <a href="..."> pointing at
-  the sibling .html files, so this works as static prototype
-  files opened directly in a browser, or dropped into a real
-  app's templates folder later.
--->
-
 <div class="app">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
     <div class="side-nav">
       <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
-      <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
-      <a class="side-link" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations & Calendar</a>
       <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
@@ -38,10 +35,9 @@
       <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
       <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
     </div>
-    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
     <div class="topnav">
       <div class="topnav-links">
@@ -50,44 +46,150 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> Owner One</div>
+      <div class="profile">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar"></span>{% endif %} {{ username }}</div>
     </div>
 
     <div class="content">
-      <h1 class="page-title">Reservations</h1>
-      <p class="page-sub">Manage upcoming, ongoing, and past bookings across your resorts</p>
+      <h1 class="page-title">Reservations & Calendar</h1>
+      <p class="page-sub">View online and walk-in bookings for your resorts. Choose a resort to filter both views.</p>
 
-      <div class="toolbar">
-        <input class="search-input" placeholder="Search by guest name or booking ID">
-        <select class="select-input"><option>All Resorts</option><option>Sunscape Resort</option><option>Triple Z Resort</option></select>
-        <select class="select-input"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select>
-        <button class="btn btn-primary">+ New Reservation</button>
-      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+      {% endwith %}
 
-      <div class="card">
-        <table>
-          <thead><tr><th>Booking ID</th><th>Guest</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>
-            {% for r in reservations %}
-            <tr>
-              <td> #RSV-{{ r.reservation_id }}</td>
-              <td>{{ r.guest_name }}</td>
-              <td>{{ r.resort_name }}</td>
-              <td>{{ r.check_in }}</td>
-              <td>{{ r.check_out }}</td>
-              <td><span class="pill pill-{{ r.reservation_status.lower() }}">{{ r.reservation_status }}</span></td>
-              <td><a class="btn btn-outline btn-sm" href="{{ url_for('reservation_detail', reservation_id=r.reservation_id) }}">View</a></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="7">No reservations found.</td></tr>
+      <form class="toolbar" method="get" action="{{ url_for('reservation') }}">
+        <select class="select-input" name="resort_id" aria-label="Filter by resort">
+          <option value="">All my resorts</option>
+          {% for resort in resorts %}
+          <option value="{{ resort.resort_id }}" {% if selected_resort == resort.resort_id %}selected{% endif %}>{{ resort.resort_name }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="year" value="{{ calendar_year }}">
+        <input type="hidden" name="month" value="{{ calendar_month_number }}">
+        <button class="btn btn-primary" type="submit">Show resort</button>
+        <a class="btn btn-outline" href="{{ url_for('reservation', _anchor='calendar') }}">Open calendar</a>
+      </form>
+
+      <section class="card" id="reservation-list">
+        <div class="card-row" style="padding:18px 18px 0;">
+          <h3 style="margin:0;">Bookings <span id="booking-count">({{ reservations|length }})</span></h3>
+          <span class="page-sub" style="margin:0;">Includes walk-in guests</span>
+        </div>
+        <div class="toolbar" style="padding:14px 18px 0;">
+          <input class="search-input" id="booking-search" type="search" placeholder="Search guest, resort, or booking ID">
+          <select class="select-input" id="status-filter" aria-label="Filter by status">
+            <option value="">All statuses</option><option>Pending</option><option>Confirmed</option>
+            <option>Rejected</option><option>Cancelled</option><option>Completed</option>
+          </select>
+        </div>
+        <div class="table-wrap" style="padding:0 18px 18px;">
+          <table>
+            <thead><tr><th>Booking ID</th><th>Guest</th><th>Source</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Payment</th><th>Action</th></tr></thead>
+            <tbody id="reservation-rows">
+              {% for r in reservations %}
+              <tr id="reservation-{{ r.reservation_id }}" data-search="{{ (r.guest_name ~ ' ' ~ r.resort_name ~ ' ' ~ r.reservation_id)|lower }}" data-status="{{ r.reservation_status }}">
+                <td>#RSV-{{ r.reservation_id }}</td>
+                <td>{{ r.guest_name or 'Walk-in Guest' }}</td>
+                <td class="source-cell"><span class="booking-tag {{ 'online' if r.booking_source == 'Online' else '' }}">{{ r.booking_source }}</span></td>
+                <td><a href="{{ url_for('reservation', resort_id=r.resort_id) }}">{{ r.resort_name }}</a></td>
+                <td>{{ r.check_in }}</td><td>{{ r.check_out }}</td>
+                <td><span class="pill pill-{{ (r.reservation_status or 'pending')|lower }}">{{ r.reservation_status or 'Pending' }}</span></td>
+                <td>{{ r.payment_status or 'Pending' }}</td>
+                <td><a class="btn btn-outline btn-sm" href="{{ url_for('reservation_detail', reservation_id=r.reservation_id) }}">View</a></td>
+              </tr>
+              {% else %}<tr><td colspan="9" id="empty-reservations">No bookings found for this resort.</td></tr>{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="calendar" style="margin-top:22px;padding:18px;">
+        <div class="card-row">
+          <div><h3 style="margin:0;">{{ calendar_month }}</h3><p class="page-sub" style="margin:4px 0 0;">Pending and confirmed stays; checkout day is not counted as an occupied night.</p></div>
+          <div class="action-group">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('reservation', year=previous_month.year, month=previous_month.month, resort_id=selected_resort, _anchor='calendar') }}">&larr; Prev</a>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('reservation', year=next_month.year, month=next_month.month, resort_id=selected_resort, _anchor='calendar') }}">Next &rarr;</a>
+          </div>
+        </div>
+        <div class="calendar-grid">
+          <div class="cal-head">Sun</div><div class="cal-head">Mon</div><div class="cal-head">Tue</div><div class="cal-head">Wed</div><div class="cal-head">Thu</div><div class="cal-head">Fri</div><div class="cal-head">Sat</div>
+          {% for cell in calendar_days %}
+          {% set day_events = events_by_date.get(cell.day.isoformat(), []) %}
+          <div class="cal-cell {{ '' if cell.in_month else 'muted' }} {{ 'today' if cell.day == today else '' }} {{ 'reserved-day' if day_events else '' }}">
+            <div class="cal-date">{{ cell.day.day }}</div>
+            {% for event in day_events %}
+            <a class="cal-event {{ 'walkin' if event.booking_source == 'Walk-in' else '' }}" href="#reservation-{{ event.reservation_id }}" title="{{ event.resort_name }} - {{ event.guest_name }} ({{ event.booking_source }}, {{ event.reservation_status }})">
+              {{ event.resort_name }} · {{ event.guest_name }}{% if event.booking_source == 'Walk-in' %} (Walk-in){% endif %}
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
-
-      </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
     </div>
   </div>
 </div>
+
+<script>
+(() => {
+  const rows = document.getElementById('reservation-rows');
+  const search = document.getElementById('booking-search');
+  const status = document.getElementById('status-filter');
+  const resortId = new URLSearchParams(location.search).get('resort_id') || '';
+  const endpoint = `{{ url_for('reservation_data') }}?resort_id=${encodeURIComponent(resortId)}`;
+
+  function applyFilters() {
+    const q = search.value.trim().toLowerCase();
+    const selectedStatus = status.value.toLowerCase();
+    let visible = 0;
+    rows.querySelectorAll('tr[data-search]').forEach((row) => {
+      const show = row.dataset.search.includes(q) && (!selectedStatus || row.dataset.status.toLowerCase() === selectedStatus);
+      row.hidden = !show;
+      if (show) visible++;
+    });
+    document.getElementById('booking-count').textContent = `(${visible})`;
+  }
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+  }
+
+  function renderRows(items) {
+    if (!items.length) {
+      rows.innerHTML = '<tr><td colspan="9">No bookings found for this resort.</td></tr>';
+      document.getElementById('booking-count').textContent = '(0)';
+      return;
+    }
+    rows.innerHTML = items.map((r) => {
+      const sourceClass = r.source === 'Online' ? 'online' : '';
+      const statusClass = (r.status || 'Pending').toLowerCase();
+      return `<tr id="reservation-${r.id}" data-search="${esc(`${r.guest} ${r.resort} ${r.id}`).toLowerCase()}" data-status="${esc(r.status)}">
+        <td>#RSV-${r.id}</td><td>${esc(r.guest || 'Walk-in Guest')}</td>
+        <td class="source-cell"><span class="booking-tag ${sourceClass}">${esc(r.source)}</span></td>
+        <td><a href="/reservation?resort_id=${encodeURIComponent(r.resort_id)}">${esc(r.resort)}</a></td>
+        <td>${esc(r.check_in)}</td><td>${esc(r.check_out)}</td>
+        <td><span class="pill pill-${esc(statusClass)}">${esc(r.status)}</span></td>
+        <td>${esc(r.payment_status)}</td>
+        <td><a class="btn btn-outline btn-sm" href="/admin/reservations/${r.id}">View</a></td></tr>`;
+    }).join('');
+    applyFilters();
+  }
+
+  search.addEventListener('input', applyFilters);
+  status.addEventListener('change', applyFilters);
+  async function refreshBookings() {
+    if (document.hidden) return;
+    try {
+      const response = await fetch(endpoint, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
+      if (response.ok) renderRows((await response.json()).reservations || []);
+    } catch (_) { /* Keep the last rendered list if a refresh is temporarily unavailable. */ }
+  }
+  window.setInterval(refreshBookings, 15000);
+})();
+</script>
+
 
 </body>
 </html>

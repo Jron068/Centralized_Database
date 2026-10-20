@@ -1,0 +1,20 @@
+<nav class="nav" aria-label="Customer navigation">
+  <a href="{{ url_for('customer_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_dashboard' else '' }}"><i class="fa-solid fa-grip"></i> Dashboard</a>
+
+  <p class="nav-label">Discover</p>
+  <a href="{{ url_for('resorts') }}" class="nav-item {{ 'active' if request.endpoint == 'resorts' else '' }}"><i class="fa-solid fa-umbrella-beach"></i> Explore Resorts</a>
+  <a href="{{ url_for('customer_deal') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_deal' else '' }}"><i class="fa-solid fa-compass"></i> Resort Picks</a>
+  <a href="{{ url_for('customer_favorites') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_favorites' else '' }}"><i class="fa-regular fa-heart"></i> Saved Resorts</a>
+  <a href="{{ url_for('customer_messages') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_messages' else '' }}"><i class="fa-regular fa-bell"></i> Updates</a>
+
+  <p class="nav-label">My Bookings</p>
+  <a href="{{ url_for('customer_reservation') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_reservation' else '' }}"><i class="fa-regular fa-calendar-check"></i> My Reservations</a>
+  <a href="{{ url_for('customer_paymentHistory') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_paymentHistory' else '' }}"><i class="fa-solid fa-file-invoice-dollar"></i> Payment History</a>
+
+  <p class="nav-label">My Account</p>
+  <a href="{{ url_for('customer_profileSetting') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_profileSetting' else '' }}"><i class="fa-solid fa-gear"></i> Profile Settings</a>
+  <a href="{{ url_for('customer_changePassword') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_changePassword' else '' }}"><i class="fa-solid fa-lock"></i> Change Password</a>
+
+  <p class="nav-label">Support</p>
+  <a href="{{ url_for('contact') }}" class="nav-item"><i class="fa-regular fa-circle-question"></i> Contact Support</a>
+</nav>

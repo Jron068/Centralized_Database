@@ -1,5 +1,7 @@
 """Shared presentation defaults for resort listings."""
 
+from pathlib import Path
+
 RESORT_IMAGES = {
     "sunscape resort": "uploads/resorts/sunscape.png",
     "triple z resort": "uploads/resorts/triple_z.png",
@@ -26,10 +28,17 @@ def enrich_resort(resort):
     """Return a resort with saved values preferred over known presentation defaults."""
     row = dict(resort)
     key = (row.get("resort_name") or "").strip().lower()
-    row["logo"] = row.get("logo") or (
+    logo = row.get("logo") or (
         "/static/" + RESORT_IMAGES[key] if key in RESORT_IMAGES
         else "/static/images/default-resort.svg"
     )
+    # Old database paths may reference uploads that were moved or never copied
+    # to this deployment. Validate local static paths before sending them to UI.
+    if isinstance(logo, str) and logo.startswith("/static/"):
+        local_path = Path(__file__).resolve().parent.parent / "static" / logo[len("/static/"):]
+        if not local_path.is_file():
+            logo = "/static/images/default-resort.svg"
+    row["logo"] = logo
     row["description"] = row.get("description") or RESORT_DESCRIPTIONS.get(key)
     return row
 
@@ -47,6 +56,10 @@ def gallery_photos(resort, saved_photos):
         urls.append(main_image if main_image.startswith("/") else "/static/" + main_image)
     for photo in saved_photos:
         url = photo.get("url") or "/static/" + photo["photo_path"]
+        if url.startswith("/static/"):
+            local_path = Path(__file__).resolve().parent.parent / "static" / url[len("/static/"):]
+            if not local_path.is_file():
+                continue
         if url not in urls:
             urls.append(url)
     if not saved_photos:

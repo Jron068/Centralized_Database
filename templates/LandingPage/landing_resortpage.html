@@ -16,6 +16,8 @@
     .empty-state { grid-column:1/-1; text-align:center; color:var(--gray); padding:40px 12px; }
     .resort-card[hidden] { display:none; }
   </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 <header>
@@ -84,5 +86,7 @@ search.addEventListener('input', () => {
   document.getElementById('resultsInfo').textContent = `Showing ${visible} active resort${visible === 1 ? '' : 's'}`;
 });
 </script>
+
+
 </body>
 </html>

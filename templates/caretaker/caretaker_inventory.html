@@ -5,28 +5,14 @@
 <title>Reservations — Pansol Resorts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <span class="leaf">🌿</span>
-    <div class="sidebar-brand-text">
-      <div class="name">PANSOL RESORTS</div>
-      <div class="tagline">Centralized Reservation Hub</div>
-    </div>
-  </div>
-  <ul class="sidebar-nav">
-    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
-    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
-    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}" class="active"><span class="icon">🗓</span> Reservations</a></li>
-    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
-    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
-    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
-  </ul>
-  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
-</aside>
+{% include 'caretaker/_sidebar.html' %}
 
 <div class="main">
   <header class="topbar">
@@ -40,7 +26,7 @@
     <div class="topbar-right">
       <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
-        <div class="avatar"></div>
+        {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "C")[:1]|upper }}</div>{% endif %}{% endif %}
         <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
@@ -89,7 +75,7 @@
 <script>
 const REVIEW_URL = "{{ url_for('caretaker_review_reservation', reservation_id=0) }}";
 const DATA_URL = "{{ url_for('caretaker_inventory_data') }}";
-const NEXT = "{{ url_for('caretaker_inventory') }}";
+const NEXT = "{{ url_for('caretaker_guests') }}";
 let state = {{ data|tojson }};
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -126,5 +112,7 @@ async function refresh() {
 render();
 setInterval(refresh, 15000);
 </script>
+
+
 </body>
 </html>

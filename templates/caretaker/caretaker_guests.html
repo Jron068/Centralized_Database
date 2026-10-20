@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Guests — Pansol Resorts</title>
+<title>Guests & Reservations — Pansol Resorts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
 <style>
@@ -21,28 +21,14 @@
   .proof-preview { display:none; max-width:200px; max-height:140px; margin-top:8px; border-radius:8px; object-fit:cover; }
   .hint { font-size:12px; opacity:.7; margin-top:4px; }
 </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <span class="leaf">🌿</span>
-    <div class="sidebar-brand-text">
-      <div class="name">PANSOL RESORTS</div>
-      <div class="tagline">Centralized Reservation Hub</div>
-    </div>
-  </div>
-  <ul class="sidebar-nav">
-    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
-    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
-    <li><a href="{{ url_for('caretaker_guests') }}" class="active"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
-    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
-    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
-    <li><a href="{{ url_for('caretaker_messages') }}"><span class="icon">✉</span> Messages</a></li>
-  </ul>
-  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
-</aside>
+{% include 'caretaker/_sidebar.html' %}
 
 <div class="main">
   <header class="topbar">
@@ -56,7 +42,7 @@
     <div class="topbar-right">
       <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
-        <div class="avatar"></div>
+        {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "C")[:1]|upper }}</div>{% endif %}{% endif %}
         <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
@@ -65,8 +51,8 @@
   <div class="content">
     <div class="page-header">
       <div>
-        <h1>Guests</h1>
-        <p>Manage guest reservations, walk-in bookings and check-in/check-out for {{ resort.resort_name }}. <span class="live" id="liveStamp"></span></p>
+        <h1>Guests & Reservations</h1>
+        <p>View online bookings and walk-ins, review pending reservations, and manage guest check-in/check-out for {{ resort.resort_name }}. <span class="live" id="liveStamp"></span></p>
       </div>
       <div class="header-actions">
         <button class="btn btn-primary" onclick="document.getElementById('walkinModal').classList.add('open')">+ Add Walk-in Guest</button>
@@ -80,11 +66,10 @@
     {% endwith %}
 
     <div class="stat-row">
-      <div class="stat-card"><div class="stat-label">Total Guests Today</div><div class="stat-value" id="statToday">0</div></div>
-      <div class="stat-card"><div class="stat-label">Checked In</div><div class="stat-value" id="statIn">0</div></div>
-      <div class="stat-card"><div class="stat-label">Checked Out</div><div class="stat-value" id="statOut">0</div></div>
-      <div class="stat-card"><div class="stat-label">Upcoming Reservations</div><div class="stat-value" id="statUpcoming">0</div></div>
-      <div class="stat-card"><div class="stat-label">Awaiting Admin</div><div class="stat-value" id="statPending">0</div></div>
+      <div class="stat-card"><div class="stat-label">Total Reservations</div><div class="stat-value" id="statTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Verification</div><div class="stat-value" id="statPending">0</div></div>
+      <div class="stat-card"><div class="stat-label">Upcoming</div><div class="stat-value" id="statUpcoming">0</div></div>
+      <div class="stat-card"><div class="stat-label">Checked In</div><div class="stat-value" id="statIn">0</div><div class="stat-note" id="extraStats"></div></div>
     </div>
 
     <div class="toolbar">
@@ -106,13 +91,13 @@
     </div>
 
     <div class="card">
-      <div class="card-header"><h2>Guest List</h2></div>
+      <div class="card-header"><h2>All Guest Reservations</h2></div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Guest</th><th>Booking ID</th><th>Check-in</th><th>Check-out</th><th>Guests</th>
-              <th>Source</th><th>Amount</th><th>Photo</th><th>Status</th>
+              <th>Guest</th><th>Booking ID</th><th>Stay</th><th>Guests</th>
+              <th>Source</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="guestRows"></tbody>
@@ -168,6 +153,8 @@
 
 <script>
   const DATA_URL = "{{ url_for('caretaker_guests_data') }}";
+  const REVIEW_URL = "{{ url_for('caretaker_review_reservation', reservation_id=0) }}";
+  const NEXT_URL = "{{ url_for('caretaker_guests') }}";
   const SEARCH_URL = "{{ url_for('caretaker_walkin_customers') }}";
   let state = {{ data|tojson }};
 
@@ -187,9 +174,9 @@
 
   function render() {
     const st = state.stats;
-    $('statToday').textContent = st.today_guests; $('statIn').textContent = st.checked_in;
-    $('statOut').textContent = st.checked_out; $('statUpcoming').textContent = st.upcoming;
-    $('statPending').textContent = st.pending;
+    $('statTotal').textContent = st.total; $('statIn').textContent = st.checked_in;
+    $('statUpcoming').textContent = st.upcoming; $('statPending').textContent = st.pending;
+    $('extraStats').textContent = 'Today guests: ' + st.today_guests + ' · Checked out today: ' + st.checked_out;
 
     const q = $('guestSearch').value.trim().toLowerCase();
     const status = $('statusFilter').value, source = $('sourceFilter').value;
@@ -205,16 +192,30 @@
     rows.forEach(g => {
       const tr = document.createElement('tr');
       const who = document.createElement('div'); who.textContent = g.guest;
+      if (g.email) { const email = document.createElement('small'); email.style.display = 'block'; email.style.opacity = '.65'; email.textContent = g.email; who.appendChild(email); }
       if (g.contact) { const sm = document.createElement('small'); sm.style.display = 'block'; sm.style.opacity = '.65'; sm.textContent = g.contact; who.appendChild(sm); }
-      cell(tr, who); cell(tr, g.booking); cell(tr, g.check_in); cell(tr, g.check_out); cell(tr, g.guests + ' guests');
+      cell(tr, who); cell(tr, g.booking); cell(tr, g.check_in + ' to ' + g.check_out); cell(tr, g.guests + ' guests');
       cell(tr, g.source === 'Walk-in' ? pill('Walk-in') : 'Online');
-      cell(tr, money(g.amount));
+      cell(tr, (g.payment_status || 'No payment') + (g.amount != null ? ' · ' + money(g.amount) : ''));
       if (g.proof) {
         const a = document.createElement('a'); a.href = g.proof; a.target = '_blank';
         const img = document.createElement('img'); img.src = g.proof; img.alt = 'Proof'; img.className = 'proof-thumb';
         a.appendChild(img); cell(tr, a);
       } else cell(tr, '—');
       cell(tr, pill(g.status));
+      const action = document.createElement('td');
+      if (g.can_review) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = REVIEW_URL.replace('/0/', '/' + g.id + '/');
+        form.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+        const next = document.createElement('input'); next.type = 'hidden'; next.name = 'next'; next.value = NEXT_URL;
+        const approve = document.createElement('button'); approve.className = 'btn btn-primary btn-sm'; approve.type = 'submit'; approve.name = 'action'; approve.value = 'approve'; approve.textContent = 'Approve';
+        const reject = document.createElement('button'); reject.className = 'btn btn-outline btn-sm'; reject.type = 'submit'; reject.name = 'action'; reject.value = 'reject'; reject.textContent = 'Reject';
+        reject.addEventListener('click', event => { if (!confirm('Reject this reservation?')) event.preventDefault(); });
+        form.append(next, approve, reject); action.appendChild(form);
+      } else action.textContent = '—';
+      tr.appendChild(action);
       body.appendChild(tr);
     });
   }
@@ -284,5 +285,7 @@
     if (ACCOUNT_REQUIRED && !idField.value) { e.preventDefault(); alert("Please select the customer's account from the search results."); searchBox.focus(); }
   });
 </script>
+
+
 </body>
 </html>

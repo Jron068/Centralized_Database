@@ -5,28 +5,14 @@
 <title>Messages — Pansol Resorts</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker/styles.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <span class="leaf">🌿</span>
-    <div class="sidebar-brand-text">
-      <div class="name">PANSOL RESORTS</div>
-      <div class="tagline">Centralized Reservation Hub</div>
-    </div>
-  </div>
-  <ul class="sidebar-nav">
-    <li><a href="{{ url_for('caretaker_dashboard') }}"><span class="icon">▦</span> Dashboard</a></li>
-    <li><a href="{{ url_for('caretaker_updates') }}"><span class="icon">⟳</span> Updates</a></li>
-    <li><a href="{{ url_for('caretaker_guests') }}"><span class="icon">👥</span> Guests</a></li>
-    <li><a href="{{ url_for('caretaker_inventory') }}"><span class="icon">🗓</span> Reservations</a></li>
-    <li><a href="{{ url_for('caretaker_maintenance') }}"><span class="icon">🛠</span> Maintenance</a></li>
-    <li><a href="{{ url_for('caretaker_reports') }}"><span class="icon">📊</span> Reports</a></li>
-    <li><a href="{{ url_for('caretaker_messages') }}" class="active"><span class="icon">✉</span> Messages</a></li>
-  </ul>
-  <div class="sidebar-footer">© 2026 Pansol Resorts</div>
-</aside>
+{% include 'caretaker/_sidebar.html' %}
 
 <div class="main">
   <header class="topbar">
@@ -40,7 +26,7 @@
     <div class="topbar-right">
       <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
       <div class="user-chip">
-        <div class="avatar"></div>
+        {% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "C")[:1]|upper }}</div>{% endif %}{% endif %}
         <span class="user-name">{{ fullname }}</span>
       </div>
     </div>
@@ -50,50 +36,29 @@
     <div class="page-header">
       <div>
         <h1>Messages</h1>
-        <p>Communicate with guests and the head office.</p>
+        <p>Messages involving your caretaker account and {{ resort.resort_name }}.</p>
       </div>
     </div>
 
-    <div class="messages-layout">
-      <!-- Thread list -->
-      <div class="thread-list">
-        <div class="empty-state" style="padding:20px 10px;">No messages or notifications yet. New conversations will appear here.</div>
-
-        <!-- Example structure for when data exists (hidden by default, shown for reference) -->
-        <!--
-        <div class="thread-item active">
-          <div class="avatar"></div>
-          <div class="list-item-body">
-            <div class="list-item-top">
-              <span class="sender">Head Office</span>
-              <span class="time">9:32 AM</span>
-            </div>
-            <div class="preview">Please confirm the weekend housekeeping schedule.</div>
-          </div>
+    <section class="card messages-records" aria-label="Recent messages">
+      <div class="messages-records-heading"><h2>Recent messages</h2><span>{{ messages|length }} shown</span></div>
+      {% for message in messages %}
+      <article class="message-record {{ 'message-sent' if message.sent_by_me else 'message-received' }}">
+        <div class="message-record-meta">
+          <strong>{{ 'You to ' ~ (message.receiver_name or 'Account') if message.sent_by_me else (message.sender_name or 'Account') }}</strong>
+          <time>{{ message.sent_at.strftime('%b %d, %Y · %I:%M %p') if message.sent_at else '' }}</time>
         </div>
-        -->
-      </div>
-
-      <!-- Chat panel -->
-      <div class="chat-panel">
-        <div class="chat-header">
-          <div class="avatar" style="width:36px;height:36px;"></div>
-          <div>
-            <div class="name">No conversation selected</div>
-            <div class="status" style="color:var(--text-muted);">Select a message thread to start</div>
-          </div>
-        </div>
-        <div class="chat-body">
-          <div class="empty-state" style="text-align:center; margin:auto;">No messages to show.</div>
-        </div>
-        <div class="chat-input">
-          <input type="text" placeholder="Type a message..." disabled>
-          <button disabled>Send</button>
-        </div>
-      </div>
-    </div>
+        <p>{{ message.message }}</p>
+        {% if not message.sent_by_me and not message.is_read %}<span class="message-unread">Unread</span>{% endif %}
+      </article>
+      {% else %}
+      <div class="empty-state messages-empty">No direct messages yet. Resort notifications are available in the Notifications page.</div>
+      {% endfor %}
+    </section>
   </div>
 </div>
+
+
 
 </body>
 </html>

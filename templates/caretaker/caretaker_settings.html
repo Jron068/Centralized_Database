@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caretaker Settings | Pansol Resorts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/caretaker_dashboard.css') }}">
+  <style>
+    .settings-card{max-width:760px;background:#fff;border:1px solid #e6ece8;border-radius:18px;padding:28px;box-shadow:0 8px 28px #173d2b0b}
+    .settings-card h1{margin:0 0 8px;color:#143e2b}.settings-card>p{margin:0 0 24px;color:#66766d}
+    .settings-form{display:grid;gap:18px}.settings-form label{display:grid;gap:8px;color:#30483b;font-weight:600}
+    .settings-form input{width:100%;box-sizing:border-box;border:1px solid #d9e3dd;border-radius:10px;padding:12px 14px;font:inherit}
+    .settings-form input[type=file]{background:#f8faf9}.photo-preview{width:96px;height:96px;object-fit:cover;border-radius:50%;border:3px solid #e6f2eb}
+    .settings-form button{justify-self:start;border:0;border-radius:10px;background:#168552;color:white;padding:12px 20px;font-weight:700;cursor:pointer}
+    .settings-note{font-size:13px;color:#748179}.settings-alert{padding:12px 15px;border-radius:10px;margin:0 0 16px;background:#edf7ef;color:#225d38}
+  </style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
+</head>
+<body>
+  <div class="layout">
+    {% include 'caretaker/_sidebar.html' %}
+    <div class="main">
+      <header class="topbar"><div class="topbar-logo">PANSOL RESORTS</div><nav class="topbar-links"><a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a><a href="{{ url_for('caretaker_updates') }}">Updates</a><a href="{{ url_for('caretaker_reports') }}">Reports</a></nav><span>{{ fullname }}</span></header>
+      <section class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="settings-alert">{{ message }}</div>{% endfor %}{% endwith %}
+        <div class="settings-card">
+          <h1>Profile settings</h1>
+          <p>Keep your caretaker account details and profile photo up to date.</p>
+          <form class="settings-form" method="post" enctype="multipart/form-data">
+            {% if profile_photo %}<img class="photo-preview" src="{{ profile_photo }}" alt="Current profile photo">{% endif %}
+            <label for="profile_picture">Profile photo
+              <input id="profile_picture" type="file" name="profile_picture" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+              <span class="settings-note">JPG, PNG, or WEBP · up to 5 MB</span>
+            </label>
+            <label for="fullname">Full name<input id="fullname" name="fullname" value="{{ account.fullname }}" maxlength="150" required></label>
+            <label for="email">Email<input id="email" type="email" name="email" value="{{ account.email }}" maxlength="150" required></label>
+            <button type="submit">Save profile</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+</body>
+</html>

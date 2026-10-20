@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pansol Resorts — Booking Calendar</title>
 <link rel="stylesheet" href="{{url_for('static', filename='css/admin_style/admin.css')}}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page_experience.css') }}">
 </head>
 <body>
 
@@ -28,8 +30,7 @@
     <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
     <div class="side-nav">
       <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
-      <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservation</a>
-      <a class="side-link active" href="{{ url_for('calendar') }}"><span class="icon">&#128198;</span> Calendar</a>
+      <a class="side-link active" href="{{ url_for('reservation', _anchor='calendar') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
       <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
@@ -37,7 +38,7 @@
       <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
       <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
     </div>
-    <a class="logout" href="{{ url_for('login') }}">&larr; Log Out</a>
+    <a class="logout" href="{{ url_for('logout') }}">&larr; Log Out</a>
   </div>
 
   <!-- MAIN -->
@@ -49,7 +50,7 @@
         <a class="topnav-link" href="{{ url_for('properties') }}">Properties</a>
         <a class="topnav-link" href="{{ url_for('reports') }}">Reports</a>
       </div>
-      <div class="profile"><span class="avatar"></span> {{ username }}</div>
+      <div class="profile">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<span class="avatar"></span>{% endif %} {{ username }}</div>
     </div>
 
     <div class="content">
@@ -82,6 +83,8 @@
     </div>
   </div>
 </div>
+
+
 
 </body>
 </html>

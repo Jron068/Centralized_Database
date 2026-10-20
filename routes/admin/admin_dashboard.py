@@ -7,6 +7,8 @@ from app import app
 from config import get_connection
 from models.resort import enrich_resorts
 from models.decorators import role_required
+from models.reservation_reminders import create_upcoming_reservation_reminders
+from models.account_profile import ensure_account_profiles_table, save_profile_photo
 
 @app.route("/admin_dashboard", endpoint="admin_dashboard")
 @app.route("/owner-dashboard", endpoint="owner_dashboard")
@@ -26,9 +28,23 @@ def admin_dashboard():
         selected_resort = None
 
     try:
+        create_upcoming_reservation_reminders(cursor)
+        conn.commit()
         cursor.execute(
             """
-            SELECT resort_id, resort_name, status
+            SELECT title, message, created_at
+            FROM notifications
+            WHERE account_id = %s AND type = 'reservation_reminder' AND is_read = 0
+            ORDER BY created_at DESC
+            LIMIT 5
+            """,
+            (session.get("account_id"),),
+        )
+        reservation_reminders = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT resort_id, resort_name, status, address, logo
             FROM resorts
             ORDER BY resort_name ASC
             """
@@ -40,10 +56,9 @@ def admin_dashboard():
             """
             SELECT resort_id, resort_name, status
             FROM resorts
-            WHERE owner_id = %s
+            WHERE status = 'Active'
             ORDER BY resort_name ASC
-            """,
-            (session.get("owner_id"),),
+            """
         )
         owner_resorts = cursor.fetchall()
 
@@ -64,20 +79,25 @@ def admin_dashboard():
             """
             SELECT r.resort_id,
                    r.resort_name,
-                   COUNT(DISTINCT res.reservation_id) AS total_bookings,
-                   COALESCE(SUM(CASE WHEN p.payment_status = 'Verified' THEN p.amount_paid ELSE 0 END), 0) AS total_revenue,
-                   COALESCE(SUM(CASE WHEN p.payment_status = 'Pending' THEN 1 ELSE 0 END), 0) AS pending_payments,
-                   COALESCE(MAX(a.fullname), 'Unassigned') AS caretaker_name
+                   r.status,
+                   (SELECT COUNT(*) FROM reservations res
+                    WHERE res.resort_id = r.resort_id) AS total_bookings,
+                   (SELECT COALESCE(SUM(p.amount_paid), 0)
+                    FROM payments p
+                    JOIN reservations res ON res.reservation_id = p.reservation_id
+                    WHERE res.resort_id = r.resort_id AND p.payment_status = 'Verified') AS total_revenue,
+                   (SELECT COUNT(*)
+                    FROM payments p
+                    JOIN reservations res ON res.reservation_id = p.reservation_id
+                    WHERE res.resort_id = r.resort_id AND p.payment_status = 'Pending') AS pending_payments,
+                   COALESCE((SELECT GROUP_CONCAT(DISTINCT a.fullname ORDER BY a.fullname SEPARATOR ', ')
+                    FROM caretakers c
+                    JOIN accounts a ON a.account_id = c.account_id
+                    WHERE c.resort_id = r.resort_id AND c.status = 'Active'), 'Unassigned') AS caretaker_name
             FROM resorts r
-            LEFT JOIN reservations res ON res.resort_id = r.resort_id
-            LEFT JOIN payments p ON p.reservation_id = res.reservation_id
-            LEFT JOIN caretakers c ON c.resort_id = r.resort_id AND c.status = 'Active'
-            LEFT JOIN accounts a ON a.account_id = c.account_id
-            WHERE r.owner_id = %s
-            GROUP BY r.resort_id, r.resort_name
+            WHERE r.status = 'Active'
             ORDER BY r.resort_name ASC
-            """,
-            (session.get("owner_id"),),
+            """
         )
         resort_stats = cursor.fetchall()
 
@@ -183,6 +203,7 @@ def admin_dashboard():
         return render_template(
             "admin/admin.html",
             username=session.get("fullname"),
+            reservation_reminders=reservation_reminders,
             resorts=my_resorts,
             owner_resorts=owner_resorts,
             assigned_caretakers=assigned_caretakers,
@@ -293,8 +314,10 @@ def create_caretaker_account():
 #this is route for NAVBAR
 
 @app.route("/booking")
+@role_required("owner")
 def booking():
-    return render_template("admin/navbar/booking.html")
+    # Keep the legacy entry point connected to the live reservation workflow.
+    return redirect(url_for("reservation"))
 
 @app.route("/properties", methods=["GET", "POST"])
 @role_required("owner")
@@ -569,84 +592,13 @@ def reports():
 @app.route("/calendar")
 @role_required("owner")
 def calendar():
-    owner_id = session.get("owner_id")
-    if not owner_id:
-        return redirect(url_for("login"))
-
-    today = date.today()
-    try:
-        selected_year = int(request.args.get("year", today.year))
-        selected_month = int(request.args.get("month", today.month))
-        selected_date = date(selected_year, selected_month, 1)
-    except (TypeError, ValueError):
-        selected_date = date(today.year, today.month, 1)
-
-    month_start = selected_date
-    month_end = date(
-        selected_date.year,
-        selected_date.month,
-        calendar_lib.monthrange(selected_date.year, selected_date.month)[1],
-    )
-
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """
-                 SELECT r.reservation_id, r.check_in, r.check_out,
-                     r.reservation_status, res.resort_name,
-                     COALESCE(r.guest_name, a.fullname) AS guest_name
-            FROM reservations r
-            JOIN resorts res ON res.resort_id = r.resort_id
-            JOIN customers c ON c.customer_id = r.customer_id
-            JOIN accounts a ON a.account_id = c.account_id
-                        WHERE r.check_in IS NOT NULL
-              AND r.check_out IS NOT NULL
-                            AND r.check_in <= %s
-                            AND r.check_out >= %s
-                            AND r.reservation_status IN ('Pending', 'Confirmed')
-            ORDER BY r.check_in, res.resort_name
-            """,
-                        (month_end, month_start),
-        )
-        reservations = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-    events_by_date = {}
-    for reservation in reservations:
-        event_start = max(reservation["check_in"], month_start)
-        event_end = min(reservation["check_out"], month_end)
-        event_day = event_start
-        while event_day <= event_end:
-            events_by_date.setdefault(event_day.isoformat(), []).append(reservation)
-            event_day += timedelta(days=1)
-
-    first_weekday, days_in_month = calendar_lib.monthrange(selected_date.year, selected_date.month)
-    calendar_start = month_start - timedelta(days=(first_weekday + 1) % 7)
-    total_cells = ((calendar_start - month_start).days * -1 + days_in_month)
-    total_cells = ((total_cells + 6) // 7) * 7
-    calendar_days = [
-        {
-            "day": calendar_start + timedelta(days=index),
-            "in_month": (calendar_start + timedelta(days=index)).month == selected_month,
-        }
-        for index in range(total_cells)
-    ]
-
-    previous_month = selected_date - timedelta(days=1)
-    next_month = month_end + timedelta(days=1)
-    return render_template(
-        "admin/sidebar/calendar.html",
-        calendar_days=calendar_days,
-        events_by_date=events_by_date,
-        calendar_month=selected_date.strftime("%B %Y"),
-        previous_month=previous_month,
-        next_month=next_month,
-        today=today,
-        username=session.get("fullname", "Owner"),
-    )
+    return redirect(url_for(
+        "reservation",
+        year=request.args.get("year"),
+        month=request.args.get("month"),
+        resort_id=request.args.get("resort_id"),
+        _anchor="calendar",
+    ))
 
 @app.route("/payment")
 def payment():
@@ -747,6 +699,7 @@ def settings():
         if request.method == "POST":
             fullname = request.form.get("fullname", "").strip()
             email = request.form.get("email", "").strip()
+            profile_upload = request.files.get("profile_picture")
             if not fullname or not email:
                 flash("Full name and email are required.", "warning")
                 return redirect(url_for("settings"))
@@ -763,8 +716,24 @@ def settings():
                 "UPDATE accounts SET fullname = %s, email = %s WHERE account_id = %s AND role = 'owner'",
                 (fullname, email, account_id),
             )
+            profile_path = None
+            if profile_upload and profile_upload.filename:
+                try:
+                    profile_path = save_profile_photo(profile_upload)
+                except ValueError as exc:
+                    conn.rollback()
+                    flash(str(exc), "warning")
+                    return redirect(url_for("settings"))
+                ensure_account_profiles_table(cursor)
+                cursor.execute(
+                    "INSERT INTO account_profiles (account_id, profile_photo_path) VALUES (%s, %s) "
+                    "ON DUPLICATE KEY UPDATE profile_photo_path = VALUES(profile_photo_path)",
+                    (account_id, profile_path),
+                )
             conn.commit()
             session["fullname"] = fullname
+            if profile_path:
+                session["profile_photo"] = "/static/" + profile_path
             flash("Account settings updated successfully.", "success")
             return redirect(url_for("settings"))
 
@@ -775,6 +744,15 @@ def settings():
         account = cursor.fetchone()
         if not account:
             return redirect(url_for("login"))
+        ensure_account_profiles_table(cursor)
+        cursor.execute(
+            "SELECT profile_photo_path FROM account_profiles WHERE account_id = %s",
+            (account_id,),
+        )
+        photo = cursor.fetchone()
+        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        if profile_photo:
+            session["profile_photo"] = profile_photo
 
         cursor.execute(
             """
@@ -787,6 +765,8 @@ def settings():
         )
         owner_resorts = cursor.fetchall()
 
+        create_upcoming_reservation_reminders(cursor)
+        conn.commit()
         cursor.execute(
             """
             SELECT title, message, type, is_read, created_at
@@ -834,6 +814,7 @@ def settings():
             notifications=notifications,
             team_members=team_members,
             billing=billing,
+            profile_photo=profile_photo,
             username=account["fullname"],
         )
     finally:
