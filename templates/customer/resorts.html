@@ -1263,6 +1263,7 @@
   const checkOutInput = document.getElementById('co-date');
   const guestCountInput = document.getElementById('guest-count');
   const searchMessage = document.getElementById('searchResultsMessage');
+  const carouselWrap = document.querySelector('.cardrow-wrap');
   const availabilityCache = new Map();
   const earliestCheckIn = new Date();
   earliestCheckIn.setHours(0, 0, 0, 0);
@@ -1299,9 +1300,11 @@
           card.hidden = !(matchesText && Number(resort.maxPax || 0) >= guestCount);
         }
       });
+      const hasVisibleResorts = [...document.querySelectorAll('.rcard')].some(card => !card.hidden);
+      carouselWrap.classList.toggle('no-results', !hasVisibleResorts);
       updateCarouselButtons();
-      searchMessage.hidden = false;
-      searchMessage.textContent = 'Choose a valid check-in and check-out date range to check availability.';
+      searchMessage.hidden = !hasVisibleResorts;
+      if (hasVisibleResorts) searchMessage.textContent = 'Choose a valid check-in and check-out date range to check availability.';
       return;
     }
 
@@ -1334,16 +1337,12 @@
       card.hidden = !(matchesText && matchesCapacity && matchesDates);
       if (!card.hidden) visibleCount++;
     });
-    searchMessage.hidden = visibleCount > 0 && !(checkIn && checkOut);
-    if (visibleCount === 0) {
-      searchMessage.hidden = false;
-      searchMessage.textContent = availabilityFailed
-        ? 'We could not confirm availability for some resorts. Please try again.'
-        : 'No resorts match your search and selected stay dates.';
-    } else if (availabilityFailed) {
+    carouselWrap.classList.toggle('no-results', visibleCount === 0);
+    searchMessage.hidden = visibleCount === 0 || !(checkIn && checkOut);
+    if (visibleCount > 0 && availabilityFailed) {
       searchMessage.hidden = false;
       searchMessage.textContent = 'Some resort availability could not be confirmed, so those resorts are hidden. Please try again.';
-    } else if (checkIn && checkOut) {
+    } else if (visibleCount > 0 && checkIn && checkOut) {
       searchMessage.hidden = false;
       searchMessage.textContent = `${visibleCount} resort${visibleCount === 1 ? '' : 's'} available for your selected dates.`;
     }

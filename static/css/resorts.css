@@ -57,6 +57,10 @@
   }
   .rcard[hidden]{display:none;}
   .search-results-message{padding:12px 4px;color:var(--slate);font-size:13px;}
+  .cardrow-wrap.no-results{height:24px;margin-bottom:22px;}
+  .cardrow-wrap.no-results .cardrow,
+  .cardrow-wrap.no-results .search-results-message,
+  .cardrow-wrap.no-results .scrollbtn{display:none!important;}
   .rcard:hover{box-shadow:0 14px 28px -20px rgba(11,74,48,.45);transform:translateY(-2px);}
   .rcard.selected{border-color:var(--leaf);box-shadow:0 0 0 2px var(--leaf-light);}
   .rcard .thumb{height:130px;position:relative;background:var(--leaf-light);overflow:hidden;}
