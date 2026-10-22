@@ -978,7 +978,34 @@ body {
 }
 
 @media (max-width: 980px) {
-  .app > .sidebar { display: none; }
+  .app > .sidebar {
+    display: flex;
+    position: static;
+    inset: auto;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    max-height: 35dvh;
+    overflow: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    z-index: 10;
+  }
+  .app > .sidebar .brand { flex: 0 0 130px; margin: 0; }
+  .app > .sidebar .nav { display: flex; flex: 1 1 auto; align-items: center; gap: 5px; min-width: 0; overflow-x: auto; }
+  .app > .sidebar .nav-label { display: none; }
+  .app > .sidebar .nav-item { flex: 0 0 auto; min-height: 38px; margin: 0; padding: 8px 10px; font-size: 12px; white-space: nowrap; }
+  .app > .sidebar .logout { flex: 0 0 auto; margin: 0 !important; padding: 8px 10px; border-top: 0; white-space: nowrap; }
   .app > .main { width: 100%; max-width: 100%; margin-left: 0; }
+}
+
+@media (max-width: 560px) {
+  .app > .sidebar { max-height: 30dvh; gap: 8px; padding: 8px 10px; }
+  .app > .sidebar .brand { flex-basis: 92px; }
+  .app > .sidebar .brand img { max-height: 38px; }
+  .app > .sidebar .nav-item { font-size: 11px; padding: 8px; }
 }
 

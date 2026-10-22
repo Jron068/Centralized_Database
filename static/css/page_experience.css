@@ -139,3 +139,79 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .welcome-music-copy { min-width: 80px; }
   .welcome-music-volume { width: 42px; }
 }
+
+/* Shared responsive guardrails for all standalone and authenticated pages. */
+img, video, canvas, iframe { max-width: 100%; }
+input, select, textarea, button { max-width: 100%; }
+table { max-width: 100%; }
+.table-wrap, .table-responsive, .data-table-wrap, .caretaker-table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 1024px) {
+  body > header { gap: 14px; padding: 16px 24px; flex-wrap: wrap; }
+  body > header nav { gap: 20px; flex-wrap: wrap; }
+  .wrap { padding-right: 24px; padding-left: 24px; }
+  .main-row, .content-row { grid-template-columns: minmax(0, 1fr); gap: 18px; padding-right: 24px; padding-left: 24px; }
+  .main-row > .sidebar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .overview-left { gap: 18px; }
+  .perfect-for { margin-right: 24px; margin-left: 24px; grid-template-columns: 1fr; gap: 18px; }
+  .pf-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cta { margin-right: 24px; margin-left: 24px; }
+  .stat-cards, .chart-grid, .resort-stat-grid, .my-resort-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 800px) {
+  body > header { align-items: center; padding: 14px 18px; }
+  body > header nav { order: 3; width: 100%; flex-wrap: nowrap; gap: 22px; overflow-x: auto; padding: 4px 0; }
+  body > header nav a { flex: 0 0 auto; white-space: nowrap; }
+  body > header .auth-buttons { margin-left: auto; }
+  .main-row, .content-row { padding-right: 18px; padding-left: 18px; }
+  .main-row > .sidebar { grid-template-columns: 1fr; }
+  .overview-left { grid-template-columns: 1fr; }
+  .tabs { gap: 22px; padding: 22px 18px 0; overflow-x: auto; white-space: nowrap; }
+  .perfect-for { margin-right: 18px; margin-left: 18px; padding: 20px; }
+  .cta { margin-right: 18px; margin-left: 18px; padding: 22px; gap: 18px; }
+
+  /* Keep the staff navigation reachable without consuming a narrow screen. */
+  body:has(> .app > .sidebar) > .app > .sidebar,
+  body:has(> .sidebar.sidebar-nav) > .sidebar,
+  body:has(> .sidebar .sidebar-nav) > .sidebar {
+    position: static; top: auto; width: 100%; height: auto; min-height: 0;
+  }
+  body:has(> .app > .sidebar) > .app { display: block; }
+}
+
+@media (max-width: 600px) {
+  body > header { padding: 12px 14px; }
+  body > header .logo img { width: min(180px, 52vw); }
+  body > header .auth-buttons { gap: 6px; }
+  body > header .auth-buttons .btn-outline { padding: 7px 11px; font-size: 12px; }
+  .wrap { padding: 18px 14px; }
+  .main-row, .content-row { padding: 18px 14px; }
+  .hero { min-height: 340px; padding: 24px; }
+  .hero h2 { font-size: clamp(30px, 9vw, 42px); }
+  .hero p { max-width: 100%; }
+  .facts-bar { flex-wrap: wrap; gap: 14px; margin-top: -18px; }
+  .fact { flex: 1 1 40%; }
+  .tabs { gap: 18px; padding: 18px 14px 0; font-size: 13px; }
+  .photo-grid { height: auto; min-height: 280px; }
+  .perfect-for { margin: 0 14px; padding: 18px; }
+  .perfect-for h3 { white-space: normal; }
+  .pf-cards { grid-template-columns: 1fr; }
+  .cta { margin: 20px 14px 28px; align-items: flex-start; flex-direction: column; padding: 18px; }
+  .cta-left { align-items: flex-start; }
+  .btn-cta { width: 100%; }
+  .card-row, .page-header, .header-actions { flex-wrap: wrap; }
+  .grid-2, .grid-3, .grid-4, .form-cols, .form-grid { grid-template-columns: 1fr !important; }
+  .toolbar { align-items: stretch; }
+  .toolbar > *, .toolbar .search-input, .toolbar .select-input { min-width: 0; width: 100%; }
+  .modal, .modal-content { width: calc(100vw - 24px); max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
+  .action-group { flex-wrap: wrap; }
+  .stat-cards, .chart-grid, .resort-stat-grid, .my-resort-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 380px) {
+  body > header .logo-text span { display: none; }
+  .hero { min-height: 300px; padding: 18px; }
+  .main-row, .content-row { padding-right: 10px; padding-left: 10px; }
+  .stat-row, .ops-metrics { grid-template-columns: 1fr !important; }
+}
