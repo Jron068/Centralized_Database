@@ -4,6 +4,7 @@ from flask import render_template, request, redirect, url_for, session
 from app import app
 from config import get_connection
 from models.decorators import role_required
+from models.notifications import notify_resort_caretakers
 
 
 @app.route('/admin/payments')
@@ -83,6 +84,15 @@ def verify_payment(payment_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        cursor.execute("""
+            SELECT r.resort_id, r.reservation_id, r.check_in, r.check_out
+            FROM payments p JOIN reservations r ON r.reservation_id = p.reservation_id
+            WHERE p.payment_id = %s
+            FOR UPDATE
+        """, (payment_id,))
+        booking = cursor.fetchone()
+        if not booking:
+            return redirect(url_for('admin_payments'))
         cursor.execute(
             """
             UPDATE payments p
@@ -101,6 +111,19 @@ def verify_payment(payment_id):
                 SET r.reservation_status = 'Confirmed'
                 WHERE p.payment_id = %s
             """, (payment_id,))
+            notify_resort_caretakers(
+                cursor,
+                booking["resort_id"],
+                "Reservation approved by the owner",
+                f"The owner approved reservation #RSV-{booking['reservation_id']} ({booking['check_in']} to {booking['check_out']}).",
+                "reservation_owner_approved",
+            )
+            cursor.execute("""
+                INSERT INTO notifications (account_id, title, message, type)
+                SELECT c.account_id, 'Reservation approved', %s, 'reservation_approved'
+                FROM reservations r JOIN customers c ON c.customer_id = r.customer_id
+                WHERE r.reservation_id = %s
+            """, (f"Your reservation #RSV-{booking['reservation_id']} has been approved by the owner.", booking["reservation_id"]))
         conn.commit()
         return redirect(url_for('admin_payments'))
     finally:

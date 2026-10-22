@@ -15,6 +15,11 @@
   .proof-thumb { width:52px; height:38px; object-fit:cover; border-radius:6px; }
   .live { font-size:12px; opacity:.65; margin-left:8px; font-weight:400; }
   .modal { max-height:90vh; overflow-y:auto; }
+  .walkin-modal-header { position:sticky; top:-24px; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:16px; margin:-24px -24px 16px; padding:17px 18px 12px 24px; background:#fff; border-bottom:1px solid #edf1ee; }
+  .walkin-modal-header h3 { font-size:17px; margin:0; }
+  .walkin-modal-close { display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; border:0; border-radius:50%; background:#eef4f0; color:#244a35; font-size:25px; line-height:1; cursor:pointer; }
+  .walkin-modal-close:hover { background:#dcebe1; }
+  .walkin-modal-close:focus-visible { outline:2px solid #24734d; outline-offset:2px; }
   .customer-results { position:absolute; left:0; right:0; background:#fff; border:1px solid #d5ddd7; border-radius:8px; z-index:5; display:none; box-shadow:0 6px 16px rgba(0,0,0,.08); }
   .customer-results div { padding:9px 12px; cursor:pointer; } .customer-results div:hover { background:#eef3ef; }
   .customer-results small { opacity:.65; }
@@ -37,7 +42,6 @@
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}">Updates</a>
       <a href="{{ url_for('caretaker_reports') }}">Reports</a>
-      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
       <button class="icon-btn" onclick="location.href='{{ url_for('caretaker_notifications') }}'">🔔<span class="badge-dot"></span></button>
@@ -110,7 +114,10 @@
 <!-- Walk-in booking modal -->
 <div class="modal-overlay" id="walkinModal">
   <div class="modal">
-    <h3>Add Walk-in Guest</h3>
+    <div class="walkin-modal-header">
+      <h3>Add Walk-in Guest</h3>
+      <button type="button" class="walkin-modal-close" aria-label="Close walk-in guest form" title="Close" onclick="document.getElementById('walkinModal').classList.remove('open')">&times;</button>
+    </div>
     <form method="post" action="{{ url_for('caretaker_walkin') }}" enctype="multipart/form-data" id="walkinForm">
       <input type="hidden" name="next" value="guests">
       <div class="form-group">
@@ -239,6 +246,10 @@
   const ci = $('check_in'), co = $('check_out');
   ci.min = today; co.min = today;
   ci.addEventListener('change', () => { co.min = ci.value || today; });
+  if (new URLSearchParams(window.location.search).get('open_walkin') === '1') {
+    document.getElementById('walkinModal').classList.add('open');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
   const proofInput = $('proof'), preview = $('proofPreview'), MAX_BYTES = 5 * 1024 * 1024;
   proofInput.addEventListener('change', () => {

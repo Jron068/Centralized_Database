@@ -49,34 +49,34 @@
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <input type="text" placeholder="Search resort name or location..." value="{{ search_query }}">
+              <input type="search" id="resortQuery" placeholder="Search resort name or location..." value="{{ search_query }}" aria-label="Search resort name or location">
             </div>
             <div class="sfield">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="5" width="18" height="16" rx="2" />
                 <path d="M8 3v4M16 3v4M3 10h18" />
               </svg>
-              <input type="text" placeholder="Check-in">
+              <input type="date" id="ci-date" aria-label="Check-in date">
             </div>
             <div class="sfield">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="5" width="18" height="16" rx="2" />
                 <path d="M8 3v4M16 3v4M3 10h18" />
               </svg>
-              <input type="text" placeholder="Check-out">
+              <input type="date" id="co-date" aria-label="Check-out date">
             </div>
             <div class="sfield">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
               </svg>
-              <select>
-                <option> 2 Guests </option>
-                <option> 4 Guests </option>
-                <option> 6+ Guests </option>
+              <select id="guest-count" aria-label="Number of guests">
+                <option value="2">2 Guests</option>
+                <option value="4">4 Guests</option>
+                <option value="6">6+ Guests</option>
               </select>
             </div>
-            <button class="searchbtn">
+            <button class="searchbtn" id="searchResortsBtn" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
@@ -89,6 +89,7 @@
               </svg>
             </button>
             <div class="cardrow" id="cardRow"></div>
+            <p class="search-results-message" id="searchResultsMessage" hidden></p>
             <button class="scrollbtn right" id="scrollRightBtn" type="button" aria-label="Next resorts">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
                 <path d="M9 6l6 6-6 6" />
@@ -260,14 +261,30 @@
           <div class="revsection">
             <div class="revsection-head">
               <h3> What Guests Are Saying </h3>
-              <button class="writebtn"> Write a Review </button>
+              <button class="writebtn" id="writeReviewBtn" type="button" disabled> Write a Review </button>
             </div>
+            <p class="review-eligibility" id="reviewEligibility">Reviews are available to customers after a confirmed stay is complete.</p>
             <div class="revgrid" id="revGrid"></div>
             <button class="ghostbtn" id="viewAllRevBtn"> View All Reviews </button>
           </div>
         </div> {% endblock %}
       </div>
     </div>
+
+    <dialog class="review-dialog" id="reviewDialog" aria-labelledby="reviewDialogTitle">
+      <form id="reviewForm">
+        <div class="review-dialog-head">
+          <div><span class="review-eyebrow">YOUR STAY</span><h2 id="reviewDialogTitle">Share your experience</h2><p id="reviewResortName"></p></div>
+          <button class="review-close" type="button" id="closeReviewDialog" aria-label="Close review form">&times;</button>
+        </div>
+        <label class="review-rating-label" for="reviewRating">Your rating</label>
+        <div class="review-rating-control"><input id="reviewRating" type="range" min="1" max="5" step="1" value="5"><output id="reviewRatingValue" for="reviewRating">5 out of 5 — Excellent</output></div>
+        <label class="review-comment-label" for="reviewComment">Your comments</label>
+        <textarea id="reviewComment" maxlength="2000" rows="5" placeholder="What did you enjoy? Is there anything future guests should know?" required></textarea>
+        <div class="review-form-footer"><span><span id="reviewCommentLength">0</span>/2000</span><div><button class="review-cancel" type="button" id="cancelReview">Cancel</button><button class="review-submit" type="submit" id="submitReview">Submit review</button></div></div>
+        <p class="review-form-error" id="reviewFormError" role="alert" hidden></p>
+      </form>
+    </dialog>
 
 <script>
 
@@ -809,25 +826,25 @@
       tags: ["Family Friendly"], amenities: [], amenitiesFull: []
     },
     "Lucky Miels Resort": {
-      variant: "villa", price: 1200, rating: 4.6, reviews: 128, satisfaction: 92, maxPax: 15,
+      variant: "villa", price: 1200, rating: 0, reviews: 0, satisfaction: 0, maxPax: 15,
       tags: ["Family Friendly", "Pet Friendly", "Great for Groups"],
       amenities: [{n:"Swimming Pool",icon:"pool"},{n:"Free WiFi",icon:"wifi"},{n:"Parking",icon:"park"},{n:"Karaoke",icon:"mic"}],
       amenitiesFull: [{n:"Private hot spring pool",d:"In every villa",icon:"pool"},{n:"Free WiFi",d:"Common areas & villas",icon:"wifi"},{n:"Covered parking",d:"12 slots",icon:"park"},{n:"Karaoke rooms",d:"Hourly rental",icon:"mic"}]
     },
     "Magic Kingdom Resort": {
-      variant: "waterpark", price: 1500, rating: 4.5, reviews: 95, satisfaction: 90, maxPax: 20,
+      variant: "waterpark", price: 1500, rating: 0, reviews: 0, satisfaction: 0, maxPax: 20,
       tags: ["Waterpark", "Family Friendly", "Great for Groups"],
       amenities: [{n:"Waterpark",icon:"slide"},{n:"Lazy River",icon:"river"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Restaurant",icon:"restaurant"},{n:"Pool",icon:"pool"}],
       amenitiesFull: [{n:"Waterpark & slides",d:"3 slides, lifeguard on duty",icon:"slide"},{n:"Lazy river",d:"350m loop",icon:"river"},{n:"Hot spring pools",d:"Separate from waterpark",icon:"pool"},{n:"Restaurant",d:"Filipino & grill menu",icon:"restaurant"},{n:"Function hall",d:"Seats up to 120",icon:"hall"},{n:"Open parking",d:"30 slots",icon:"park"}]
     },
     "Sunscape Resort": {
-      variant: "family", price: 1300, rating: 4.7, reviews: 142, satisfaction: 87, maxPax: 18,
+      variant: "family", price: 1300, rating: 0, reviews: 0, satisfaction: 0, maxPax: 18,
       tags: ["Family Friendly", "Great for Groups"],
       amenities: [{n:"3 Pools",icon:"pool"},{n:"Karaoke",icon:"mic"},{n:"Parking",icon:"park"},{n:"Function Hall",icon:"hall"},{n:"Cottage",icon:"cottage"},{n:"WiFi",icon:"wifi"}],
       amenitiesFull: [{n:"3 shared hot spring pools",d:"Adult, family, kiddie",icon:"pool"},{n:"Function hall",d:"Air-conditioned, 80 pax",icon:"hall"},{n:"Karaoke rooms",d:"2 available, hourly",icon:"mic"},{n:"Open parking",d:"20 slots",icon:"park"},{n:"Cottages",d:"8 nipa cottages",icon:"cottage"},{n:"Free WiFi",d:"Common areas",icon:"wifi"}]
     },
     "Triple Z Resort": {
-      variant: "cottage", price: 1100, rating: 4.4, reviews: 76, satisfaction: 79, maxPax: 12,
+      variant: "cottage", price: 1100, rating: 0, reviews: 0, satisfaction: 0, maxPax: 12,
       tags: ["Budget Friendly", "Pet Friendly"],
       amenities: [{n:"Pool",icon:"pool"},{n:"Cottage",icon:"cottage"},{n:"Parking",icon:"park"},{n:"Store",icon:"store"},{n:"Karaoke",icon:"mic"},{n:"BBQ Pit",icon:"bbq"}],
       amenitiesFull: [{n:"Shared hot spring pool",d:"Open 6am–10pm",icon:"pool"},{n:"Nipa cottages",d:"6 units",icon:"cottage"},{n:"Open parking",d:"8 slots",icon:"park"},{n:"Sari-sari store",d:"On-site",icon:"store"},{n:"Videoke rental",d:"Per hour",icon:"mic"},{n:"BBQ pit",d:"Shared, first-come",icon:"bbq"}]
@@ -862,8 +879,8 @@
         ? Number(dbResort.price) : (defaults.price || 0),
       maxPax: dbResort.max_pax !== null && dbResort.max_pax !== undefined && dbResort.max_pax !== ''
         ? Number(dbResort.max_pax) : (defaults.maxPax || 15),
-      rating: defaults.rating || 0,
-      reviews: defaults.reviews || 0,
+      rating: 0,
+      reviews: 0,
       satisfaction: defaults.satisfaction || 0,
       tags: defaults.tags || [],
       amenities: defaults.amenities || [],
@@ -897,7 +914,7 @@
         <div class="body">
           <div class="rc-top">
             <b>${r.name}</b>
-            <div class="rc-rate">${ic.star} ${r.rating} <span>(${r.reviews})</span></div>
+            <div class="rc-rate">${ic.star} ${r.reviews ? Number(r.rating).toFixed(1) : '—'} <span>(${r.reviews})</span></div>
           </div>
           <div class="rc-loc">${ic.pin} ${r.location}</div>
           <div class="rc-hours">
@@ -910,6 +927,9 @@
       </div>
     `).join('');
     updateCarouselButtons();
+    if (queryInput.value || checkInInput.value || checkOutInput.value || Number(guestCountInput.value) !== 2) {
+      applyResortFilters();
+    }
   }
 
   async function toggleFav(id, fromHero = false) {
@@ -959,7 +979,7 @@
     document.getElementById('heroHeart').classList.toggle('active', favs.has(r.id));
     document.getElementById('d-name').textContent = r.name;
     document.getElementById('d-loc').innerHTML = `${ic.pin} ${r.location}`;
-    document.getElementById('d-rate').innerHTML = `${ic.star} ${r.rating} <span>(${r.reviews} reviews)</span>`;
+    document.getElementById('d-rate').innerHTML = `${ic.star} ${r.reviews ? Number(r.rating).toFixed(1) : 'No reviews yet'} <span>(${r.reviews} reviews)</span>`;
     document.getElementById('d-price').innerHTML = r.price
       ? `${peso(r.price)} <span style="font-weight:500;font-size:13px;color:#6b7674;">fixed · includes ${r.maxPax} pax · +${peso(EXTRA_PAX_PRICE)}/extra head</span>`
       : `<span style="font-weight:500;font-size:13px;color:#9a2f2f;">Price not set</span>`;
@@ -986,24 +1006,134 @@
     document.getElementById('loc-addr').textContent = r.address;
     document.getElementById('nearby').innerHTML = r.nearby.map(n => `<div class="nearitem">${n[0]} <span>${n[1]}</span></div>`).join('');
     document.getElementById('bigMap').innerHTML = bigMap(r);
-    document.getElementById('rv-avg').textContent = Number(r.rating).toFixed(1);
-    document.getElementById('rv-stars').innerHTML = stars(r.rating);
-    document.getElementById('rv-count').textContent = `Based on ${r.reviews} verified stays`;
-    document.getElementById('rv-bars').innerHTML = r.ratingBreak.map((pct, i) => `
-      <div class="barrow"><span class="lbl">${5 - i} star</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>
-    `).join('');
-    document.getElementById('tab-revcount').textContent = `(${r.reviews})`;
-    document.getElementById('revGrid').innerHTML = r.revList.map(rv => `
-      <div class="revcard2">
-        <div class="rev-head2"><div class="rev-ava2">${rv.n.split(' ').map(x => x[0]).join('')}</div><div><b>${rv.n}</b><span>${rv.d}</span></div></div>
-        <div class="rev-rating"><div class="stars">${stars(rv.r)}</div><b>${rv.r.toFixed(1)}</b></div>
-        <p>${rv.t}</p>
-        <div class="revphotos">${[5, 55, 105].map(a => `<div>${scene(r.variant, a)}</div>`).join('')}</div>
-      </div>
-    `).join('');
-    document.getElementById('viewAllRevBtn').textContent = `View All ${r.reviews} Reviews`;
+    renderReviewData(r, null);
+    loadReviews(r);
     showTab('overview');
   }
+
+  function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+
+  function renderReviewData(resort, data) {
+    const ratings = data?.distribution || [0, 0, 0, 0, 0];
+    const count = data?.count || 0;
+    resort.rating = data?.average || 0;
+    resort.reviews = count;
+    document.getElementById('d-rate').innerHTML = `${ic.star} ${count ? Number(resort.rating).toFixed(1) : 'No reviews yet'} <span>(${count} reviews)</span>`;
+    document.getElementById('rv-avg').textContent = count ? Number(resort.rating).toFixed(1) : '—';
+    document.getElementById('rv-stars').innerHTML = count ? stars(resort.rating) : '';
+    document.getElementById('rv-count').textContent = count ? `Based on ${count} verified guest reviews` : 'No guest reviews yet';
+    document.getElementById('rv-bars').innerHTML = ratings.map((amount, index) => {
+      const pct = count ? Math.round(amount / count * 100) : 0;
+      return `<div class="barrow"><span class="lbl">${5 - index} star</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>`;
+    }).join('');
+    document.getElementById('tab-revcount').textContent = `(${count})`;
+    const reviews = data?.reviews || [];
+    document.getElementById('revGrid').innerHTML = reviews.length ? reviews.slice(0, resort.showAllReviews ? reviews.length : 3).map(review => {
+      const name = escapeHTML(review.name || 'Guest');
+      const initial = escapeHTML((review.name || 'G').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2));
+      const rating = Number(review.rating) || 0;
+      return `<article class="revcard2"><div class="rev-head2"><div class="rev-ava2">${initial}</div><div><b>${name}</b><span>${escapeHTML(review.date)}</span></div></div><div class="rev-rating"><div class="stars">${stars(rating)}</div><b>${rating.toFixed(1)}</b></div><p>${escapeHTML(review.comment)}</p></article>`;
+    }).join('') : '<p class="reviews-empty">No reviews yet. Be the first guest to share your experience after your stay.</p>';
+    document.getElementById('viewAllRevBtn').hidden = reviews.length <= 3;
+    document.getElementById('viewAllRevBtn').textContent = resort.showAllReviews ? 'Show Fewer Reviews' : `View All ${count} Reviews`;
+    const writeButton = document.getElementById('writeReviewBtn');
+    writeButton.disabled = !data?.can_review;
+    writeButton.title = data?.can_review ? 'Share your experience from your completed stay' : 'Available to customers with a completed stay who have not reviewed this resort';
+    document.getElementById('reviewEligibility').textContent = data?.can_review
+      ? 'Your completed stay is verified. You can write one review for this resort.'
+      : 'Only customers with a confirmed stay that has ended can review this resort. Each customer can submit one review per resort.';
+    if (document.getElementById('cardRow')) renderCards();
+  }
+
+  async function loadReviews(resort) {
+    const button = document.getElementById('writeReviewBtn');
+    button.disabled = true;
+    try {
+      const response = await fetch(`/resort_reviews/${resort.id}`, { headers: { 'Accept': 'application/json' } });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || 'Could not load reviews.');
+      resort.reviewData = data;
+      if (currentId === resort.id) renderReviewData(resort, data);
+    } catch (error) {
+      if (currentId === resort.id) {
+        document.getElementById('rv-count').textContent = 'Reviews are temporarily unavailable';
+        document.getElementById('writeReviewBtn').disabled = true;
+      }
+    }
+  }
+
+  document.getElementById('viewAllRevBtn').addEventListener('click', () => {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort) return;
+    resort.showAllReviews = !resort.showAllReviews;
+    renderReviewData(resort, resort.reviewData);
+  });
+
+  const reviewDialog = document.getElementById('reviewDialog');
+  const reviewRating = document.getElementById('reviewRating');
+  const reviewRatingValue = document.getElementById('reviewRatingValue');
+  const reviewComment = document.getElementById('reviewComment');
+  const ratingDescriptions = {1:'Needs improvement',2:'Fair',3:'Good',4:'Very good',5:'Excellent'};
+  function updateReviewRating() {
+    const score = Number(reviewRating.value);
+    reviewRatingValue.textContent = `${score} out of 5 — ${ratingDescriptions[score]}`;
+    reviewRating.style.setProperty('--rating-progress', `${(score - 1) * 25}%`);
+  }
+  function closeReviewDialog() {
+    if (reviewDialog.open) reviewDialog.close();
+    document.getElementById('reviewFormError').hidden = true;
+  }
+  document.getElementById('writeReviewBtn').addEventListener('click', () => {
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort?.reviewData?.can_review) return;
+    document.getElementById('reviewResortName').textContent = resort.name;
+    document.getElementById('reviewForm').reset();
+    reviewRating.value = '5';
+    reviewComment.value = '';
+    document.getElementById('reviewCommentLength').textContent = '0';
+    updateReviewRating();
+    reviewDialog.showModal();
+    reviewComment.focus();
+  });
+  reviewRating.addEventListener('input', updateReviewRating);
+  reviewComment.addEventListener('input', () => {
+    document.getElementById('reviewCommentLength').textContent = reviewComment.value.length;
+  });
+  document.getElementById('closeReviewDialog').addEventListener('click', closeReviewDialog);
+  document.getElementById('cancelReview').addEventListener('click', closeReviewDialog);
+  reviewDialog.addEventListener('click', event => {
+    if (event.target === reviewDialog) closeReviewDialog();
+  });
+  document.getElementById('reviewForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const resort = resorts.find(item => item.id === currentId);
+    if (!resort?.reviewData?.can_review) return closeReviewDialog();
+    const submit = document.getElementById('submitReview');
+    const errorBox = document.getElementById('reviewFormError');
+    submit.disabled = true;
+    submit.textContent = 'Submitting…';
+    errorBox.hidden = true;
+    try {
+      const response = await fetch(`/resort_reviews/${resort.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ rating: Number(reviewRating.value), comment: reviewComment.value.trim() })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || 'Could not submit your review.');
+      resort.showAllReviews = false;
+      closeReviewDialog();
+      await loadReviews(resort);
+    } catch (error) {
+      errorBox.textContent = error.message || 'Could not submit your review. Please try again.';
+      errorBox.hidden = false;
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Submit review';
+    }
+  });
 
   async function loadAvailabilityDates(resort) {
     let bookedDates = new Set();
@@ -1128,92 +1258,105 @@
     }
   }, { passive: false });
 
-  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const DOW_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  const stayDates = { ci: new Date(2026, 4, 28), co: new Date(2026, 4, 29) };
-  const dpView = { ci: new Date(2026, 4, 1), co: new Date(2026, 4, 1) };
-  let activeDatePicker = null;
-
-  function fmtDate(d) { return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
-  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
-
-  function openDatePicker(which, evt) {
-    evt.stopPropagation();
-    if (activeDatePicker === which) { closeDatePicker(); return; }
-    closeDatePicker();
-    activeDatePicker = which;
-    dpView[which] = new Date(stayDates[which].getFullYear(), stayDates[which].getMonth(), 1);
-    document.getElementById(which + '-pop').classList.add('open');
-    renderDatePicker(which);
-  }
-  function closeDatePicker() {
-    if (!activeDatePicker) return;
-    document.getElementById(activeDatePicker + '-pop').classList.remove('open');
-    activeDatePicker = null;
-  }
-  document.addEventListener('click', (e) => {
-    if (!activeDatePicker) return;
-    const pop = document.getElementById(activeDatePicker + '-pop');
-    if (pop && !pop.contains(e.target)) closeDatePicker();
+  const queryInput = document.getElementById('resortQuery');
+  const checkInInput = document.getElementById('ci-date');
+  const checkOutInput = document.getElementById('co-date');
+  const guestCountInput = document.getElementById('guest-count');
+  const searchMessage = document.getElementById('searchResultsMessage');
+  const availabilityCache = new Map();
+  const earliestCheckIn = new Date();
+  earliestCheckIn.setHours(0, 0, 0, 0);
+  earliestCheckIn.setDate(earliestCheckIn.getDate() + 3);
+  const todayText = `${earliestCheckIn.getFullYear()}-${String(earliestCheckIn.getMonth() + 1).padStart(2, '0')}-${String(earliestCheckIn.getDate()).padStart(2, '0')}`;
+  checkInInput.min = todayText;
+  checkOutInput.min = todayText;
+  checkInInput.addEventListener('change', () => {
+    checkOutInput.min = checkInInput.value || todayText;
+    if (checkOutInput.value && checkOutInput.value <= checkInInput.value) checkOutInput.value = '';
   });
-  function shiftDpMonth(which, dir, evt) {
-    evt.stopPropagation();
-    dpView[which].setMonth(dpView[which].getMonth() + dir);
-    renderDatePicker(which);
+  let searchRequestId = 0;
+  async function bookedDatesFor(resort) {
+    const cached = availabilityCache.get(resort.id);
+    if (cached && Date.now() - cached.fetchedAt < 15000) return cached.dates;
+    const response = await fetch(`/resort_availability/${resort.id}`, { headers: { 'Accept': 'application/json' } });
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data.booked_dates)) throw new Error('Availability could not be checked.');
+    const dates = new Set(data.booked_dates);
+    availabilityCache.set(resort.id, { dates, fetchedAt: Date.now() });
+    return dates;
   }
-  function renderDatePicker(which) {
-    const pop = document.getElementById(which + '-pop');
-    const view = dpView[which];
-    const year = view.getFullYear();
-    const month = view.getMonth();
-    const firstDow = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const minDate = which === 'co' ? stayDates.ci : today;
-    let cells = '';
-    for (let i = 0; i < firstDow; i++) cells += `<div class="dp-day muted"></div>`;
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cellDate = new Date(year, month, day);
-      const isDisabled = cellDate < minDate;
-      const isSelected = sameDay(cellDate, stayDates[which]);
-      const isToday = sameDay(cellDate, today);
-      const classes = ['dp-day', isDisabled ? 'disabled' : '', isSelected ? 'selected' : '', (isToday && !isSelected) ? 'today' : ''].filter(Boolean).join(' ');
-      cells += `<div class="${classes}" ${isDisabled ? '' : `onclick="pickDate('${which}', ${year}, ${month}, ${day}, event)"`}>${day}</div>`;
-    }
-    pop.innerHTML = `
-      <div class="dp-head"><b>${MONTH_NAMES[month]} ${year}</b><div class="dp-nav"><button onclick="shiftDpMonth('${which}', -1, event)">‹</button><button onclick="shiftDpMonth('${which}', 1, event)">›</button></div></div>
-      <div class="dp-grid">${DOW_NAMES.map(d => `<div class="dp-dow">${d}</div>`).join('')}${cells}</div>
-    `;
-  }
-  function pickDate(which, year, month, day, evt) {
-    evt.stopPropagation();
-    const chosen = new Date(year, month, day);
-    stayDates[which] = chosen;
-    document.getElementById(which + '-date').textContent = fmtDate(chosen);
-    if (which === 'ci' && stayDates.co <= chosen) {
-      const nextDay = new Date(chosen);
-      nextDay.setDate(chosen.getDate() + 1);
-      stayDates.co = nextDay;
-      document.getElementById('co-date').textContent = fmtDate(nextDay);
-    }
-    closeDatePicker();
-  }
-
-  const searchInput = document.querySelector('.searchrow input[type="text"]');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      const keyword = this.value.toLowerCase().trim();
-      document.querySelectorAll('.rcard').forEach(card => {
-        const text = card.textContent.toLowerCase();
-        card.style.display = text.includes(keyword) ? '' : 'none';
+  async function applyResortFilters() {
+    const requestId = ++searchRequestId;
+    const query = queryInput.value.trim().toLocaleLowerCase();
+    const checkIn = checkInInput.value;
+    const checkOut = checkOutInput.value;
+    const guestCount = Number(guestCountInput.value || 1);
+    if ((checkIn && !checkOut) || (!checkIn && checkOut) || (checkIn && checkOut <= checkIn)) {
+      resorts.forEach(resort => {
+        const card = [...document.querySelectorAll('.rcard')].find(item => item.getAttribute('onclick')?.includes(`'${resort.id}'`));
+        if (card) {
+          const matchesText = !query || `${resort.name} ${resort.location} ${resort.desc} ${resort.tags.join(' ')}`.toLocaleLowerCase().includes(query);
+          card.hidden = !(matchesText && Number(resort.maxPax || 0) >= guestCount);
+        }
       });
-      setTimeout(updateCarouselButtons, 50);
+      updateCarouselButtons();
+      searchMessage.hidden = false;
+      searchMessage.textContent = 'Choose a valid check-in and check-out date range to check availability.';
+      return;
+    }
+
+    searchMessage.hidden = !(checkIn && checkOut);
+    if (checkIn && checkOut) searchMessage.textContent = 'Checking dates for each resort…';
+    let available = new Set();
+    let availabilityFailed = false;
+    if (checkIn && checkOut) {
+      const results = await Promise.all(resorts.map(async resort => {
+        try {
+          const bookedDates = await bookedDatesFor(resort);
+          const hasConflict = [...bookedDates].some(day => day >= checkIn && day < checkOut);
+          return { id: resort.id, available: !hasConflict };
+        } catch (error) {
+          availabilityFailed = true;
+          return { id: resort.id, available: false };
+        }
+      }));
+      if (requestId !== searchRequestId) return;
+      available = new Set(results.filter(item => item.available).map(item => item.id));
+    }
+
+    let visibleCount = 0;
+    resorts.forEach(resort => {
+      const card = [...document.querySelectorAll('.rcard')].find(item => item.getAttribute('onclick')?.includes(`'${resort.id}'`));
+      if (!card) return;
+      const matchesText = !query || `${resort.name} ${resort.location} ${resort.desc} ${resort.tags.join(' ')}`.toLocaleLowerCase().includes(query);
+      const matchesCapacity = Number(resort.maxPax || 0) >= guestCount;
+      const matchesDates = !(checkIn && checkOut) || available.has(resort.id);
+      card.hidden = !(matchesText && matchesCapacity && matchesDates);
+      if (!card.hidden) visibleCount++;
     });
+    searchMessage.hidden = visibleCount > 0 && !(checkIn && checkOut);
+    if (visibleCount === 0) {
+      searchMessage.hidden = false;
+      searchMessage.textContent = availabilityFailed
+        ? 'We could not confirm availability for some resorts. Please try again.'
+        : 'No resorts match your search and selected stay dates.';
+    } else if (availabilityFailed) {
+      searchMessage.hidden = false;
+      searchMessage.textContent = 'Some resort availability could not be confirmed, so those resorts are hidden. Please try again.';
+    } else if (checkIn && checkOut) {
+      searchMessage.hidden = false;
+      searchMessage.textContent = `${visibleCount} resort${visibleCount === 1 ? '' : 's'} available for your selected dates.`;
+    }
+    updateCarouselButtons();
   }
+  document.getElementById('searchResortsBtn').addEventListener('click', applyResortFilters);
+  queryInput.addEventListener('input', applyResortFilters);
+  guestCountInput.addEventListener('change', applyResortFilters);
+  checkInInput.addEventListener('change', () => { if (checkOutInput.value) applyResortFilters(); });
+  checkOutInput.addEventListener('change', () => { if (checkInInput.value) applyResortFilters(); });
 
   renderCards();
-  if (searchInput && searchInput.value.trim()) searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+  if (queryInput && queryInput.value.trim()) applyResortFilters();
   renderDetail();
   updateCarouselButtons();
   window.addEventListener('resize', () => updateCarouselButtons());

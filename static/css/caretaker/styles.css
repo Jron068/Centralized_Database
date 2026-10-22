@@ -754,6 +754,7 @@ tbody tr:hover {
   padding: 14px 6px;
   border-bottom: 1px solid var(--border-color);
 }
+.notif-item.unread { border-left:3px solid #2f855a;background:#f2f8f4;padding-left:12px; }
 
 .notif-icon {
   width: 34px;

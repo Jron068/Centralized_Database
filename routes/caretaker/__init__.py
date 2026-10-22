@@ -714,7 +714,21 @@ def _reservation_overview(cursor, account_id):
 @app.route("/caretaker/inventory")
 @role_required("caretaker")
 def caretaker_inventory():
-    return redirect(url_for("caretaker_guests"))
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        resort = _walkin_resort(cursor)
+        if not resort:
+            return redirect(url_for("login"))
+        return render_template(
+            "caretaker/caretaker_inventory.html",
+            fullname=session.get("fullname", "Caretaker"),
+            resort=resort,
+            data=_reservation_overview(cursor, session.get("account_id")),
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/caretaker/inventory/data")
@@ -856,40 +870,6 @@ def caretaker_maintenance_data():
         conn.close()
 
 
-@app.route("/caretaker/messages")
-@role_required("caretaker")
-def caretaker_messages():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        resort = _walkin_resort(cursor)
-        if not resort:
-            return redirect(url_for("login"))
-        account_id = session.get("account_id")
-        cursor.execute("""
-            SELECT m.message_id, m.sender_account, m.receiver_account, m.message,
-                   m.is_read, m.sent_at,
-                   sender.fullname AS sender_name,
-                   receiver.fullname AS receiver_name,
-                   CASE WHEN m.sender_account = %s THEN 1 ELSE 0 END AS sent_by_me
-            FROM messages m
-            LEFT JOIN accounts sender ON sender.account_id = m.sender_account
-            LEFT JOIN accounts receiver ON receiver.account_id = m.receiver_account
-            WHERE m.sender_account = %s OR m.receiver_account = %s
-            ORDER BY m.sent_at DESC, m.message_id DESC
-            LIMIT 100
-        """, (account_id, account_id, account_id))
-        messages = cursor.fetchall()
-        return render_template(
-            "caretaker/caretaker_messages.html",
-            fullname=session.get("fullname", "Caretaker"),
-            resort=resort,
-            messages=messages,
-        )
-    finally:
-        cursor.close()
-        conn.close()
-
 @app.route("/caretaker/notifications")
 @role_required("caretaker")
 def caretaker_notifications():
@@ -917,6 +897,27 @@ def caretaker_notifications():
     finally:
         cursor.close()
         conn.close()
+
+
+@app.route("/caretaker/notifications/read-all", methods=["POST"])
+@role_required("caretaker")
+def caretaker_mark_notifications_read():
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE notifications SET is_read = 1 WHERE account_id = %s AND is_read = 0",
+            (session.get("account_id"),),
+        )
+        conn.commit()
+        flash("All notifications marked as read.", "success")
+    except Exception:
+        conn.rollback()
+        flash("Notifications could not be updated. Please try again.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for("caretaker_notifications"))
 
 @app.route("/caretaker/reports")
 @role_required("caretaker")
@@ -1403,7 +1404,7 @@ def _insert_row(cursor, table, values, now_columns=()):
 def caretaker_walkin():
     """Caretaker books on behalf of a walk-in guest. Uses only the columns your tables already have."""
     if request.method == "GET":
-        return redirect(url_for("caretaker_guests"))
+        return redirect(url_for("caretaker_guests", open_walkin=1))
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)

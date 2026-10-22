@@ -6,6 +6,7 @@ from flask import render_template, request, session, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from app import app
 from config import get_connection
+from models.notifications import notify_resort_caretakers
 
 UPLOAD_FOLDER = os.path.join('static', 'uploads', 'payments')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'webp'}
@@ -185,6 +186,13 @@ def book_resort():
         """, (customer_id, resort_id, check_in, check_out, guests, total_amount,
               guest_name, guest_phone, guests, gas_stove))
         reservation_id = cursor.lastrowid
+        notify_resort_caretakers(
+            cursor,
+            resort_id,
+            "New reservation request",
+            f"A customer requested {check_in:%b %d, %Y} to {check_out:%b %d, %Y} for reservation #RSV-{reservation_id}. Review it in Guests & Reservations.",
+            "reservation_new",
+        )
         conn.commit()
         return jsonify({
             "success": True,

@@ -1,4 +1,6 @@
 .env
+.env.*
+!.env.example
 .venv/
 env/
 __pycache__/
@@ -7,3 +9,11 @@ __pycache__/
 .pytest_cache/
 .vscode/
 vscode/
+
+# Runtime uploads can contain customer identity and payment documents.
+static/uploads/payments/
+static/uploads/profiles/
+static/uploads/walkin_proofs/
+
+# Local database exports contain customer and reservation records.
+Dump*.sql

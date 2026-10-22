@@ -21,7 +21,6 @@
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}">Updates</a>
       <a href="{{ url_for('caretaker_reports') }}">Reports</a>
-      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right">
       <button class="icon-btn" style="color:var(--accent-green);">🔔</button>
@@ -33,19 +32,22 @@
   </header>
 
   <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="flash {{ category }}" role="status">{{ message }}</div>{% endfor %}
+    {% endwith %}
     <div class="page-header">
       <div>
         <h1>Notifications</h1>
         <p>Stay up to date with alerts across your resort.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-outline btn-sm">Mark all as read</button>
+        <form method="post" action="{{ url_for('caretaker_mark_notifications_read') }}"><button class="btn btn-outline btn-sm" type="submit">Mark all as read</button></form>
       </div>
     </div>
 
     <div class="card notif-panel">
       {% for notification in notifications %}
-      <div class="notif-item">
+      <div class="notif-item {{ 'unread' if not notification.is_read else '' }}">
         <div class="notif-icon info">&#8505;</div>
         <div class="notif-text">
           <div class="title">{{ notification.title }}</div>

@@ -5,6 +5,7 @@ from flask import render_template, request, redirect, url_for, session, flash, j
 from app import app
 from config import get_connection
 from models.decorators import role_required
+from models.notifications import notify_resort_caretakers
 from models.reservation_reminders import create_upcoming_reservation_reminders
 from routes.caretaker import _walkin_schema
 
@@ -212,7 +213,7 @@ def review_reservation(reservation_id):
     try:
         schema = _walkin_schema(cursor)
         cursor.execute(f"""
-            SELECT r.reservation_id, c.account_id, p.payment_id, p.payment_status,
+            SELECT r.reservation_id, r.resort_id, c.account_id, p.payment_id, p.payment_status,
                    res.owner_id, CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source
             FROM reservations r
             JOIN customers c ON c.customer_id = r.customer_id
@@ -252,6 +253,13 @@ def review_reservation(reservation_id):
             VALUES (%s, %s, %s, %s)
         """, (reservation["account_id"], title, message,
               "reservation_approved" if approved else "reservation_rejected"))
+        notify_resort_caretakers(
+            cursor,
+            reservation["resort_id"],
+            "Reservation approved by the owner" if approved else "Reservation declined by the owner",
+            f"The owner {'approved' if approved else 'declined'} reservation #RSV-{reservation_id}.",
+            "reservation_owner_approved" if approved else "reservation_owner_rejected",
+        )
         conn.commit()
         flash("Reservation approved and customer notified." if approved else
               "Reservation rejected and customer notified.", "success")

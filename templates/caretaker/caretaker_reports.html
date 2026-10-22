@@ -19,7 +19,6 @@
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}">Updates</a>
       <a href="{{ url_for('caretaker_reports') }}" class="active">Reports</a>
-      <a href="{{ url_for('caretaker_messages') }}">Messages</a>
     </nav>
     <div class="topbar-right"><div class="user-chip">{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}{% if session.get("profile_photo") %}<img class="avatar" src="{{ session.get("profile_photo") }}" alt="Profile photo" style="object-fit:cover;">{% else %}<div class="avatar">{{ session.get("fullname", "C")[:1]|upper }}</div>{% endif %}{% endif %}<span class="user-name">{{ fullname }}</span></div></div>
   </header>

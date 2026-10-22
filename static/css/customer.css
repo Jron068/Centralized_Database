@@ -7,8 +7,8 @@
 
 /* Shared customer portal refinements */
 body { min-height: 100vh; background: #f5f7f6; color: #20372a; }
-.layout, .app { min-height: 100vh; }
-.sidebar { position: sticky; top: 0; height: 100vh; min-height: 620px; overflow-y:auto; scrollbar-width:thin; box-shadow: 5px 0 24px rgba(12, 44, 30, .08); }
+.layout, .app { min-height: 100vh; align-items: stretch; }
+.sidebar { align-self: stretch; position: sticky; top: 0; height: 100vh; height: 100dvh; min-height: 100vh; min-height: 100dvh; overflow-y:auto; scrollbar-width:thin; box-shadow: 5px 0 24px rgba(12, 44, 30, .08); }
 .sidebar .brand img { max-height: 54px; object-fit: contain; }
 .nav-label { margin-top: 25px; font-weight: 700; letter-spacing: .9px; }
 .nav-item { min-height: 42px; }
@@ -62,6 +62,7 @@ body { min-height: 100vh; background: #f5f7f6; color: #20372a; }
   .form-actions { flex-wrap: wrap; }
   .table-wrap { margin: 0 -8px; }
 }
+
 @media (max-width: 650px) { .customer-update-card { grid-template-columns:1fr;gap:13px; }.customer-update-image,.customer-update-icon { width:100%;height:180px; } }
 
 /* These rules follow the legacy page styles so the shared portal stays usable. */
@@ -950,5 +951,34 @@ body {
   .receipt-label { flex-basis: 145px; }
   .receipt-agreement-line { width: 180px; }
   .receipt-signatures { gap: 16px; }
+}
+
+/* Keep the customer navigation background continuous to the bottom of the viewport. */
+.app > .sidebar { min-height: 100vh; min-height: 100dvh; }
+
+/* Keep the resort navigation attached to the viewport while the page scrolls. */
+@media (min-width: 981px) {
+  .app > .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: 250px;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .app > .main {
+    width: calc(100% - 250px);
+    max-width: calc(100% - 250px);
+    margin-left: 250px;
+  }
+}
+
+@media (max-width: 980px) {
+  .app > .sidebar { display: none; }
+  .app > .main { width: 100%; max-width: 100%; margin-left: 0; }
 }
 
