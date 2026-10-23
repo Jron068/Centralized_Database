@@ -19,6 +19,7 @@ from models.resort import enrich_resort, gallery_photos
 from models.resort_photos import ensure_resort_photos_table
 from models.image_moderation import ImageModerationError, MAX_IMAGE_BYTES, scan_resort_image
 from models.resort_updates import ensure_resort_updates_table, update_image_url
+from models.file_storage import upload_file, file_url, delete_uploaded_file
 from models.decorators import role_required
 from routes.caretaker import _walkin_schema, _stay_status, _as_date, _table_columns, _owner_account_id
 
@@ -171,7 +172,7 @@ def _bookings(cursor, resort_id):
             "email": "" if r["email"] == "walkin.guest@pansolresorts.com" else (r["email"] or ""),
             "check_in": _d(r["check_in"]), "check_out": _d(r["check_out"]), "guests": r["guests"], "source": r["source"],
             "amount": _f(r["amount_paid"] if r["amount_paid"] is not None else r["total_amount"]),
-            "payment_status": r["payment_status"], "proof": url_for("static", filename=r["proof"]) if r["proof"] else None,
+            "payment_status": r["payment_status"], "proof": file_url(r["proof"]) if r["proof"] else None,
             "status": _stay_status(r, today), "raw_status": r["reservation_status"],
         })
     return out
@@ -304,7 +305,7 @@ def admin_property_detail(resort_id):
         photos = cursor.fetchall()
         display_resort = enrich_resort({k: (_f(v) if isinstance(v, Decimal) else v) for k, v in resort.items()})
         for photo in photos:
-            photo["url"] = url_for("static", filename=photo["photo_path"])
+            photo["url"] = file_url(photo["photo_path"])
         urls = {}
         for key, ep in (("review", "reservation_detail"), ("walkin", "admin_review_walkin"), ("walkins", "admin_walkins")):
             try:
@@ -358,15 +359,15 @@ def admin_resort_photos_upload(resort_id):
             scan_resort_image(image_data, extension)
             scanned_images.append((original_name, extension, image_data))
 
-        upload_dir = os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
-        os.makedirs(upload_dir, exist_ok=True)
         for original_name, extension, image_data in scanned_images:
             filename = f"{uuid.uuid4().hex}.{extension}"
-            full_path = os.path.join(upload_dir, filename)
-            with open(full_path, "wb") as destination:
-                destination.write(image_data)
-            saved_files.append(full_path)
-            photo_path = f"uploads/resort_photos/{resort_id}/{filename}"
+            content_type = "image/jpeg" if extension in {"jpg", "jpeg"} else f"image/{extension}"
+            photo_path = upload_file(
+                image_data,
+                f"resort_photos/{resort_id}/{filename}",
+                content_type=content_type,
+            )
+            saved_files.append(photo_path)
             cursor.execute(
                 "INSERT INTO resort_photos (resort_id, photo_path, caption) VALUES (%s, %s, %s)",
                 (resort_id, photo_path, os.path.splitext(original_name)[0][:255] or None),
@@ -379,20 +380,17 @@ def admin_resort_photos_upload(resort_id):
     except ImageModerationError as exc:
         conn.rollback()
         for path in saved_files:
-            if os.path.exists(path):
-                os.remove(path)
+            delete_uploaded_file(path)
         flash(str(exc), "warning")
     except ValueError as exc:
         conn.rollback()
         for path in saved_files:
-            if os.path.exists(path):
-                os.remove(path)
+            delete_uploaded_file(path)
         flash(str(exc), "warning")
     except Exception:
         conn.rollback()
         for path in saved_files:
-            if os.path.exists(path):
-                os.remove(path)
+            delete_uploaded_file(path)
         raise
     finally:
         cursor.close()
@@ -427,12 +425,15 @@ def admin_resort_photo_delete(resort_id, photo_id):
         )
         conn.commit()
 
-        resort_upload_dir = os.path.realpath(
-            os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
-        )
-        full_path = os.path.realpath(os.path.join(app.static_folder, photo_path))
-        if os.path.commonpath([resort_upload_dir, full_path]) == resort_upload_dir and os.path.isfile(full_path):
-            os.remove(full_path)
+        if photo_path.startswith("supabase://"):
+            delete_uploaded_file(photo_path)
+        else:
+            resort_upload_dir = os.path.realpath(
+                os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
+            )
+            full_path = os.path.realpath(os.path.join(app.static_folder, photo_path))
+            if os.path.commonpath([resort_upload_dir, full_path]) == resort_upload_dir and os.path.isfile(full_path):
+                os.remove(full_path)
         flash("Resort photo deleted.", "success")
     except Exception:
         conn.rollback()
@@ -486,13 +487,14 @@ def admin_property_save(resort_id):
                 raise ImageModerationError("The resort main picture must be 8 MB or smaller.")
             scan_resort_image(image_data, extension)
             filename = f"{uuid.uuid4().hex}.{extension}"
-            logo_dir = os.path.join(app.static_folder, "uploads", "resorts", str(resort_id))
-            os.makedirs(logo_dir, exist_ok=True)
-            saved_logo_path = os.path.join(logo_dir, filename)
-            with open(saved_logo_path, "wb") as destination:
-                destination.write(image_data)
+            content_type = "image/jpeg" if extension in {"jpg", "jpeg"} else f"image/{extension}"
+            saved_logo_path = upload_file(
+                image_data,
+                f"resorts/{resort_id}/{filename}",
+                content_type=content_type,
+            )
             sets.append("logo = %s")
-            vals.append(f"/static/uploads/resorts/{resort_id}/{filename}")
+            vals.append(saved_logo_path)
         name = request.form.get("resort_name", "").strip()[:150]
         if "resort_name" in cols:
             if not name:
@@ -537,13 +539,13 @@ def admin_property_save(resort_id):
         flash("Property details saved. Customers and the caretaker now see the new details.", "success")
     except ImageModerationError as e:
         conn.rollback()
-        if saved_logo_path and os.path.isfile(saved_logo_path):
-            os.remove(saved_logo_path)
+        if saved_logo_path:
+            delete_uploaded_file(saved_logo_path)
         flash(str(e), "warning")
     except Exception as e:
         conn.rollback()
-        if saved_logo_path and os.path.isfile(saved_logo_path):
-            os.remove(saved_logo_path)
+        if saved_logo_path:
+            delete_uploaded_file(saved_logo_path)
         print("PROPERTY SAVE ERROR:", e)
         flash("The property could not be saved.", "danger")
     finally:
@@ -622,13 +624,12 @@ def admin_property_post_update(resort_id):
                 if len(image_data) > MAX_IMAGE_BYTES:
                     raise ImageModerationError("The update image must be 8 MB or smaller.")
                 scan_resort_image(image_data, extension)
-                directory = os.path.join(app.static_folder, "uploads", "resort_updates")
-                os.makedirs(directory, exist_ok=True)
                 filename = f"{uuid.uuid4().hex}.{extension}"
-                saved_path = os.path.join(directory, filename)
-                with open(saved_path, "wb") as output:
-                    output.write(image_data)
-                image_path = f"uploads/resort_updates/{filename}"
+                content_type = "image/jpeg" if extension in {"jpg", "jpeg"} else f"image/{extension}"
+                saved_path = upload_file(
+                    image_data, f"resort_updates/{filename}", content_type=content_type
+                )
+                image_path = saved_path
             ensure_resort_updates_table(cursor)
             cursor.execute(
                 "INSERT INTO resort_updates (author_account_id, author_role, resort_id, title, category, message, image_path) "
@@ -639,13 +640,13 @@ def admin_property_post_update(resort_id):
             flash("Update posted and is now available on the selected resort feed.", "success")
     except ImageModerationError as exc:
         conn.rollback()
-        if saved_path and os.path.exists(saved_path):
-            os.remove(saved_path)
+        if saved_path:
+            delete_uploaded_file(saved_path)
         flash(str(exc), "warning")
     except Exception as e:
         conn.rollback()
-        if saved_path and os.path.exists(saved_path):
-            os.remove(saved_path)
+        if saved_path:
+            delete_uploaded_file(saved_path)
         print("UPDATE POST ERROR:", e)
         flash("The update could not be posted.", "danger")
     finally:

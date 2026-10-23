@@ -37,8 +37,8 @@
           <hr style="margin:22px 0; border:0; border-top:1px solid #ddd;">
           <h3>Payment proof</h3>
           {% if reservation.proof_of_payment %}
-            <p><img src="{{ url_for('static', filename=reservation.proof_of_payment) }}" alt="Payment proof" style="max-width:100%; max-height:560px; border:1px solid #ddd; border-radius:8px;"></p>
-            <a class="btn btn-outline btn-sm" target="_blank" href="{{ url_for('static', filename=reservation.proof_of_payment) }}">Open full image</a>
+            <p><img src="{{ reservation.proof_url }}" alt="Payment proof" style="max-width:100%; max-height:560px; border:1px solid #ddd; border-radius:8px;"></p>
+            <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="{{ reservation.proof_url }}">Open full image</a>
           {% else %}
             <p class="page-sub">The customer has not submitted a payment screenshot.</p>
           {% endif %}

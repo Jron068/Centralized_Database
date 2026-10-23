@@ -9,6 +9,7 @@ from models.resort import enrich_resorts
 from models.decorators import role_required
 from models.reservation_reminders import create_upcoming_reservation_reminders
 from models.account_profile import ensure_account_profiles_table, save_profile_photo
+from models.file_storage import file_url
 
 @app.route("/admin_dashboard", endpoint="admin_dashboard")
 @app.route("/owner-dashboard", endpoint="owner_dashboard")
@@ -50,6 +51,7 @@ def admin_dashboard():
             """
         )
         my_resorts = cursor.fetchall()
+        my_resorts = enrich_resorts(my_resorts)
         resort_ids = [r["resort_id"] for r in my_resorts]
 
         cursor.execute(
@@ -733,7 +735,7 @@ def settings():
             conn.commit()
             session["fullname"] = fullname
             if profile_path:
-                session["profile_photo"] = "/static/" + profile_path
+                session["profile_photo"] = file_url(profile_path)
             flash("Account settings updated successfully.", "success")
             return redirect(url_for("settings"))
 
@@ -750,7 +752,7 @@ def settings():
             (account_id,),
         )
         photo = cursor.fetchone()
-        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        profile_photo = file_url(photo["profile_photo_path"]) if photo and photo.get("profile_photo_path") else None
         if profile_photo:
             session["profile_photo"] = profile_photo
 

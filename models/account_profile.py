@@ -1,11 +1,10 @@
 """Shared storage helpers for account profile photos."""
 
-import os
 import uuid
 
 from werkzeug.utils import secure_filename
 
-from app import app
+from models.file_storage import upload_file
 
 ALLOWED_PROFILE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024
@@ -24,7 +23,7 @@ def ensure_account_profiles_table(cursor):
 
 
 def save_profile_photo(upload):
-    """Validate a user-selected image, persist it, and return its static path."""
+    """Validate a user-selected image, persist it, and return its storage reference."""
     original_name = secure_filename(upload.filename or "")
     extension = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
     if extension not in ALLOWED_PROFILE_EXTENSIONS:
@@ -36,9 +35,11 @@ def save_profile_photo(upload):
     if len(image_data) > MAX_PROFILE_PHOTO_BYTES:
         raise ValueError("Profile photos must be 5 MB or smaller.")
 
-    directory = os.path.join(app.static_folder, "uploads", "profiles")
-    os.makedirs(directory, exist_ok=True)
     filename = f"{uuid.uuid4().hex}.{extension}"
-    with open(os.path.join(directory, filename), "wb") as output:
-        output.write(image_data)
-    return f"uploads/profiles/{filename}"
+    content_type = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+    }[extension]
+    return upload_file(image_data, f"profiles/{filename}", content_type=content_type)

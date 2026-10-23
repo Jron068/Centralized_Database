@@ -49,8 +49,8 @@
         <td>&#8369;{{ "%.2f"|format(w.amount_paid or 0) }}</td>
         <td>
           {% if w.proof_of_payment %}
-          <a href="{{ url_for('static', filename=w.proof_of_payment) }}" target="_blank">
-            <img src="{{ url_for('static', filename=w.proof_of_payment) }}" alt="Proof" style="width:90px;height:64px;object-fit:cover;border-radius:6px;">
+          <a href="{{ w.proof_url }}" target="_blank" rel="noopener">
+            <img src="{{ w.proof_url }}" alt="Proof" style="width:90px;height:64px;object-fit:cover;border-radius:6px;">
           </a>
           {% else %}No photo{% endif %}
         </td>

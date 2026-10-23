@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from models.file_storage import file_url
+
 RESORT_IMAGES = {
     "sunscape resort": "images/resorts/sunscape.png",
     "triple z resort": "images/resorts/triple_z.png",
@@ -30,6 +32,8 @@ def enrich_resort(resort):
     key = (row.get("resort_name") or "").strip().lower()
     fallback_logo = "/static/" + RESORT_IMAGES[key] if key in RESORT_IMAGES else "/static/images/default-resort.svg"
     logo = row.get("logo") or fallback_logo
+    if isinstance(logo, str) and logo.startswith("supabase://"):
+        logo = file_url(logo)
     # Old database paths may reference uploads that were moved or never copied
     # to this deployment. Validate local static paths before sending them to UI.
     if isinstance(logo, str) and logo.startswith("/static/"):
@@ -51,9 +55,13 @@ def gallery_photos(resort, saved_photos):
     urls = []
     main_image = resort.get("logo")
     if main_image and not main_image.endswith("/default-resort.svg"):
-        urls.append(main_image if main_image.startswith("/") else "/static/" + main_image)
+        urls.append(main_image if main_image.startswith(("http://", "https://", "/")) else "/static/" + main_image)
     for photo in saved_photos:
-        url = photo.get("url") or "/static/" + photo["photo_path"]
+        photo_path = photo["photo_path"]
+        url = photo.get("url") or (
+            file_url(photo_path) if photo_path.startswith("supabase://")
+            else "/static/" + photo_path
+        )
         if url.startswith("/static/"):
             local_path = Path(__file__).resolve().parent.parent / "static" / url[len("/static/"):]
             if not local_path.is_file():

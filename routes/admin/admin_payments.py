@@ -5,6 +5,7 @@ from app import app
 from config import get_connection
 from models.decorators import role_required
 from models.notifications import notify_resort_caretakers
+from models.file_storage import file_url
 
 
 @app.route('/admin/payments')
@@ -44,6 +45,8 @@ def admin_payments():
             ORDER BY p.payment_date DESC
         """, (start_date, end_date_exclusive))
         payments = cursor.fetchall()
+        for payment in payments:
+            payment["proof_url"] = file_url(payment["proof_of_payment"]) if payment["proof_of_payment"] else None
 
         cursor.execute(
             """

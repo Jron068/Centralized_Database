@@ -71,7 +71,7 @@ def _translate_create_table(sql):
             r"(?:INDEX|KEY)\s+`?([\w]+)`?\s*\(([^)]+)\)", sql, re.IGNORECASE
         )
         sql = re.sub(
-            r",?\s*(?:INDEX|KEY)\s+`?[\w]+`?\s*\([^)]+\)\s*,?",
+            r",\s*(?:INDEX|KEY)\s+`?[\w]+`?\s*\([^)]+\)",
             "",
             sql,
             flags=re.IGNORECASE,

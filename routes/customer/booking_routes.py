@@ -1,4 +1,3 @@
-import os
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -7,8 +6,8 @@ from werkzeug.utils import secure_filename
 from app import app
 from config import get_connection
 from models.notifications import notify_resort_caretakers
+from models.file_storage import upload_file, file_url, delete_uploaded_file
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads', 'payments')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'webp'}
 
 # Common add-on rates. Keep these the same as the constants in the page
@@ -227,6 +226,7 @@ def submit_payment():
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    proof_path = None
     try:
         cursor.execute("""
             SELECT r.reservation_id
@@ -237,19 +237,32 @@ def submit_payment():
         if not cursor.fetchone():
             return jsonify({"success": False, "message": "Reservation not found."}), 404
 
+        image_data = proof.stream.read(5 * 1024 * 1024 + 1)
+        if len(image_data) > 5 * 1024 * 1024:
+            return jsonify({"success": False, "message": "Payment proofs must be 5 MB or smaller."}), 400
         extension = secure_filename(proof.filename).rsplit('.', 1)[1].lower()
         filename = f"{uuid.uuid4().hex}.{extension}"
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        proof.save(os.path.join(UPLOAD_FOLDER, filename))
+        content_type = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "webp": "image/webp",
+        }[extension]
+        proof_path = upload_file(
+            image_data, f"payments/{filename}", private=True, content_type=content_type
+        )
 
         cursor.execute("""
             INSERT INTO payments (reservation_id, proof_of_payment, amount_paid, payment_status, payment_date)
             VALUES (%s, %s, %s, 'Pending', NOW())
-        """, (reservation_id, f"uploads/payments/{filename}", amount_paid))
+        """, (reservation_id, proof_path, amount_paid))
         conn.commit()
         return jsonify({"success": True, "message": "Payment proof submitted for review."}), 201
     except Exception:
         conn.rollback()
+        if proof_path:
+            delete_uploaded_file(proof_path)
+        app.logger.exception("Payment proof upload failed")
         return jsonify({"success": False, "message": "Unable to save the payment proof."}), 500
     finally:
         cursor.close()

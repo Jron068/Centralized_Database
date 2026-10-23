@@ -8,6 +8,7 @@ from models.decorators import role_required
 from models.notifications import notify_resort_caretakers
 from models.reservation_reminders import create_upcoming_reservation_reminders
 from routes.caretaker import _walkin_schema
+from models.file_storage import file_url
 
 
 def _reservation_rows(cursor, selected_resort=None):
@@ -194,6 +195,7 @@ def reservation_detail(reservation_id):
         if not reservation:
             flash("Reservation not found.", "warning")
             return redirect(url_for("reservation"))
+        reservation["proof_url"] = file_url(reservation.get("proof_of_payment"))
         return render_template("admin/sidebar/reservation_detail.html", reservation=reservation)
     finally:
         cursor.close()
@@ -270,4 +272,3 @@ def review_reservation(reservation_id):
         cursor.close()
         conn.close()
     return redirect(url_for("reservation_detail", reservation_id=reservation_id))
-

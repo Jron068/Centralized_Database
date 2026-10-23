@@ -21,5 +21,5 @@ def ensure_resort_updates_table(cursor):
 def update_image_url(image_path):
     if not image_path:
         return None
-    from flask import url_for
-    return url_for("static", filename=image_path)
+    from models.file_storage import file_url
+    return file_url(image_path)

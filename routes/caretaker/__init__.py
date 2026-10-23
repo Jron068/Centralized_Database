@@ -18,6 +18,7 @@ from models.image_moderation import ImageModerationError, MAX_IMAGE_BYTES, scan_
 from models.resort_updates import ensure_resort_updates_table, update_image_url
 from models.reservation_reminders import create_upcoming_reservation_reminders
 from models.account_profile import ensure_account_profiles_table, save_profile_photo
+from models.file_storage import upload_file, file_url, delete_uploaded_file
 
 
 @app.route("/caretaker/settings", methods=["GET", "POST"])
@@ -65,7 +66,7 @@ def caretaker_settings():
             conn.commit()
             session["fullname"] = fullname
             if profile_path:
-                session["profile_photo"] = "/static/" + profile_path
+                session["profile_photo"] = file_url(profile_path)
             flash("Profile settings saved.", "success")
             return redirect(url_for("caretaker_settings"))
 
@@ -81,7 +82,7 @@ def caretaker_settings():
             (account_id,),
         )
         photo = cursor.fetchone()
-        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        profile_photo = file_url(photo["profile_photo_path"]) if photo and photo.get("profile_photo_path") else None
         if profile_photo:
             session["profile_photo"] = profile_photo
         return render_template(
@@ -160,13 +161,12 @@ def caretaker_updates():
                         if len(image_data) > MAX_IMAGE_BYTES:
                             raise ImageModerationError("The update image must be 8 MB or smaller.")
                         scan_resort_image(image_data, extension)
-                        directory = os.path.join(app.static_folder, "uploads", "resort_updates")
-                        os.makedirs(directory, exist_ok=True)
                         filename = f"{uuid.uuid4().hex}.{extension}"
-                        saved_path = os.path.join(directory, filename)
-                        with open(saved_path, "wb") as output:
-                            output.write(image_data)
-                        image_path = f"uploads/resort_updates/{filename}"
+                        content_type = "image/jpeg" if extension in {"jpg", "jpeg"} else f"image/{extension}"
+                        saved_path = upload_file(
+                            image_data, f"resort_updates/{filename}", content_type=content_type
+                        )
+                        image_path = saved_path
                     ensure_resort_updates_table(cursor)
                     cursor.execute(
                         "INSERT INTO resort_updates (author_account_id, author_role, resort_id, title, category, message, image_path) "
@@ -177,13 +177,13 @@ def caretaker_updates():
                     flash("Update posted to the selected resort feed.", "success")
             except ImageModerationError as exc:
                 conn.rollback()
-                if saved_path and os.path.exists(saved_path):
-                    os.remove(saved_path)
+                if saved_path:
+                    delete_uploaded_file(saved_path)
                 flash(str(exc), "warning")
             except Exception:
                 conn.rollback()
-                if saved_path and os.path.exists(saved_path):
-                    os.remove(saved_path)
+                if saved_path:
+                    delete_uploaded_file(saved_path)
                 raise
             return redirect(url_for("caretaker_updates"))
 
@@ -430,7 +430,7 @@ def _guest_overview(cursor, account_id):
                 "guests": r["guests"],
                 "source": r["booking_source"] or "Online",
                 "amount": float(r["amount_paid"]) if r["amount_paid"] is not None else None,
-                "proof": url_for("static", filename=r["proof_of_payment"]) if r["proof_of_payment"] else None,
+                "proof": file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None,
                 "status": status,
                 "payment_status": r["payment_status"],
                 "can_review": r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
@@ -623,7 +623,7 @@ def caretaker_dashboard():
         today = date.today()
         for r in rows:
             r["nights"] = max((_as_date(r["check_out"]) - _as_date(r["check_in"])).days, 1)
-            r["proof_url"] = url_for("static", filename=r["proof_of_payment"]) if r["proof_of_payment"] else None
+            r["proof_url"] = file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None
             r["can_review"] = r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
         upcoming = sorted(
             [r for r in rows if r["reservation_status"] in ("Pending", "Confirmed")
@@ -703,7 +703,7 @@ def _reservation_overview(cursor, account_id):
                 "guests": r["guests"],
                 "amount": float(r["amount_paid"]) if r["amount_paid"] is not None else None,
                 "payment_status": r["payment_status"],
-                "proof": url_for("static", filename=r["proof_of_payment"]) if r["proof_of_payment"] else None,
+                "proof": file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None,
                 "status": status,
                 "can_review": r["reservation_status"] == "Pending" and r["payment_status"] == "Pending" and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
             }
@@ -1335,7 +1335,6 @@ def reset_caretaker_password(account_id):
 # Caretaker submits (guest details + total amount + photo) -> reservation is
 # saved as Pending -> the resort owner/admin verifies it in /admin/walkins.
 # ---------------------------------------------------------------------------
-WALKIN_UPLOAD_SUBDIR = os.path.join("uploads", "walkin_proofs")
 MAX_PROOF_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
@@ -1501,7 +1500,7 @@ def caretaker_walkin():
             return redirect(url_for("caretaker_guests"))
 
         filename = f"{uuid.uuid4().hex}.{ext}"
-        relative_path = f"uploads/walkin_proofs/{filename}"
+        relative_path = None
 
         # Guest without an account (and no empty customer_id allowed): use the shared walk-in customer
         if not customer and not schema["account_optional"] and not schema["placeholder"]:
@@ -1565,11 +1564,11 @@ def caretaker_walkin():
                 return redirect(url_for("caretaker_guests"))
 
         # Save the photo, then the rows (file removed again if the database save fails)
-        upload_dir = os.path.join(app.static_folder, WALKIN_UPLOAD_SUBDIR)
-        os.makedirs(upload_dir, exist_ok=True)
-        saved_path = os.path.join(upload_dir, filename)
-        with open(saved_path, "wb") as fh:
-            fh.write(image_data)
+        content_type = "image/jpeg" if ext in {"jpg", "jpeg"} else f"image/{ext}"
+        saved_path = upload_file(
+            image_data, f"walkin_proofs/{filename}", private=True, content_type=content_type
+        )
+        relative_path = saved_path
 
         reservation_id = _insert_row(cursor, "reservations", res_values, res_now)
         _insert_row(cursor, "payments", {"reservation_id": reservation_id, **pay_values}, pay_now)
@@ -1606,8 +1605,8 @@ def caretaker_walkin():
         flash(f"Walk-in booking #RSV-{reservation_id} submitted. Waiting for admin verification.", "success")
     except Exception as e:
         conn.rollback()
-        if saved_path and os.path.exists(saved_path):
-            os.remove(saved_path)
+        if saved_path:
+            delete_uploaded_file(saved_path)
         print("WALK-IN ERROR:", e)
         flash("The walk-in booking could not be saved.", "danger")
     finally:
@@ -1673,9 +1672,12 @@ def admin_walkins():
             ORDER BY (r.reservation_status = 'Pending') DESC, r.created_at DESC
             """
         )
+        walkins = cursor.fetchall()
+        for walkin in walkins:
+            walkin["proof_url"] = file_url(walkin["proof_of_payment"]) if walkin["proof_of_payment"] else None
         return render_template(
             "admin/admin_walkin.html",
-            walkins=cursor.fetchall(),
+            walkins=walkins,
             placeholder_id=schema["placeholder"]["customer_id"] if schema["placeholder"] else None,
         )
     finally:

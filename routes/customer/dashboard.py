@@ -6,6 +6,8 @@ from flask import jsonify
 from models.resort_updates import ensure_resort_updates_table, update_image_url
 from models.customer_favorites import ensure_customer_favorites_table
 from models.account_profile import ensure_account_profiles_table, save_profile_photo
+from models.file_storage import file_url
+from models.resort import enrich_resorts
 
 def get_customer_row(cursor):
     """Fetch the customers row linked to the logged-in account, if any."""
@@ -129,6 +131,8 @@ def customer_paymentHistory():
             ORDER BY p.payment_date DESC, p.payment_id DESC
         """, (session["account_id"],))
         payments = cursor.fetchall()
+        for payment in payments:
+            payment["proof_url"] = file_url(payment["proof_of_payment"]) if payment["proof_of_payment"] else None
         return render_template(
             "customer/customer_paymentHistory.html",
             username=session.get("fullname", "Guest"),
@@ -148,7 +152,7 @@ def customer_deal():
             SELECT resort_id, resort_name, address, description, logo, price, max_pax
             FROM resorts WHERE status = 'Active' ORDER BY resort_name
         """)
-        resorts = cursor.fetchall()
+        resorts = enrich_resorts(cursor.fetchall())
         return render_template(
             "customer/customer_deal.html",
             username=session.get("fullname", "Guest"),
@@ -175,7 +179,7 @@ def customer_favorites():
             WHERE f.account_id = %s AND r.status = 'Active'
             ORDER BY f.created_at DESC, r.resort_name
         """, (session["account_id"],))
-        favorites = cursor.fetchall()
+        favorites = enrich_resorts(cursor.fetchall())
         return render_template(
             "customer/customer_favorite.html",
             username=session.get("fullname", "Guest"),
@@ -304,7 +308,7 @@ def customer_profileSetting():
             # Keep session fullname in sync since the navbar reads it directly
             session["fullname"] = new_fullname
             if profile_path:
-                session["profile_photo"] = "/static/" + profile_path
+                session["profile_photo"] = file_url(profile_path)
 
             flash("Profile updated successfully.", "success")
             return redirect(url_for("customer_profileSetting"))
@@ -321,7 +325,7 @@ def customer_profileSetting():
             (session.get("account_id"),),
         )
         photo = cursor.fetchone()
-        profile_photo = "/static/" + photo["profile_photo_path"] if photo and photo.get("profile_photo_path") else None
+        profile_photo = file_url(photo["profile_photo_path"]) if photo and photo.get("profile_photo_path") else None
         if profile_photo:
             session["profile_photo"] = profile_photo
         customer = get_customer_row(cursor) or {}

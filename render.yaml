@@ -2,15 +2,15 @@ services:
   - type: web
     name: centralized-database-resort
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
-    disk:
-      name: resort-uploads
-      mountPath: /opt/render/project/src/static/uploads
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_STORAGE_SERVICE_ROLE_KEY
         sync: false
       - key: FLASK_SECRET_KEY
         sync: false

@@ -111,8 +111,8 @@
               <td>{% if w.amount_paid %}&#8369;{{ "%.2f"|format(w.amount_paid) }}{% endif %}</td>
               <td>
                 {% if w.proof_of_payment %}
-                <a href="{{ url_for('static', filename=w.proof_of_payment) }}" target="_blank">
-                  <img src="{{ url_for('static', filename=w.proof_of_payment) }}" alt="Proof" style="width:56px;height:40px;object-fit:cover;border-radius:6px;">
+                <a href="{{ w.proof_url }}" target="_blank" rel="noopener">
+                  <img src="{{ w.proof_url }}" alt="Proof" style="width:56px;height:40px;object-fit:cover;border-radius:6px;">
                 </a>
                 {% endif %}
               </td>
