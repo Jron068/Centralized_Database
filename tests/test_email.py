@@ -39,6 +39,7 @@ class EmailTests(unittest.TestCase):
         self.assertEqual(request.full_url, "https://api.resend.com/emails")
         self.assertEqual(request.get_method(), "POST")
         self.assertEqual(request.get_header("Authorization"), "Bearer test-api-key")
+        self.assertEqual(request.get_header("User-agent"), "PansolResorts/1.0")
         self.assertEqual(payload["to"], ["guest@example.test"])
         self.assertEqual(payload["from"], "Pansol Resorts <verify@example.test>")
         self.assertIn("123456", payload["text"])

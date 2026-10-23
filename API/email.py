@@ -59,6 +59,7 @@ def send_otp_email(to_email, code, minutes=5):
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": "PansolResorts/1.0",
             },
             method="POST",
         )
