@@ -29,7 +29,8 @@
    - `DATABASE_URL`: Supabase PostgreSQL Session pooler connection string.
    - `SUPABASE_URL`: Supabase project URL.
    - `SUPABASE_STORAGE_SERVICE_ROLE_KEY`: Supabase service-role secret key. This key stays server-side; never put it in browser code, `static/`, or Git.
-   - `FLASK_SECRET_KEY`, mail credentials, and `OPENAI_API_KEY` as required by the app.
+   - `FLASK_SECRET_KEY` and `OPENAI_API_KEY` as required by the app.
+   - `RESEND_API_KEY` and `MAIL_DEFAULT_SENDER`: use Resend's HTTPS API for email because Render Free blocks outbound SMTP ports. Verify the sender domain/address with Resend before sending. Do not rely on `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, or `MAIL_PASSWORD` for email from Render.
 5. Optional bucket overrides are `SUPABASE_PUBLIC_STORAGE_BUCKET` (default `resort-media`) and `SUPABASE_PRIVATE_STORAGE_BUCKET` (default `payment-proofs`). The service-role key must never be exposed to clients.
 
 New image uploads continue to be checked by OpenAI moderation; configure `OPENAI_API_KEY` in Render to enable them.

@@ -1,21 +1,77 @@
+import json
+import os
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
 from flask_mail import Message
 
-from app import mail
+
+class EmailDeliveryError(RuntimeError):
+    """Raised when the configured email provider cannot deliver a message."""
 
 
 def send_otp_email(to_email, code, minutes=5):
     """Send an account verification code through the configured mail server."""
-    message = Message(
-        subject="Your Pansol Resorts verification code",
-        recipients=[to_email],
-        body=(
-            f"Your Pansol Resorts verification code is {code}. "
-            f"It expires in {minutes} minutes. Do not share this code."
-        ),
-        html=(
-            "<p>Your Pansol Resorts verification code is:</p>"
-            f"<p style='font-size:24px;font-weight:bold'>{code}</p>"
-            f"<p>It expires in {minutes} minutes. Do not share this code.</p>"
-        ),
+    subject = "Your Pansol Resorts verification code"
+    text = (
+        f"Your Pansol Resorts verification code is {code}. "
+        f"It expires in {minutes} minutes. Do not share this code."
     )
+    html = (
+        "<p>Your Pansol Resorts verification code is:</p>"
+        f"<p style='font-size:24px;font-weight:bold'>{code}</p>"
+        f"<p>It expires in {minutes} minutes. Do not share this code.</p>"
+    )
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if api_key:
+        sender = (os.getenv("MAIL_DEFAULT_SENDER") or "").strip()
+        if not sender:
+            raise EmailDeliveryError(
+                "Set MAIL_DEFAULT_SENDER to an address verified with the email provider."
+            )
+        payload = json.dumps({
+            "from": sender,
+            "to": [to_email],
+            "subject": subject,
+            "text": text,
+            "html": html,
+        }).encode("utf-8")
+        request = Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=10) as response:
+                if response.status not in (200, 201):
+                    raise EmailDeliveryError(
+                        f"Email provider rejected the message (HTTP {response.status})."
+                    )
+                response.read(64 * 1024)
+        except HTTPError as error:
+            raise EmailDeliveryError(
+                f"Email provider rejected the message (HTTP {error.code})."
+            ) from error
+        except (URLError, TimeoutError, OSError) as error:
+            raise EmailDeliveryError("Could not reach the email provider. Please try again.") from error
+        return
+
+    if os.getenv("FLASK_DEBUG") != "1":
+        raise EmailDeliveryError(
+            "Email delivery is not configured. Add RESEND_API_KEY and "
+            "MAIL_DEFAULT_SENDER to the hosting environment."
+        )
+
+    message = Message(
+        subject=subject,
+        recipients=[to_email],
+        body=text,
+        html=html,
+    )
+    from app import mail
+
     mail.send(message)

@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash
 
 from app import app
 from config import get_connection
-from API.email import send_otp_email
+from API.email import EmailDeliveryError, send_otp_email
 from API.phone import normalize_ph_number
 
 OTP_MINUTES = 5
@@ -149,10 +149,10 @@ def verification():
             except Exception as error:
                 conn.rollback()
                 app.logger.exception("Could not send registration email OTP")
-                if isinstance(error, PermissionError):
-                    message = "This server is blocked from connecting to Gmail. Run Flask in a terminal with internet access."
+                if isinstance(error, EmailDeliveryError):
+                    message = "We couldn't send the verification email. Check the email provider configuration and try again."
                 else:
-                    message = "We couldn't send the verification email. Check the app terminal for the Gmail error details."
+                    message = "We couldn't send the verification email. Please try again or contact support."
                 flash(message, "error")
                 return redirect(url_for("registration"))
 

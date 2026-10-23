@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from flask import render_template, request, redirect, session, flash, url_for
 from app import app
 from config import get_connection
-from API.email import send_otp_email
+from API.email import EmailDeliveryError, send_otp_email
 import secrets
 
 OTP_MINUTES = 5
@@ -126,10 +126,10 @@ def resend_otp():
             send_otp_email(email, code, OTP_MINUTES)
         except Exception as error:
             app.logger.exception("Could not resend registration email OTP")
-            if isinstance(error, PermissionError):
-                message = "This server is blocked from connecting to Gmail. Run Flask in a terminal with internet access."
+            if isinstance(error, EmailDeliveryError):
+                message = "We couldn't resend the verification email. Check the email provider configuration and try again."
             else:
-                message = "We couldn't resend the verification email. Check the app terminal for the Gmail error details."
+                message = "We couldn't resend the verification email. Please try again or contact support."
             flash(message, "error")
             return redirect(url_for("otp"))
 
