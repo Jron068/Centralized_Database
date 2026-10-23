@@ -1,6 +1,8 @@
+import io
 import json
 import os
 import unittest
+from urllib.error import HTTPError
 from unittest.mock import patch
 
 from flask_mail import Mail
@@ -61,6 +63,31 @@ class EmailTests(unittest.TestCase):
                     email.send_otp_email("guest@example.test", "123456")
 
         send.assert_not_called()
+
+    def test_resend_error_includes_provider_reason_without_email_address(self):
+        response = HTTPError(
+            "https://api.resend.com/emails",
+            403,
+            "Forbidden",
+            {},
+            io.BytesIO(
+                b'{"name":"validation_error","message":"Only send to '
+                b'account@example.com"}'
+            ),
+        )
+        environment = {
+            "RESEND_API_KEY": "test-api-key",
+            "MAIL_DEFAULT_SENDER": "Pansol Resorts <onboarding@resend.dev>",
+            "FLASK_DEBUG": "0",
+        }
+        with patch.dict(os.environ, environment, clear=True):
+            with patch.object(email, "urlopen", side_effect=response):
+                with self.assertRaises(email.EmailDeliveryError) as raised:
+                    email.send_otp_email("guest@example.test", "123456")
+
+        self.assertIn("HTTP 403", str(raised.exception))
+        self.assertIn("Only send to [redacted email]", str(raised.exception))
+        self.assertNotIn("account@example.com", str(raised.exception))
 
 
 if __name__ == "__main__":

@@ -1,9 +1,26 @@
 import json
 import os
+import re
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from flask_mail import Message
+
+
+def _provider_error_detail(error):
+    """Return a bounded provider message without exposing recipient addresses."""
+    try:
+        body = error.read(4096).decode("utf-8", errors="replace")
+        parsed = json.loads(body)
+        detail = parsed.get("message") or parsed.get("name") or body
+    except (json.JSONDecodeError, AttributeError):
+        detail = body if "body" in locals() else ""
+    detail = re.sub(
+        r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}",
+        "[redacted email]",
+        str(detail),
+    )
+    return detail[:500]
 
 
 class EmailDeliveryError(RuntimeError):
@@ -53,8 +70,10 @@ def send_otp_email(to_email, code, minutes=5):
                     )
                 response.read(64 * 1024)
         except HTTPError as error:
+            detail = _provider_error_detail(error)
+            suffix = f": {detail}" if detail else ""
             raise EmailDeliveryError(
-                f"Email provider rejected the message (HTTP {error.code})."
+                f"Email provider rejected the message (HTTP {error.code}){suffix}"
             ) from error
         except (URLError, TimeoutError, OSError) as error:
             raise EmailDeliveryError("Could not reach the email provider. Please try again.") from error
