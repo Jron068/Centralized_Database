@@ -303,7 +303,8 @@ def admin_property_detail(resort_id):
         )
         photos = cursor.fetchall()
         display_resort = enrich_resort({k: (_f(v) if isinstance(v, Decimal) else v) for k, v in resort.items()})
-        photos = [{"url": photo_url} for photo_url in gallery_photos(display_resort, photos)]
+        for photo in photos:
+            photo["url"] = url_for("static", filename=photo["photo_path"])
         urls = {}
         for key, ep in (("review", "reservation_detail"), ("walkin", "admin_review_walkin"), ("walkins", "admin_walkins")):
             try:
@@ -399,6 +400,49 @@ def admin_resort_photos_upload(resort_id):
     return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
 
 
+@app.route("/admin/manage-properties/<int:resort_id>/photos/<int:photo_id>/delete", methods=["POST"])
+@role_required("owner")
+def admin_resort_photo_delete(resort_id, photo_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    photo_path = None
+    try:
+        resort = _owned_resort(cursor, resort_id)
+        if not resort:
+            flash("Property not found.", "warning")
+            return redirect(url_for("admin_properties_manage"))
+        ensure_resort_photos_table(cursor)
+        cursor.execute(
+            "SELECT photo_path FROM resort_photos WHERE photo_id = %s AND resort_id = %s",
+            (photo_id, resort_id),
+        )
+        photo = cursor.fetchone()
+        if not photo:
+            flash("Photo not found for this resort.", "warning")
+            return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
+        photo_path = photo["photo_path"]
+        cursor.execute(
+            "DELETE FROM resort_photos WHERE photo_id = %s AND resort_id = %s",
+            (photo_id, resort_id),
+        )
+        conn.commit()
+
+        resort_upload_dir = os.path.realpath(
+            os.path.join(app.static_folder, "uploads", "resort_photos", str(resort_id))
+        )
+        full_path = os.path.realpath(os.path.join(app.static_folder, photo_path))
+        if os.path.commonpath([resort_upload_dir, full_path]) == resort_upload_dir and os.path.isfile(full_path):
+            os.remove(full_path)
+        flash("Resort photo deleted.", "success")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for("admin_property_detail", resort_id=resort_id, tab="overview"))
+
+
 @app.route("/admin/manage-properties/<int:resort_id>/data")
 @role_required("owner")
 def admin_property_data(resort_id):
@@ -420,6 +464,7 @@ def admin_property_data(resort_id):
 def admin_property_save(resort_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    saved_logo_path = None
     try:
         resort = _owned_resort(cursor, resort_id)
         if not resort:
@@ -427,6 +472,27 @@ def admin_property_save(resort_id):
             return redirect(url_for("admin_properties_manage"))
         cols = _table_columns(cursor, "resorts")
         sets, vals = [], []
+        logo_upload = request.files.get("property_logo")
+        if logo_upload and logo_upload.filename:
+            if "logo" not in cols:
+                flash("Your resorts table does not have a logo column.", "warning")
+                return _back(resort_id, "edit")
+            safe_name = secure_filename(logo_upload.filename)
+            extension = safe_name.rsplit(".", 1)[-1].lower() if "." in safe_name else ""
+            if extension not in _PHOTO_EXTENSIONS:
+                raise ImageModerationError("Choose a JPG, PNG, or WEBP image for the resort main picture.")
+            image_data = logo_upload.stream.read(MAX_IMAGE_BYTES + 1)
+            if len(image_data) > MAX_IMAGE_BYTES:
+                raise ImageModerationError("The resort main picture must be 8 MB or smaller.")
+            scan_resort_image(image_data, extension)
+            filename = f"{uuid.uuid4().hex}.{extension}"
+            logo_dir = os.path.join(app.static_folder, "uploads", "resorts", str(resort_id))
+            os.makedirs(logo_dir, exist_ok=True)
+            saved_logo_path = os.path.join(logo_dir, filename)
+            with open(saved_logo_path, "wb") as destination:
+                destination.write(image_data)
+            sets.append("logo = %s")
+            vals.append(f"/static/uploads/resorts/{resort_id}/{filename}")
         name = request.form.get("resort_name", "").strip()[:150]
         if "resort_name" in cols:
             if not name:
@@ -460,7 +526,8 @@ def admin_property_save(resort_id):
             changes = ", ".join(
                 label for label, col in (("name", "resort_name"), ("address", "address"),
                                          ("description", "description"), ("contact details", "email"),
-                                         ("phone", "phone"), ("amenities", "amenities"))
+                                         ("phone", "phone"), ("amenities", "amenities"),
+                                         ("main picture", "logo"))
                 if any(sql_col.startswith(f"{col} =") for sql_col in sets)
             ) or "details or rates"
             message = f"{resort['resort_name']} updated its {changes}. The latest information is available in the resort listings."
@@ -468,8 +535,15 @@ def admin_property_save(resort_id):
             _notify_resort_customers(cursor, resort_id, "Resort information updated", message, "resort_update")
             conn.commit()
         flash("Property details saved. Customers and the caretaker now see the new details.", "success")
+    except ImageModerationError as e:
+        conn.rollback()
+        if saved_logo_path and os.path.isfile(saved_logo_path):
+            os.remove(saved_logo_path)
+        flash(str(e), "warning")
     except Exception as e:
         conn.rollback()
+        if saved_logo_path and os.path.isfile(saved_logo_path):
+            os.remove(saved_logo_path)
         print("PROPERTY SAVE ERROR:", e)
         flash("The property could not be saved.", "danger")
     finally:

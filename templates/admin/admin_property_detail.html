@@ -259,9 +259,12 @@
         </form>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">
           {% for photo in photos %}
-          <figure style="margin:0;">
+          <figure style="position:relative;margin:0;">
             <img src="{{ photo.url }}" alt="{{ photo.caption or resort.resort_name }}" style="width:100%;height:110px;object-fit:cover;border-radius:8px;">
             {% if photo.caption %}<figcaption class="muted" style="font-size:12px;margin-top:4px;">{{ photo.caption }}</figcaption>{% endif %}
+            <form method="post" action="{{ url_for('admin_resort_photo_delete', resort_id=resort.resort_id, photo_id=photo.photo_id) }}" onsubmit="return confirm('Delete this resort photo? It will also disappear from the customer gallery.');" style="margin-top:6px;">
+              <button class="btn btn-sm" type="submit" style="background:#a12a2a;color:#fff;border:0;">Delete photo</button>
+            </form>
           </figure>
           {% else %}
           <p class="muted">No additional photos uploaded yet.</p>
@@ -372,8 +375,14 @@
 
       <!-- ===== TAB 4: EDIT DETAILS ===== -->
       <section class="tab-panel" id="tab-edit">
-        <form class="card" method="post" action="{{ url_for('admin_property_save', resort_id=resort.resort_id) }}" style="padding:22px;">
+        <form class="card" method="post" enctype="multipart/form-data" action="{{ url_for('admin_property_save', resort_id=resort.resort_id) }}" style="padding:22px;">
           <h3>Edit property</h3>
+
+          <div class="form-row full">
+            <label for="property_logo">Resort main picture</label>
+            <input id="property_logo" name="property_logo" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <span class="muted">Choose a JPG, PNG, or WEBP image up to 8 MB. It is scanned before upload and replaces the main picture shown to customers.</span>
+          </div>
 
           <div class="edit-grid">
 
