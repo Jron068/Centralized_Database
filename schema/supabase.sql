@@ -177,7 +177,6 @@ CREATE INDEX IF NOT EXISTS reviews_resort_id ON reviews (resort_id);
 ALTER TABLE accounts ADD CONSTRAINT fk_requested_resort FOREIGN KEY (requested_resort_id) REFERENCES resorts (resort_id) ON DELETE SET NULL;
 ALTER TABLE caretakers ADD CONSTRAINT caretakers_ibfk_1 FOREIGN KEY (account_id) REFERENCES accounts (account_id) ON DELETE CASCADE;
 ALTER TABLE caretakers ADD CONSTRAINT fk_caretaker_account FOREIGN KEY (account_id) REFERENCES accounts (account_id) ON DELETE CASCADE;
-ALTER TABLE caretakers ADD CONSTRAINT fk_caretaker_resort FOREIGN KEY (resort_id) REFERENCES resorts (resort_id) ON DELETE CASCADE;
 ALTER TABLE customers ADD CONSTRAINT customers_ibfk_1 FOREIGN KEY (account_id) REFERENCES accounts (account_id) ON DELETE CASCADE;
 ALTER TABLE messages ADD CONSTRAINT messages_ibfk_1 FOREIGN KEY (sender_account) REFERENCES accounts (account_id);
 ALTER TABLE messages ADD CONSTRAINT messages_ibfk_2 FOREIGN KEY (receiver_account) REFERENCES accounts (account_id);
@@ -185,7 +184,6 @@ ALTER TABLE notifications ADD CONSTRAINT notifications_ibfk_1 FOREIGN KEY (accou
 ALTER TABLE owners ADD CONSTRAINT owners_ibfk_1 FOREIGN KEY (account_id) REFERENCES accounts (account_id) ON DELETE CASCADE;
 ALTER TABLE payments ADD CONSTRAINT payments_ibfk_1 FOREIGN KEY (reservation_id) REFERENCES reservations (reservation_id) ON DELETE CASCADE;
 ALTER TABLE reservations ADD CONSTRAINT reservations_ibfk_1 FOREIGN KEY (customer_id) REFERENCES customers (customer_id);
-ALTER TABLE reservations ADD CONSTRAINT reservations_ibfk_2 FOREIGN KEY (resort_id) REFERENCES resorts (resort_id);
 ALTER TABLE resort_owners ADD CONSTRAINT resort_owners_ibfk_1 FOREIGN KEY (resort_id) REFERENCES resorts (resort_id) ON DELETE CASCADE;
 ALTER TABLE resort_owners ADD CONSTRAINT resort_owners_ibfk_2 FOREIGN KEY (owner_id) REFERENCES owners (owner_id) ON DELETE CASCADE;
 ALTER TABLE resort_photos ADD CONSTRAINT fk_resort_photos_resort FOREIGN KEY (resort_id) REFERENCES resorts (resort_id) ON DELETE CASCADE;
@@ -193,4 +191,3 @@ ALTER TABLE resorts ADD CONSTRAINT resorts_ibfk_1 FOREIGN KEY (owner_id) REFEREN
 ALTER TABLE resorts ADD CONSTRAINT resorts_ibfk_2 FOREIGN KEY (caretaker_id) REFERENCES caretakers (caretaker_id);
 ALTER TABLE reviews ADD CONSTRAINT reviews_ibfk_1 FOREIGN KEY (customer_id) REFERENCES customers (customer_id);
 ALTER TABLE reviews ADD CONSTRAINT reviews_ibfk_2 FOREIGN KEY (resort_id) REFERENCES resorts (resort_id);
-

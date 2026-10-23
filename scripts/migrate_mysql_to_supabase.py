@@ -62,7 +62,11 @@ def _connect_mysql():
 
 def _source_columns(cursor, table):
     cursor.execute(f"SELECT * FROM `{table}` LIMIT 0")
-    return [column[0] for column in cursor.description]
+    columns = [column[0] for column in cursor.description]
+    # mysql-connector-python can leave the cursor's result pending even for
+    # LIMIT 0 metadata queries. Drain it before the same cursor is reused.
+    cursor.fetchall()
+    return columns
 
 
 def _destination_columns(cursor, table):
