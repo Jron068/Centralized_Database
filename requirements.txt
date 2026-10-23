@@ -2,3 +2,5 @@ Flask
 Flask-Mail
 mysql-connector-python
 python-dotenv
+psycopg[binary]>=3.2,<4
+gunicorn>=22,<24; platform_system != "Windows"

@@ -4,7 +4,7 @@ import sys
 from flask import Flask, render_template, session
 from flask_mail import Mail
 from dotenv import load_dotenv
-import mysql.connector
+from config import DatabaseError, MySQLDatabaseError
 
 load_dotenv()
 
@@ -42,7 +42,8 @@ def clear_messages_from_old_sessions():
         session["_flash_messages_version"] = 2
 
 
-@app.errorhandler(mysql.connector.Error)
+@app.errorhandler(DatabaseError)
+@app.errorhandler(MySQLDatabaseError)
 def database_error(error):
     app.logger.error("Database request failed: %s", error)
     return render_template("errors/database_error.html"), 503

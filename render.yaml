@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: centralized-database-resort
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    disk:
+      name: resort-uploads
+      mountPath: /opt/render/project/src/static/uploads
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FLASK_SECRET_KEY
+        sync: false
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "1"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODERATION_MODEL
+        value: omni-moderation-latest

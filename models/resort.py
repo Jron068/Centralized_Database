@@ -3,10 +3,10 @@
 from pathlib import Path
 
 RESORT_IMAGES = {
-    "sunscape resort": "uploads/resorts/sunscape.png",
-    "triple z resort": "uploads/resorts/triple_z.png",
-    "magic kingdom resort": "uploads/resorts/magic_kingdom.png",
-    "lucky miels resort": "uploads/resorts/lucky_miels.png",
+    "sunscape resort": "images/resorts/sunscape.png",
+    "triple z resort": "images/resorts/triple_z.png",
+    "magic kingdom resort": "images/resorts/magic_kingdom.png",
+    "lucky miels resort": "images/resorts/lucky_miels.png",
 }
 
 RESORT_DESCRIPTIONS = {
@@ -28,16 +28,14 @@ def enrich_resort(resort):
     """Return a resort with saved values preferred over known presentation defaults."""
     row = dict(resort)
     key = (row.get("resort_name") or "").strip().lower()
-    logo = row.get("logo") or (
-        "/static/" + RESORT_IMAGES[key] if key in RESORT_IMAGES
-        else "/static/images/default-resort.svg"
-    )
+    fallback_logo = "/static/" + RESORT_IMAGES[key] if key in RESORT_IMAGES else "/static/images/default-resort.svg"
+    logo = row.get("logo") or fallback_logo
     # Old database paths may reference uploads that were moved or never copied
     # to this deployment. Validate local static paths before sending them to UI.
     if isinstance(logo, str) and logo.startswith("/static/"):
         local_path = Path(__file__).resolve().parent.parent / "static" / logo[len("/static/"):]
         if not local_path.is_file():
-            logo = "/static/images/default-resort.svg"
+            logo = fallback_logo
     row["logo"] = logo
     row["description"] = row.get("description") or RESORT_DESCRIPTIONS.get(key)
     return row
