@@ -82,6 +82,22 @@ class FileStorageTests(unittest.TestCase):
                     file_storage.delete_uploaded_file(reference)
                 self.assertFalse(path.exists())
 
+    def test_verification_get_redirects_to_otp_for_pending_registration(self):
+        with app.app.test_client() as client:
+            with client.session_transaction() as session:
+                session["otp_email"] = "user@example.test"
+
+            response = client.get("/verification")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/otp")
+
+    def test_verification_get_without_pending_registration_redirects_to_signup(self):
+        response = app.app.test_client().get("/verification")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/registration")
+
 
 if __name__ == "__main__":
     unittest.main()

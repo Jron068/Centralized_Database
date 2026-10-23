@@ -87,8 +87,13 @@ def registration():
         if conn:
             conn.close()
 
-@app.route("/verification", methods=["POST"])
+@app.route("/verification", methods=["GET", "POST"])
 def verification():
+    if request.method == "GET":
+        if session.get("otp_email"):
+            return redirect(url_for("otp"))
+        return redirect(url_for("registration"))
+
     role = request.form.get("role")
     fullname = request.form.get("fullname")
     email = request.form.get("email")
