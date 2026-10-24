@@ -481,7 +481,7 @@ def caretaker_guests_data():
 
 def _customer_visible_clause(schema):
     """SQL that is true only for CUSTOMER reservations. Walk-ins are admin-only."""
-    return f"NOT COALESCE(({schema['walkin_expr']}), 0)"
+    return f"NOT COALESCE(({schema['walkin_expr']}), FALSE)"
 
 
 def _owner_account_id(cursor, owner_id):

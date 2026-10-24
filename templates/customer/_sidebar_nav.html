@@ -16,5 +16,6 @@
   <a href="{{ url_for('customer_changePassword') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_changePassword' else '' }}"><i class="fa-solid fa-lock"></i> Change Password</a>
 
   <p class="nav-label">Support</p>
-  <a href="{{ url_for('contact') }}" class="nav-item"><i class="fa-regular fa-circle-question"></i> Contact Support</a>
+  <a href="{{ url_for('customer_support') }}" class="nav-item {{ 'active' if request.endpoint == 'customer_support' else '' }}"><i class="fa-regular fa-circle-question"></i> Contact Support</a>
 </nav>
+<script src="{{ url_for('static', filename='js/responsive_navigation.js') }}" defer></script>

@@ -332,9 +332,10 @@
     const style = document.createElement('style');
     style.id = 'bookingModalStyles';
     style.textContent = `
-      .booking-overlay{position:fixed;inset:0;background:rgba(15,20,18,.55);display:flex;align-items:center;justify-content:center;z-index:1500;padding:24px;}
-      .booking-modal{position:relative;background:#fff;border-radius:14px;width:min(760px,95vw);max-height:92vh;overflow-y:auto;padding:32px 32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
-      .booking-exit{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:none;background:#f1f1f1;font-size:20px;line-height:1;cursor:pointer;color:#333;}
+      .booking-overlay{position:fixed;inset:0;background:rgba(15,20,18,.62);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px;overflow-y:auto;}
+      .booking-modal{position:relative;box-sizing:border-box;background:#fff;border-radius:16px;width:min(760px,100%);max-height:min(92vh,900px);max-height:min(92dvh,900px);overflow-y:auto;overscroll-behavior:contain;padding:30px 32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
+      .booking-modal h3{padding-right:42px;color:#123d2b;line-height:1.35;}
+      .booking-exit{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:none;background:#f1f4f1;font-size:22px;line-height:1;cursor:pointer;color:#333;}
       .booking-exit:hover{background:#e2e2e2;}
       .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
       .pkg-card{border:2px solid #e0e0e0;border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;font-size:12.5px;color:#555;}
@@ -347,6 +348,14 @@
       .ewallet-card{border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12.5px;}
       .ewallet-card.selected{border-color:#1e7a45;background:#eaf7ef;}
       .qr-box{width:110px;height:110px;margin:8px auto;background:#fff;border:1px dashed #999;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#888;text-align:center;}
+      @media(max-width:600px){
+        .booking-overlay{align-items:flex-start;padding:12px;}
+        .booking-modal{width:100%;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);border-radius:12px;padding:24px 18px 20px;}
+        .pkg-grid{grid-template-columns:1fr;gap:8px;}
+        .pkg-card{text-align:left;padding:12px;}
+        .ewallet-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .terms-box{max-height:45vh;}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -358,19 +367,17 @@
           alert('This resort does not have a price set yet. Please contact support.');
           return;
       }
-      bookingState = { resort: r, package: null, agreedPackage: false, agreedTerms: false };
-
-      let bookedDates = new Set();
+      const checkButton = this;
+      checkButton.disabled = true;
       try {
-          const res = await fetch(`/resort_availability/${r.id}`);
-          const data = await res.json();
-          bookedDates = new Set(data.booked_dates || []);
+          bookingState = { resort: r, package: null, agreedPackage: false, agreedTerms: false };
+          bookingState.bookedDates = await bookedDatesFor(r);
+          openBookingModal();
       } catch (err) {
-          bookedDates = new Set();
+          window.alert('We could not check this resort’s availability. Please try again in a moment.');
+      } finally {
+          checkButton.disabled = false;
       }
-      bookingState.bookedDates = bookedDates;
-
-      openBookingModal();
   });
 
   function openBookingModal() {
@@ -378,19 +385,33 @@
       const overlay = document.createElement('div');
       overlay.id = 'bookingOverlay';
       overlay.className = 'booking-overlay';
+      overlay.setAttribute('role', 'presentation');
       overlay.innerHTML = `
-        <div class="booking-modal">
+        <div class="booking-modal" role="dialog" aria-modal="true" aria-label="Book a resort" tabindex="-1">
             <button class="booking-exit" type="button" onclick="requestCloseBookingModal()" aria-label="Close">&times;</button>
             <div id="bookingModalBody"></div>
         </div>
       `;
+      overlay.addEventListener('click', event => {
+          if (event.target === overlay) requestCloseBookingModal();
+      });
+      overlay.addEventListener('keydown', event => {
+          if (event.key === 'Escape') requestCloseBookingModal();
+      });
+      overlay.dataset.previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
       document.body.appendChild(overlay);
       renderCalendarStep();
+      overlay.querySelector('.booking-modal').focus();
   }
 
   function closeBookingModal() {
       const el = document.getElementById('bookingOverlay');
-      if (el) el.remove();
+      if (el) {
+          document.body.style.overflow = el.dataset.previousBodyOverflow || '';
+          el.remove();
+          document.querySelector('.checkbtn')?.focus();
+      }
   }
 
   function requestCloseBookingModal() {
@@ -1217,13 +1238,23 @@
   const leftBtn = document.getElementById('scrollLeftBtn');
   const rightBtn = document.getElementById('scrollRightBtn');
 
-  function getScrollAmount() {
-    const card = cardRow.querySelector('.rcard');
-    if (!card) return 300;
-    return card.offsetWidth + 16;
+  function scrollToAdjacentCard(direction) {
+    const cards = [...cardRow.querySelectorAll('.rcard:not([hidden])')];
+    if (!cards.length) return;
+    const rowBounds = cardRow.getBoundingClientRect();
+    const firstVisibleIndex = cards.findIndex(card => {
+      const bounds = card.getBoundingClientRect();
+      return bounds.left + bounds.width / 2 > rowBounds.left + 1;
+    });
+    const currentIndex = firstVisibleIndex < 0 ? cards.length - 1 : firstVisibleIndex;
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= cards.length) return;
+    const target = cards[targetIndex];
+    const targetDelta = target.getBoundingClientRect().left - rowBounds.left;
+    cardRow.scrollBy({ left: targetDelta, behavior: 'smooth' });
   }
-  leftBtn.addEventListener('click', () => cardRow.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' }));
-  rightBtn.addEventListener('click', () => cardRow.scrollBy({ left: getScrollAmount(), behavior: 'smooth' }));
+  leftBtn.addEventListener('click', () => scrollToAdjacentCard(-1));
+  rightBtn.addEventListener('click', () => scrollToAdjacentCard(1));
 
   function updateCarouselButtons() {
     if (!cardRow) return;

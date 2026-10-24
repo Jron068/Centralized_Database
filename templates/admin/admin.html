@@ -118,6 +118,7 @@
       <a class="side-link" href="{{ url_for('properties') }}"><span class="icon">&#127968;</span> Properties</a>
       <a class="side-link" href="{{ url_for('payment') }}"><span class="icon">&#128179;</span> Payments</a>
       <a class="side-link" href="{{ url_for('guests') }}"><span class="icon">&#128101;</span> Guests</a>
+      <a class="side-link" href="{{ url_for('owner_support') }}"><span class="icon">&#9993;</span> Customer Support</a>
       <a class="side-link" href="{{ url_for('reviews') }}"><span class="icon">&#9733;</span> Reviews</a>
       <a class="side-link" href="{{ url_for('reports') }}"><span class="icon">&#128202;</span> Reports</a>
       <a class="side-link" href="{{ url_for('settings') }}"><span class="icon">&#9881;</span> Settings</a>
@@ -404,5 +405,6 @@
 
 
 
+{% include 'admin/_owner_navigation.html' %}
 </body>
 </html>

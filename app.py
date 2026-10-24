@@ -65,8 +65,10 @@ import routes.auth.registration
 import routes.auth.otp
 import routes.auth.login
 import routes.customer.dashboard
+import routes.customer.support
 import routes.customer.booking_routes
 import routes.admin.admin_dashboard
+import routes.admin.support
 import routes.admin.admin_payments
 import routes.caretaker
 import routes.admin.reservation
