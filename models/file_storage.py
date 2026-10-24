@@ -3,6 +3,7 @@
 import json
 import mimetypes
 import os
+import re
 from pathlib import Path
 from time import monotonic
 from urllib.error import HTTPError, URLError
@@ -20,16 +21,27 @@ class FileStorageError(RuntimeError):
 
 def _settings():
     base_url = (os.getenv("SUPABASE_URL") or "").strip().rstrip("/")
-    service_key = (os.getenv("SUPABASE_STORAGE_SERVICE_ROLE_KEY") or "").strip()
+    service_key = (
+        os.getenv("SUPABASE_STORAGE_SERVICE_ROLE_KEY")
+        or os.getenv("SUPABASE_KEY")
+        or ""
+    ).strip()
     if not base_url or not service_key:
         raise FileStorageError(
             "Uploads are unavailable. Configure SUPABASE_URL and "
-            "SUPABASE_STORAGE_SERVICE_ROLE_KEY in the hosting environment."
+            "SUPABASE_STORAGE_SERVICE_ROLE_KEY in the hosting environment "
+            "(SUPABASE_KEY is also accepted for existing deployments)."
         )
     parsed_url = urlsplit(base_url)
-    if parsed_url.scheme != "https" or not parsed_url.netloc:
-        raise FileStorageError("SUPABASE_URL must be a valid HTTPS URL.")
-    return base_url, service_key
+    if parsed_url.scheme != "https" or not parsed_url.netloc or parsed_url.query or parsed_url.fragment:
+        raise FileStorageError("SUPABASE_URL must be a valid HTTPS project URL.")
+    project_path = re.sub(r"/rest/v1/?$", "", parsed_url.path).rstrip("/")
+    if project_path:
+        raise FileStorageError(
+            "SUPABASE_URL must be the project URL root without an API path."
+        )
+    project_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    return project_url, service_key
 
 
 def _bucket(private):
@@ -44,9 +56,15 @@ def upload_file(data, object_path, *, private=False, content_type=None):
     if not clean_path or any(part in {".", ".."} for part in clean_path.split("/")):
         raise ValueError("Invalid upload path.")
 
-    if not (os.getenv("SUPABASE_URL") or "").strip() or not (
-        os.getenv("SUPABASE_STORAGE_SERVICE_ROLE_KEY") or ""
-    ).strip():
+    has_storage_url = bool((os.getenv("SUPABASE_URL") or "").strip())
+    has_storage_key = bool(
+        (
+            os.getenv("SUPABASE_STORAGE_SERVICE_ROLE_KEY")
+            or os.getenv("SUPABASE_KEY")
+            or ""
+        ).strip()
+    )
+    if not has_storage_url or not has_storage_key:
         if os.getenv("FLASK_DEBUG") != "1":
             _settings()
         destination = Path(current_app.static_folder) / "uploads" / Path(*clean_path.split("/"))

@@ -41,6 +41,44 @@ class FileStorageTests(unittest.TestCase):
 
         self.assertEqual(reference, "supabase://resort-media/resort_photos/1/photo.png")
         self.assertEqual(send.call_args.args[0].get_method(), "POST")
+        self.assertTrue(
+            send.call_args.args[0].full_url.startswith(
+                "https://project.supabase.co/storage/v1/object/"
+            )
+        )
+
+    def test_upload_normalizes_rest_api_url_and_legacy_supabase_key(self):
+        environment = {
+            "SUPABASE_URL": "https://project.supabase.co/rest/v1/",
+            "SUPABASE_KEY": "test-service-role-key",
+            "FLASK_DEBUG": "0",
+        }
+        with patch.dict(os.environ, environment, clear=True):
+            with patch.object(file_storage, "urlopen", return_value=_Response()) as send:
+                reference = file_storage.upload_file(
+                    b"proof", "payments/proof.png", private=True, content_type="image/png"
+                )
+
+        self.assertEqual(reference, "supabase://payment-proofs/payments/proof.png")
+        request = send.call_args.args[0]
+        self.assertTrue(
+            request.full_url.startswith(
+                "https://project.supabase.co/storage/v1/object/payment-proofs/"
+            )
+        )
+        self.assertEqual(request.get_header("Apikey"), "test-service-role-key")
+
+    def test_project_url_rejects_unrecognized_paths(self):
+        environment = {
+            "SUPABASE_URL": "https://project.supabase.co/custom/path",
+            "SUPABASE_STORAGE_SERVICE_ROLE_KEY": "test-key",
+            "FLASK_DEBUG": "0",
+        }
+        with patch.dict(os.environ, environment, clear=True):
+            with self.assertRaisesRegex(
+                file_storage.FileStorageError, "project URL root"
+            ):
+                file_storage._settings()
 
     def test_private_file_url_is_signed_and_cached(self):
         environment = {

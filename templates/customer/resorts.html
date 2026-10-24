@@ -300,9 +300,8 @@
   ];
 
   const EWALLETS = [
-    { id: 'gcash', label: 'GCash', account: '0917-000-0000 (Pansol Resorts)' },
-    { id: 'maya', label: 'Maya', account: '0918-000-0000 (Pansol Resorts)' },
-    { id: 'gotyme', label: 'GoTyme', account: '0919-000-0000 (Pansol Resorts)' }
+    { id: 'gcash', label: 'GCash', account: 'Zandro Castillo', qr: "{{ url_for('static', filename='images/payments/gcash-qr.png') }}" },
+    { id: 'maya', label: 'Maya', account: 'Zandro Castillo', qr: "{{ url_for('static', filename='images/payments/maya-qr.png') }}" }
   ];
 
   // Optional add-on prices (PHP). Change WATER_PRICE to your actual price.
@@ -345,15 +344,22 @@
       .agree-row input{margin-top:2px;}
       .terms-box{max-height:320px;overflow-y:auto;border:1px solid #e2e2e2;border-radius:8px;padding:16px 18px;font-size:13px;background:#fafafa;line-height:1.5;}
       .ewallet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
-      .ewallet-card{border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12.5px;}
+      .ewallet-card{width:100%;border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font:inherit;font-size:12.5px;color:#273b30;background:#fff;}
       .ewallet-card.selected{border-color:#1e7a45;background:#eaf7ef;}
-      .qr-box{width:110px;height:110px;margin:8px auto;background:#fff;border:1px dashed #999;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#888;text-align:center;}
+      .qr-box{width:min(190px,100%);aspect-ratio:1;margin:10px auto;background:#f8faf8;border:1px solid #e0e8e2;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+      .qr-box img{display:block;width:100%;height:100%;object-fit:contain;background:#fff;}
+      .qr-box [hidden]{display:none!important;}
+      .qr-unavailable{padding:12px;color:#755b20;font-size:11px;line-height:1.4;}
+      .payment-recipient{font-size:12px;color:#526359;}
+      .payment-help{margin:8px 0;color:#6c796f;font-size:12px;line-height:1.45;}
+      .payMethod:focus-visible,.ewallet-card:focus-visible{outline:3px solid #98c9a9;outline-offset:2px;}
       @media(max-width:600px){
         .booking-overlay{align-items:flex-start;padding:12px;}
         .booking-modal{width:100%;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);border-radius:12px;padding:24px 18px 20px;}
         .pkg-grid{grid-template-columns:1fr;gap:8px;}
         .pkg-card{text-align:left;padding:12px;}
-        .ewallet-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .ewallet-grid{grid-template-columns:1fr;}
+        .qr-box{width:min(220px,100%);}
         .terms-box{max-height:45vh;}
       }
     `;
@@ -706,21 +712,19 @@
       body.innerHTML = `
           <h3 style="margin:0 0 4px;">Payment — ₱${total.toLocaleString()}</h3>
           <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 4 of 4 — Choose how you'd like to pay</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
-              <button class="payMethod" data-m="Bank transfer" style="height:60px;">Bank transfer</button>
-              <button class="payMethod" data-m="E-wallet" style="height:60px;">E-wallet</button>
+          <p class="payment-help">Choose GCash or Maya, scan its QR code, and confirm the recipient name is <strong>Zandro Castillo</strong> before sending payment.</p>
+          <div class="ewallet-grid" id="ewalletGrid">
+            ${EWALLETS.map(w => `
+              <button class="ewallet-card" type="button" data-w="${w.id}" aria-pressed="false">
+                <b>${w.label}</b>
+                <span class="qr-box">
+                  <img src="${w.qr}" alt="${w.label} payment QR code" data-qr-image>
+                  <span class="qr-unavailable" data-qr-fallback hidden>QR code not available yet. Please contact support before transferring.</span>
+                </span>
+                <span class="payment-recipient">Recipient: ${w.account}</span>
+              </button>`).join('')}
           </div>
-          <div id="ewalletSection" style="display:none;">
-            <div style="font-size:13px;font-weight:600;margin-top:10px;">Select your e-wallet</div>
-            <div class="ewallet-grid" id="ewalletGrid">
-              ${EWALLETS.map(w => `
-                <div class="ewallet-card" data-w="${w.id}">
-                  <b>${w.label}</b>
-                  <div class="qr-box">${w.label}<br>QR Code</div>
-                  <div style="font-size:11px;color:#666;">${w.account}</div>
-                </div>`).join('')}
-            </div>
-          </div>
+          <div id="qrPaymentHelp" class="payment-help" role="status">Select a payment method with an available QR code to continue.</div>
           <div id="proofSection" style="display:none;margin-top:14px;">
               <p style="font-size:13px;color:#555;">Upload a screenshot of your successful payment.</p>
               <input type="file" id="proofFile" accept="image/*" style="width:100%;margin-bottom:8px;">
@@ -730,36 +734,54 @@
           <button onclick="renderFormStep()" style="margin-top:14px;width:100%;">Back</button>
           <button onclick="requestCloseBookingModal()" style="margin-top:8px;width:100%;">Cancel</button>
       `;
-      let method = null;
       let ewallet = null;
-      body.querySelectorAll('.payMethod').forEach(b => {
-          b.addEventListener('click', () => {
-              method = b.dataset.m;
-              const showEwallet = method === 'E-wallet';
-              document.getElementById('ewalletSection').style.display = showEwallet ? 'block' : 'none';
-              document.getElementById('proofSection').style.display = showEwallet ? (ewallet ? 'block' : 'none') : 'block';
-          });
-      });
       body.querySelectorAll('.ewallet-card').forEach(card => {
+          const image = card.querySelector('[data-qr-image]');
+          const fallback = card.querySelector('[data-qr-fallback]');
+          const setQrAvailability = available => {
+              image.hidden = !available;
+              fallback.hidden = available;
+              card.dataset.qrAvailable = String(available);
+          };
+          image.addEventListener('load', () => setQrAvailability(image.naturalWidth > 0));
+          image.addEventListener('error', () => setQrAvailability(false));
+          if (image.complete) setQrAvailability(image.naturalWidth > 0);
+
           card.addEventListener('click', () => {
+              if (card.dataset.qrAvailable !== 'true') {
+                  document.getElementById('proofSection').style.display = 'none';
+                  document.getElementById('qrPaymentHelp').textContent =
+                      `${card.dataset.w === 'gcash' ? 'GCash' : 'Maya'} QR code is not available yet. Please contact support before transferring.`;
+                  return;
+              }
               ewallet = card.dataset.w;
-              body.querySelectorAll('.ewallet-card').forEach(c => c.classList.toggle('selected', c === card));
+              body.querySelectorAll('.ewallet-card').forEach(c => {
+                  c.classList.toggle('selected', c === card);
+                  c.setAttribute('aria-pressed', String(c === card));
+              });
+              document.getElementById('qrPaymentHelp').textContent =
+                  `Scan the ${card.querySelector('b').textContent} QR code. Confirm the recipient is ${card.querySelector('.payment-recipient').textContent.replace('Recipient: ', '')} before paying.`;
               document.getElementById('proofSection').style.display = 'block';
           });
       });
       document.getElementById('submitProof').onclick = async () => {
           const fileInput = document.getElementById('proofFile');
           const err = document.getElementById('proofErr');
-          if (!fileInput.files.length || !method || (method === 'E-wallet' && !ewallet)) {
-              err.textContent = 'Choose a payment method (and e-wallet, if applicable) and upload your screenshot.';
+          if (!fileInput.files.length || !ewallet) {
+              err.textContent = 'Choose an available QR payment method and upload your payment screenshot.';
               err.style.display = 'block';
               return;
           }
           if (!confirmAction('Are you sure you want to submit this payment for review?')) return;
-          const walletLabel = EWALLETS.find(w => w.id === ewallet)?.label || ewallet;
+          const wallet = EWALLETS.find(w => w.id === ewallet);
+          if (!wallet || !body.querySelector(`[data-w="${ewallet}"]`)?.querySelector('[data-qr-image]')?.naturalWidth) {
+              err.textContent = 'The selected payment QR is unavailable. Please choose another method or contact support.';
+              err.style.display = 'block';
+              return;
+          }
           const fd = new FormData();
           fd.append('reservation_id', bookingState.reservationId);
-          fd.append('payment_method', method === 'E-wallet' ? `E-wallet (${walletLabel})` : method);
+          fd.append('payment_method', wallet.label);
           fd.append('amount_paid', total);
           fd.append('proof', fileInput.files[0]);
 

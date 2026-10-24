@@ -261,9 +261,12 @@ def submit_payment():
         return jsonify({"success": True, "message": "Payment proof submitted for review."}), 201
     except Exception:
         conn.rollback()
-        if proof_path:
-            delete_uploaded_file(proof_path)
         app.logger.exception("Payment proof upload failed")
+        if proof_path:
+            try:
+                delete_uploaded_file(proof_path)
+            except Exception:
+                app.logger.exception("Could not clean up the uploaded payment proof")
         return jsonify({"success": False, "message": "Unable to save the payment proof."}), 500
     finally:
         cursor.close()
