@@ -16,15 +16,11 @@ services:
         sync: false
       - key: FLASK_DEBUG
         value: "0"
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USE_TLS
-        value: "1"
-      - key: MAIL_USERNAME
+      - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
-      - key: MAIL_PASSWORD
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_REFRESH_TOKEN
         sync: false
       - key: MAIL_DEFAULT_SENDER
         sync: false

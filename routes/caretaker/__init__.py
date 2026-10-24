@@ -8,11 +8,11 @@ from flask import request, jsonify
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 
-from app import app, mail
+from app import app
 from config import get_connection
 from models.resort import enrich_resort, gallery_photos
 from models.resort_photos import get_resort_photos
-from flask_mail import Message
+from API.email import EmailDeliveryError, send_email as deliver_email
 from models.decorators import role_required
 from models.image_moderation import ImageModerationError, MAX_IMAGE_BYTES, scan_resort_image
 from models.resort_updates import ensure_resort_updates_table, update_image_url
@@ -1068,11 +1068,11 @@ def caretaker_review_reservation(reservation_id):
 
 def send_email(to_email, subject, body_html):
     try:
-        msg = Message(subject=subject, recipients=[to_email], html=body_html)
-        mail.send(msg)
+        body_text = re.sub(r"<[^>]+>", " ", body_html)
+        deliver_email(to_email, subject, body_text, body_html)
         return True
-    except Exception as e:
-        print("EMAIL ERROR:", e)
+    except EmailDeliveryError:
+        app.logger.exception("Caretaker approval email could not be sent")
         return False
 
 @app.route("/approve-caretaker/<int:account_id>")

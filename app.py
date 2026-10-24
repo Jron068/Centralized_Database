@@ -17,7 +17,7 @@ app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
 
 
 # ============================
-# FLASK MAIL CONFIGURATION (Gmail only: used to send the verification code)
+# Local SMTP is retained for development; Render email delivery uses Gmail API.
 # ============================
 
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
