@@ -183,7 +183,7 @@ def book_resort():
                  reservation_status, guest_name, guest_phone, pax, gas_stove)
             VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s, %s)
         """, (customer_id, resort_id, check_in, check_out, guests, total_amount,
-              guest_name, guest_phone, guests, gas_stove))
+              guest_name, guest_phone, guests, int(gas_stove)))
         reservation_id = cursor.lastrowid
         notify_resort_caretakers(
             cursor,
@@ -201,6 +201,7 @@ def book_resort():
         }), 201
     except Exception:
         conn.rollback()
+        app.logger.exception("Reservation could not be created")
         return jsonify({"success": False, "message": "Unable to save the reservation."}), 500
     finally:
         cursor.close()

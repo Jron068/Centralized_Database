@@ -1,94 +1,57 @@
-import io
-import json
-import os
+import smtplib
 import unittest
-from urllib.error import HTTPError
 from unittest.mock import patch
 
 from flask_mail import Mail
 
 from API import email
-
-
-class _Response:
-    status = 200
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        return False
-
-    def read(self, size=-1):
-        return b'{"id":"message-id"}'
+from app import app
 
 
 class EmailTests(unittest.TestCase):
-    def test_otp_uses_resend_https_api_with_bounded_timeout(self):
-        environment = {
-            "RESEND_API_KEY": "test-api-key",
+    def test_otp_uses_configured_smtp_credentials_and_sender(self):
+        settings = {
+            "MAIL_USERNAME": "verify@example.test",
+            "MAIL_PASSWORD": "test-app-password",
             "MAIL_DEFAULT_SENDER": "Pansol Resorts <verify@example.test>",
-            "FLASK_DEBUG": "0",
         }
-        with patch.dict(os.environ, environment, clear=True):
-            with patch.object(email, "urlopen", return_value=_Response()) as send:
-                email.send_otp_email("guest@example.test", "123456", 5)
+        with patch.dict(app.config, settings):
+            with app.app_context():
+                with patch.object(Mail, "send") as smtp_send:
+                    email.send_otp_email("guest@example.test", "123456", 5)
 
-        request = send.call_args.args[0]
-        payload = json.loads(request.data)
-        self.assertEqual(request.full_url, "https://api.resend.com/emails")
-        self.assertEqual(request.get_method(), "POST")
-        self.assertEqual(request.get_header("Authorization"), "Bearer test-api-key")
-        self.assertEqual(request.get_header("User-agent"), "PansolResorts/1.0")
-        self.assertEqual(payload["to"], ["guest@example.test"])
-        self.assertEqual(payload["from"], "Pansol Resorts <verify@example.test>")
-        self.assertIn("123456", payload["text"])
-        self.assertEqual(send.call_args.kwargs["timeout"], 10)
+        message = smtp_send.call_args.args[0]
+        self.assertEqual(message.sender, settings["MAIL_DEFAULT_SENDER"])
+        self.assertEqual(message.recipients, ["guest@example.test"])
+        self.assertIn("123456", message.body)
+        self.assertIn("5 minutes", message.body)
+        self.assertIn("123456", message.html)
 
-    def test_production_without_resend_configuration_fails_without_smtp(self):
-        with patch.dict(os.environ, {"FLASK_DEBUG": "0"}, clear=True):
-            with patch.object(Mail, "send") as smtp_send:
-                with self.assertRaises(email.EmailDeliveryError):
-                    email.send_otp_email("guest@example.test", "123456")
+    def test_missing_smtp_credentials_fails_without_sending(self):
+        settings = {
+            "MAIL_USERNAME": "",
+            "MAIL_PASSWORD": "",
+            "MAIL_DEFAULT_SENDER": "",
+        }
+        with patch.dict(app.config, settings):
+            with app.app_context():
+                with patch.object(Mail, "send") as smtp_send:
+                    with self.assertRaises(email.EmailDeliveryError):
+                        email.send_otp_email("guest@example.test", "123456")
 
         smtp_send.assert_not_called()
 
-    def test_resend_requires_sender_address(self):
-        with patch.dict(
-            os.environ,
-            {"RESEND_API_KEY": "test-api-key", "FLASK_DEBUG": "0"},
-            clear=True,
-        ):
-            with patch.object(email, "urlopen") as send:
-                with self.assertRaises(email.EmailDeliveryError):
-                    email.send_otp_email("guest@example.test", "123456")
-
-        send.assert_not_called()
-
-    def test_resend_error_includes_provider_reason_without_email_address(self):
-        response = HTTPError(
-            "https://api.resend.com/emails",
-            403,
-            "Forbidden",
-            {},
-            io.BytesIO(
-                b'{"name":"validation_error","message":"Only send to '
-                b'account@example.com"}'
-            ),
-        )
-        environment = {
-            "RESEND_API_KEY": "test-api-key",
-            "MAIL_DEFAULT_SENDER": "Pansol Resorts <onboarding@resend.dev>",
-            "FLASK_DEBUG": "0",
+    def test_smtp_failure_is_reported_as_email_delivery_error(self):
+        settings = {
+            "MAIL_USERNAME": "verify@example.test",
+            "MAIL_PASSWORD": "test-app-password",
+            "MAIL_DEFAULT_SENDER": "verify@example.test",
         }
-        with patch.dict(os.environ, environment, clear=True):
-            with patch.object(email, "urlopen", side_effect=response):
-                with self.assertRaises(email.EmailDeliveryError) as raised:
-                    email.send_otp_email("guest@example.test", "123456")
-
-        self.assertIn("HTTP 403", str(raised.exception))
-        self.assertIn("Only send to [redacted email]", str(raised.exception))
-        self.assertNotIn("account@example.com", str(raised.exception))
+        with patch.dict(app.config, settings):
+            with app.app_context():
+                with patch.object(Mail, "send", side_effect=smtplib.SMTPException("failed")):
+                    with self.assertRaises(email.EmailDeliveryError):
+                        email.send_otp_email("guest@example.test", "123456")
 
 
 if __name__ == "__main__":

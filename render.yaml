@@ -16,9 +16,17 @@ services:
         sync: false
       - key: FLASK_DEBUG
         value: "0"
-      - key: MAIL_DEFAULT_SENDER
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "1"
+      - key: MAIL_USERNAME
         sync: false
-      - key: RESEND_API_KEY
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
         sync: false
       - key: OPENAI_API_KEY
         sync: false
