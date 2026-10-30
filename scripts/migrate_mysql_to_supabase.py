@@ -1,10 +1,3 @@
-"""Copy the existing MySQL application data into an empty Supabase schema.
-
-This script does not delete or modify the source database. It refuses to write
-if the destination contains rows or if the source and destination schemas do not
-match safely. Set DATABASE_URL in .env before running it.
-"""
-
 import os
 import sys
 

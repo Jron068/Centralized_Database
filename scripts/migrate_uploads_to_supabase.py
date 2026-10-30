@@ -1,5 +1,3 @@
-"""Copy existing local upload files to Supabase Storage and update their DB references."""
-
 import mimetypes
 import os
 import sys

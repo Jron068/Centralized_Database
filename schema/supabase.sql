@@ -63,6 +63,9 @@ CREATE TABLE IF NOT EXISTS payments (
   reservation_id int NOT NULL,
   proof_of_payment varchar(255) DEFAULT NULL,
   reference_number varchar(100) DEFAULT NULL,
+  payer_name varchar(150) DEFAULT NULL,
+  payer_phone varchar(30) DEFAULT NULL,
+  payment_method varchar(30) DEFAULT NULL,
   amount_paid decimal(10,2) DEFAULT NULL,
   payment_status VARCHAR(50) DEFAULT 'Pending',
   payment_date TIMESTAMP DEFAULT NULL,
@@ -83,6 +86,7 @@ CREATE TABLE IF NOT EXISTS reservations (
   pax int DEFAULT NULL,
   gas_stove SMALLINT DEFAULT '0',
   booking_source VARCHAR(50) NOT NULL DEFAULT 'Online',
+  customer_decision VARCHAR(20) NOT NULL DEFAULT 'Pending',
   PRIMARY KEY (reservation_id)
 );
 CREATE TABLE IF NOT EXISTS resort_owners (

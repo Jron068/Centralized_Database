@@ -2,5 +2,6 @@ Flask
 Flask-Mail
 mysql-connector-python
 python-dotenv
+google-auth-oauthlib
 psycopg[binary]>=3.2,<4
 gunicorn>=22,<24; platform_system != "Windows"

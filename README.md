@@ -4,6 +4,7 @@
 
 - `API/` contains external services, including SMS.
 - `models/` contains shared helpers and model files.
+- `scripts/` contains database/upload migration tools and the Gmail OAuth setup utility.
 - `routes/auth/` contains login, registration, and OTP routes.
 - `routes/customer/` contains customer pages and reservations.
 - `routes/admin/` contains owner and admin pages.
@@ -17,6 +18,7 @@
 
 1. Install packages with `pip install -r requirements.txt`.
 2. Copy `.env.example` to `.env` and set your database and SMS settings.
+   To create Gmail API credentials, save your OAuth client JSON as the ignored `credentials.json` file in the project root and run `python scripts/generate_gmail_token.py`; copy the printed values into `.env`.
 3. For Supabase PostgreSQL, run `schema/supabase.sql` in the Supabase SQL Editor and set `DATABASE_URL`. For local MySQL, leave `DATABASE_URL` blank and configure the `DB_*` settings.
 4. Start the site with `python app.py`. When `FLASK_DEBUG=1`, uploads are saved locally for development; production deployments require the Supabase Storage settings below.
 

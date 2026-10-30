@@ -49,7 +49,7 @@ def resort_availability(resort_id):
             WHERE resort_id = %s
               AND check_in IS NOT NULL AND check_out IS NOT NULL
               AND check_out > check_in
-              AND reservation_status IN ('Pending', 'Confirmed')
+              AND reservation_status = 'Confirmed'
         """, (resort_id,))
         rows = cursor.fetchall()
 
@@ -125,7 +125,7 @@ def book_resort():
             customer_id = cursor.lastrowid
 
         cursor.execute(
-            "SELECT resort_id, price, max_pax FROM resorts WHERE resort_id = %s AND status = 'Active'",
+            "SELECT resort_id, price, max_pax FROM resorts WHERE resort_id = %s AND status = 'Active' FOR UPDATE",
             (resort_id,)
         )
         resort = cursor.fetchone()
@@ -159,7 +159,7 @@ def book_resort():
             SELECT reservation_id
             FROM reservations
             WHERE resort_id = %s
-              AND reservation_status IN ('Pending', 'Confirmed')
+              AND reservation_status = 'Confirmed'
               AND check_in IS NOT NULL AND check_out IS NOT NULL
               AND check_in < %s AND check_out > %s
             LIMIT 1
@@ -180,8 +180,8 @@ def book_resort():
         cursor.execute("""
             INSERT INTO reservations
                 (customer_id, resort_id, check_in, check_out, guests, total_amount,
-                 reservation_status, guest_name, guest_phone, pax, gas_stove)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s, %s)
+                 reservation_status, guest_name, guest_phone, pax, gas_stove, customer_decision)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s, %s, 'Pending')
         """, (customer_id, resort_id, check_in, check_out, guests, total_amount,
               guest_name, guest_phone, guests, int(gas_stove)))
         reservation_id = cursor.lastrowid
@@ -215,28 +215,43 @@ def submit_payment():
         return jsonify({"success": False, "message": "Please log in to submit payment."}), 401
 
     proof = request.files.get('proof')
+    payer_name = request.form.get('payer_name', '').strip()
+    payer_phone = request.form.get('payer_phone', '').strip()
+    reference_number = request.form.get('reference_number', '').strip()
+    payment_method = request.form.get('payment_method', '').strip()
     try:
         reservation_id = int(request.form.get('reservation_id', ''))
         amount_paid = Decimal(request.form.get('amount_paid', ''))
     except (TypeError, ValueError, InvalidOperation):
         return jsonify({"success": False, "message": "Invalid payment details."}), 400
 
-    if (not proof or not proof.filename or not allowed_file(proof.filename)
+    if (not payer_name or len(payer_name) > 150
+            or not payer_phone or len(payer_phone) > 30
+            or not reference_number or len(reference_number) > 100
+            or payment_method not in {'GCash', 'Maya'}
+            or not proof or not proof.filename or not allowed_file(proof.filename)
             or not amount_paid.is_finite() or amount_paid <= 0):
-        return jsonify({"success": False, "message": "Upload a PNG, JPG, JPEG, or WEBP payment screenshot."}), 400
+        return jsonify({
+            "success": False,
+            "message": "Enter the sender name, phone number, transaction reference, payment method, and upload a PNG, JPG, JPEG, or WEBP receipt.",
+        }), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     proof_path = None
     try:
         cursor.execute("""
-            SELECT r.reservation_id
+            SELECT r.reservation_id, r.reservation_status
             FROM reservations AS r
             JOIN customers AS c ON c.customer_id = r.customer_id
             WHERE r.reservation_id = %s AND c.account_id = %s
+            FOR UPDATE
         """, (reservation_id, session['account_id']))
-        if not cursor.fetchone():
+        reservation = cursor.fetchone()
+        if not reservation:
             return jsonify({"success": False, "message": "Reservation not found."}), 404
+        if reservation["reservation_status"] != "Pending":
+            return jsonify({"success": False, "message": "This reservation is no longer accepting payment proofs."}), 409
 
         image_data = proof.stream.read(5 * 1024 * 1024 + 1)
         if len(image_data) > 5 * 1024 * 1024:
@@ -254,9 +269,14 @@ def submit_payment():
         )
 
         cursor.execute("""
-            INSERT INTO payments (reservation_id, proof_of_payment, amount_paid, payment_status, payment_date)
-            VALUES (%s, %s, %s, 'Pending', NOW())
-        """, (reservation_id, proof_path, amount_paid))
+            INSERT INTO payments
+                (reservation_id, proof_of_payment, amount_paid, payment_status, payment_date,
+                 payer_name, payer_phone, reference_number, payment_method)
+            VALUES (%s, %s, %s, 'Pending', NOW(), %s, %s, %s, %s)
+        """, (
+            reservation_id, proof_path, amount_paid, payer_name,
+            payer_phone, reference_number, payment_method,
+        ))
         conn.commit()
         return jsonify({"success": True, "message": "Payment proof submitted for review."}), 201
     except Exception:
