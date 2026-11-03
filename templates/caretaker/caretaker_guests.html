@@ -38,6 +38,7 @@
 
 <div class="main">
   <header class="topbar">
+    {% include 'caretaker/_mobile_menu_toggle.html' %}
     <div class="topbar-brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></div>
     <nav class="topbar-nav">
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>

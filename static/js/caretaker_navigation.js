@@ -2,19 +2,22 @@
   const initialize = () => {
     const sidebar = document.querySelector('.sidebar');
     const topbar = document.querySelector('.topbar');
-    if (!sidebar || !topbar || topbar.querySelector('.caretaker-menu-toggle')) return;
+    if (!sidebar || !topbar) return;
     if (sidebar.parentElement === document.body) {
       document.body.classList.add('caretaker-direct-layout');
     }
 
-    const toggle = document.createElement('button');
-    toggle.className = 'caretaker-menu-toggle';
-    toggle.type = 'button';
+    let toggle = topbar.querySelector('.caretaker-menu-toggle');
+    if (!toggle) {
+      toggle = document.createElement('button');
+      toggle.className = 'caretaker-menu-toggle';
+      toggle.type = 'button';
+      toggle.innerHTML = '<span></span><span></span><span></span>';
+      topbar.insertBefore(toggle, topbar.firstChild);
+    }
     toggle.setAttribute('aria-label', 'Open navigation menu');
     toggle.setAttribute('aria-controls', 'caretaker-sidebar');
     toggle.setAttribute('aria-expanded', 'false');
-    toggle.innerHTML = '<span></span><span></span><span></span>';
-    topbar.insertBefore(toggle, topbar.firstChild);
     sidebar.id = 'caretaker-sidebar';
 
     let backdrop = document.querySelector('.caretaker-drawer-backdrop');
