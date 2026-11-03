@@ -38,7 +38,7 @@
 
 <div class="main">
   <header class="topbar">
-    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <div class="topbar-brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></div>
     <nav class="topbar-nav">
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}">Updates</a>
@@ -102,7 +102,8 @@
           <thead>
             <tr>
               <th>Guest</th><th>Booking ID</th><th>Stay</th><th>Guests</th>
-              <th>Source</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th>
+              <th>Source</th><th>Payment</th><th>Sender / reference</th><th>Customer decision</th>
+              <th>Proof</th><th>Status</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="guestRows"></tbody>
@@ -195,7 +196,7 @@
     const body = $('guestRows'); body.innerHTML = '';
     if (!rows.length) {
       const tr = document.createElement('tr'); const td = cell(tr, 'No guest records found for your assigned resort.');
-      td.colSpan = 9; td.className = 'empty-state'; body.appendChild(tr); return;
+      td.colSpan = 11; td.className = 'empty-state'; body.appendChild(tr); return;
     }
     rows.forEach(g => {
       const tr = document.createElement('tr');
@@ -205,6 +206,14 @@
       cell(tr, who); cell(tr, g.booking); cell(tr, g.check_in + ' to ' + g.check_out); cell(tr, g.guests + ' guests');
       cell(tr, g.source === 'Walk-in' ? pill('Walk-in') : 'Online');
       cell(tr, (g.payment_status || 'No payment') + (g.amount != null ? ' · ' + money(g.amount) : ''));
+      const paymentDetails = document.createElement('div');
+      paymentDetails.textContent = `${g.payer_name || 'Sender not provided'} · ${g.payer_phone || 'Phone not provided'}`;
+      const reference = document.createElement('small');
+      reference.style.display = 'block';
+      reference.textContent = 'Ref: ' + (g.reference_number || 'Not provided');
+      paymentDetails.appendChild(reference);
+      cell(tr, paymentDetails);
+      cell(tr, g.customer_decision || 'Pending');
       if (g.proof) {
         const a = document.createElement('a'); a.href = g.proof; a.target = '_blank';
         const img = document.createElement('img'); img.src = g.proof; img.alt = 'Proof'; img.className = 'proof-thumb';
@@ -222,7 +231,7 @@
         const reject = document.createElement('button'); reject.className = 'btn btn-outline btn-sm'; reject.type = 'submit'; reject.name = 'action'; reject.value = 'reject'; reject.textContent = 'Reject';
         reject.addEventListener('click', event => { if (!confirm('Reject this reservation?')) event.preventDefault(); });
         form.append(next, approve, reject); action.appendChild(form);
-      } else action.textContent = '—';
+      } else action.textContent = g.status === 'Pending Verification' ? 'Waiting for customer confirmation' : '—';
       tr.appendChild(action);
       body.appendChild(tr);
     });

@@ -9,7 +9,7 @@
 body { min-height: 100vh; background: #f5f7f6; color: #20372a; }
 .layout, .app { min-height: 100vh; align-items: stretch; }
 .sidebar { align-self: stretch; position: sticky; top: 0; height: 100vh; height: 100dvh; min-height: 100vh; min-height: 100dvh; overflow-y:auto; scrollbar-width:thin; box-shadow: 5px 0 24px rgba(12, 44, 30, .08); }
-.sidebar .brand img { max-height: 54px; object-fit: contain; }
+.sidebar .brand img { max-height: 54px; object-fit: contain; background: #fff; padding: 4px 8px; border-radius: 8px; }
 .nav-label { margin-top: 25px; font-weight: 700; letter-spacing: .9px; }
 .nav-item { min-height: 42px; }
 .nav-item:focus-visible, .topbar-links a:focus-visible, .logout:focus-visible { outline: 2px solid #9bd2b0; outline-offset: 2px; }
@@ -25,6 +25,13 @@ body { min-height: 100vh; background: #f5f7f6; color: #20372a; }
 .panel:hover { box-shadow: 0 8px 24px rgba(26, 59, 41, .07); }
 .data-table th { white-space: nowrap; }
 .data-table tbody tr:hover { background: #f8fbf9; }
+.customer-decision-actions { display:flex;flex-wrap:wrap;gap:7px;min-width:170px; }
+.customer-decision-actions button { min-height:36px;padding:7px 10px;border:1px solid #d5e1d8;border-radius:8px;background:#fff;color:#294936;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,transform .15s; }
+.customer-decision-actions button:hover { transform:translateY(-1px); }
+.customer-decision-actions button.continue { border-color:#2f855a;background:#2f855a;color:#fff; }
+.customer-decision-actions button.cancel { border-color:#efd0ce;background:#fff7f6;color:#9a403b; }
+.customer-decision-actions button:focus-visible { outline:3px solid #9bd2b0;outline-offset:2px; }
+.badge.rejected,.badge.cancelled { background:#fce9e7;color:#a14740; }
 .field input, .field select, .field textarea { width: 100%; min-height: 44px; border: 1px solid #dce6df; border-radius: 9px; padding: 10px 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #39835d; box-shadow: 0 0 0 3px rgba(57,131,93,.12); }
 .btn-save, .primary-action { box-shadow: 0 4px 10px rgba(36,115,77,.15); }
@@ -61,6 +68,8 @@ body { min-height: 100vh; background: #f5f7f6; color: #20372a; }
   .topbar-user span { display: none; }
   .form-actions { flex-wrap: wrap; }
   .table-wrap { margin: 0 -8px; }
+  .customer-decision-actions { min-width:140px; }
+  .customer-decision-actions button { flex:1 1 100%; }
 }
 
 @media (max-width: 650px) { .customer-update-card { grid-template-columns:1fr;gap:13px; }.customer-update-image,.customer-update-icon { width:100%;height:180px; } }
@@ -1008,4 +1017,3 @@ body {
   .app > .sidebar .brand img { max-height: 38px; }
   .app > .sidebar .nav-item { font-size: 11px; padding: 8px; }
 }
-

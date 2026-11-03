@@ -300,8 +300,8 @@
   ];
 
   const EWALLETS = [
-    { id: 'gcash', label: 'GCash', account: 'Zandro Castillo', qr: "{{ url_for('static', filename='images/payments/gcash-qr.png') }}" },
-    { id: 'maya', label: 'Maya', account: 'Zandro Castillo', qr: "{{ url_for('static', filename='images/payments/maya-qr.png') }}" }
+    { id: 'gcash', label: 'GCash', account: 'AR******N C.', qr: "{{ url_for('static', filename='images/payments/gcash-qr.png') }}" },
+    { id: 'maribank', label: 'MariBank', account: 'ARON-JOHN CASTILLO · MariBank (****5616)', qr: "{{ url_for('static', filename='images/payments/maribank-qr.png') }}" }
   ];
 
   // Optional add-on prices (PHP). Change WATER_PRICE to your actual price.
@@ -334,6 +334,8 @@
       .booking-overlay{position:fixed;inset:0;background:rgba(15,20,18,.62);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px;overflow-y:auto;}
       .booking-modal{position:relative;box-sizing:border-box;background:#fff;border-radius:16px;width:min(760px,100%);max-height:min(92vh,900px);max-height:min(92dvh,900px);overflow-y:auto;overscroll-behavior:contain;padding:30px 32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.28);}
       .booking-modal h3{padding-right:42px;color:#123d2b;line-height:1.35;}
+      .booking-calendar-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-flow:row;gap:4px;min-width:0;width:100%;}
+      .booking-calendar-grid .cal-cell{min-width:0;min-height:38px;display:grid;place-items:center;padding:4px 0!important;font-size:14px!important;font-weight:600;}
       .booking-exit{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:none;background:#f1f4f1;font-size:22px;line-height:1;cursor:pointer;color:#333;}
       .booking-exit:hover{background:#e2e2e2;}
       .pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
@@ -342,7 +344,9 @@
       .pkg-card b{display:block;margin-bottom:4px;font-size:14px;color:#1a1a1a;}
       .agree-row{display:flex;align-items:flex-start;gap:8px;margin:16px 0;font-size:13px;background:#f7f7f5;padding:12px 14px;border-radius:8px;}
       .agree-row input{margin-top:2px;}
-      .terms-box{max-height:320px;overflow-y:auto;border:1px solid #e2e2e2;border-radius:8px;padding:16px 18px;font-size:13px;background:#fafafa;line-height:1.5;}
+      .terms-box{max-height:320px;overflow-y:auto;border:1px solid #e2e2e2;border-radius:8px;padding:16px 18px;font-size:14px;background:#fafafa;color:#26352c;line-height:1.65;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+      .terms-box ol{padding-left:22px;}
+      .terms-box li{margin:0 0 7px;}
       .ewallet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
       .ewallet-card{width:100%;border:2px solid #e0e0e0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font:inherit;font-size:12.5px;color:#273b30;background:#fff;}
       .ewallet-card.selected{border-color:#1e7a45;background:#eaf7ef;}
@@ -360,7 +364,11 @@
         .pkg-card{text-align:left;padding:12px;}
         .ewallet-grid{grid-template-columns:1fr;}
         .qr-box{width:min(220px,100%);}
-        .terms-box{max-height:45vh;}
+        .booking-calendar-grid{gap:4px;}
+        .booking-calendar-grid .cal-cell{min-height:40px;font-size:15px!important;}
+        .booking-modal .terms-box{max-height:50vh;padding:14px;font-size:15px;line-height:1.7;}
+        .booking-modal .agree-row{font-size:14px;line-height:1.5;}
+        .booking-modal #bookingModalBody>p{font-size:14px!important;line-height:1.5;}
       }
     `;
     document.head.appendChild(style);
@@ -473,7 +481,7 @@
               <span>${monthNames[m]} ${y}</span>
               <button id="calNext">›</button>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">${cells}</div>
+          <div class="booking-calendar-grid">${cells}</div>
           <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:#666;">
               <div><span style="display:inline-block;width:10px;height:10px;background:#e4f5e9;border-radius:2px;margin-right:4px;"></span>Available</div>
               <div><span style="display:inline-block;width:10px;height:10px;background:#fbe4e4;border-radius:2px;margin-right:4px;"></span>Booked</div>
@@ -712,7 +720,7 @@
       body.innerHTML = `
           <h3 style="margin:0 0 4px;">Payment — ₱${total.toLocaleString()}</h3>
           <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 4 of 4 — Choose how you'd like to pay</p>
-          <p class="payment-help">Choose GCash or Maya, scan its QR code, and confirm the recipient name is <strong>Zandro Castillo</strong> before sending payment.</p>
+          <p class="payment-help">Choose GCash or MariBank and verify the recipient details before transferring. If a payment QR code is unavailable, contact the resort for payment instructions.</p>
           <div class="ewallet-grid" id="ewalletGrid">
             ${EWALLETS.map(w => `
               <button class="ewallet-card" type="button" data-w="${w.id}" aria-pressed="false">
@@ -724,16 +732,25 @@
                 <span class="payment-recipient">Recipient: ${w.account}</span>
               </button>`).join('')}
           </div>
-          <div id="qrPaymentHelp" class="payment-help" role="status">Select a payment method with an available QR code to continue.</div>
+          <div id="qrPaymentHelp" class="payment-help" role="status">Select your payment method. You can still submit transaction details and a receipt if you have already paid.</div>
           <div id="proofSection" style="display:none;margin-top:14px;">
-              <p style="font-size:13px;color:#555;">Upload a screenshot of your successful payment.</p>
-              <input type="file" id="proofFile" accept="image/*" style="width:100%;margin-bottom:8px;">
+              <p style="font-size:13px;color:#555;">Enter the sender details and transaction reference, then upload a screenshot of your successful payment.</p>
+              <label for="payerName">Sender name</label>
+              <input type="text" id="payerName" maxlength="150" autocomplete="name" required style="width:100%;margin:4px 0 10px;">
+              <label for="payerPhone">Sender phone number</label>
+              <input type="tel" id="payerPhone" maxlength="30" autocomplete="tel" required style="width:100%;margin:4px 0 10px;">
+              <label for="paymentReference">Transaction reference number</label>
+              <input type="text" id="paymentReference" maxlength="100" required style="width:100%;margin:4px 0 10px;">
+              <label for="proofFile">Payment receipt / verification screenshot</label>
+              <input type="file" id="proofFile" accept="image/png,image/jpeg,image/webp" required style="width:100%;margin:4px 0 8px;">
               <div id="proofErr" style="display:none;color:#9a2f2f;font-size:13px;margin-bottom:8px;"></div>
               <button id="submitProof" style="width:100%;">Submit for review</button>
           </div>
           <button onclick="renderFormStep()" style="margin-top:14px;width:100%;">Back</button>
           <button onclick="requestCloseBookingModal()" style="margin-top:8px;width:100%;">Cancel</button>
       `;
+      document.getElementById('payerName').value = bookingState.guestName || '';
+      document.getElementById('payerPhone').value = bookingState.guestPhone || '';
       let ewallet = null;
       body.querySelectorAll('.ewallet-card').forEach(card => {
           const image = card.querySelector('[data-qr-image]');
@@ -748,34 +765,37 @@
           if (image.complete) setQrAvailability(image.naturalWidth > 0);
 
           card.addEventListener('click', () => {
-              if (card.dataset.qrAvailable !== 'true') {
-                  document.getElementById('proofSection').style.display = 'none';
-                  document.getElementById('qrPaymentHelp').textContent =
-                      `${card.dataset.w === 'gcash' ? 'GCash' : 'Maya'} QR code is not available yet. Please contact support before transferring.`;
-                  return;
-              }
               ewallet = card.dataset.w;
               body.querySelectorAll('.ewallet-card').forEach(c => {
                   c.classList.toggle('selected', c === card);
                   c.setAttribute('aria-pressed', String(c === card));
               });
-              document.getElementById('qrPaymentHelp').textContent =
-                  `Scan the ${card.querySelector('b').textContent} QR code. Confirm the recipient is ${card.querySelector('.payment-recipient').textContent.replace('Recipient: ', '')} before paying.`;
+              document.getElementById('qrPaymentHelp').textContent = card.dataset.qrAvailable === 'true'
+                  ? `Scan the ${card.querySelector('b').textContent} QR code and confirm the recipient is ${card.querySelector('.payment-recipient').textContent.replace('Recipient: ', '')}.`
+                  : `${card.querySelector('b').textContent} QR is not configured. Contact the resort for payment instructions; if you have already paid, submit the receipt and transaction details below.`;
               document.getElementById('proofSection').style.display = 'block';
           });
       });
       document.getElementById('submitProof').onclick = async () => {
           const fileInput = document.getElementById('proofFile');
           const err = document.getElementById('proofErr');
-          if (!fileInput.files.length || !ewallet) {
-              err.textContent = 'Choose an available QR payment method and upload your payment screenshot.';
+          const payerName = document.getElementById('payerName').value.trim();
+          const payerPhone = document.getElementById('payerPhone').value.trim();
+          const referenceNumber = document.getElementById('paymentReference').value.trim();
+          if (!ewallet || !payerName || !payerPhone || !referenceNumber || !fileInput.files.length) {
+              err.textContent = 'Enter the sender name, phone number, transaction reference, payment method, and upload the receipt.';
+              err.style.display = 'block';
+              return;
+          }
+          if (fileInput.files[0].size > 5 * 1024 * 1024) {
+              err.textContent = 'Payment receipts must be 5 MB or smaller.';
               err.style.display = 'block';
               return;
           }
           if (!confirmAction('Are you sure you want to submit this payment for review?')) return;
           const wallet = EWALLETS.find(w => w.id === ewallet);
-          if (!wallet || !body.querySelector(`[data-w="${ewallet}"]`)?.querySelector('[data-qr-image]')?.naturalWidth) {
-              err.textContent = 'The selected payment QR is unavailable. Please choose another method or contact support.';
+          if (!wallet) {
+              err.textContent = 'Choose GCash or MariBank before submitting.';
               err.style.display = 'block';
               return;
           }
@@ -783,6 +803,9 @@
           fd.append('reservation_id', bookingState.reservationId);
           fd.append('payment_method', wallet.label);
           fd.append('amount_paid', total);
+          fd.append('payer_name', payerName);
+          fd.append('payer_phone', payerPhone);
+          fd.append('reference_number', referenceNumber);
           fd.append('proof', fileInput.files[0]);
 
           try {
@@ -791,7 +814,7 @@
               if (data.success) {
                   document.getElementById('bookingModalBody').innerHTML = `
                       <h3>Booking sent for review</h3>
-                      <p style="font-size:13px;color:#555;">The admin will confirm once your payment screenshot is checked.</p>
+                      <p style="font-size:13px;color:#555;">Your receipt and transaction details were saved. Visit My Reservations and confirm that you still want to continue so the resort can review your booking.</p>
                       <button onclick="closeBookingModal(); window.location.href='/customer_reservation'" style="width:100%;margin-top:10px;">Go to my reservations</button>
                   `;
               } else {
@@ -1202,10 +1225,10 @@
         <span><i style="display:inline-block;width:12px;height:12px;background:#fff;border:1px solid #bbb;border-radius:2px;"></i> Vacant</span>
         <span><i style="display:inline-block;width:12px;height:12px;background:#d9534f;border-radius:2px;"></i> Booked</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(7, minmax(56px, 1fr));gap:8px;">
+      <div class="availability-date-grid" style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:6px;min-width:0;">
         ${dates.map(date => {
           const booked = bookedDates.has(format(date));
-          return `<div title="${date.toLocaleDateString()} — ${booked ? 'Booked' : 'Vacant'}" style="padding:10px 4px;text-align:center;border:1px solid ${booked ? '#d9534f' : '#d8d8d8'};border-radius:6px;background:${booked ? '#d9534f' : '#fff'};color:${booked ? '#fff' : '#263238'};">
+          return `<div class="availability-date ${booked ? 'booked' : ''}" title="${date.toLocaleDateString()} — ${booked ? 'Booked' : 'Vacant'}" style="min-width:0;padding:8px 2px;text-align:center;border:1px solid ${booked ? '#d9534f' : '#d8d8d8'};border-radius:6px;background:${booked ? '#d9534f' : '#fff'};color:${booked ? '#fff' : '#263238'};">
             <strong>${date.getDate()}</strong><br><small>${date.toLocaleDateString(undefined, { month: 'short' })}</small>
           </div>`;
         }).join('')}
@@ -1239,16 +1262,23 @@
   function openDirections() {
     const resort = resorts.find(item => item.id === currentId);
     if (!resort) return;
-    const destination = resort.address === 'Address to be confirmed' ? `${resort.name}, Calamba City, Laguna` : resort.address;
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`, '_blank', 'noopener');
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(resortDestination(resort))}`, '_blank', 'noopener');
+  }
+
+  function resortDestination(r) {
+    const address = String(r.address || '').trim();
+    return address && address !== 'Address to be confirmed'
+      ? address
+      : `${r.name}, Calamba City, Laguna`;
   }
 
   function miniMap(r) {
-    return `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="150" fill="#DCF2E4"/><path d="M0 40 H300 M0 90 H300" stroke="#BFE0CC" stroke-width="4"/><path d="M60 0 V150 M220 0 V150" stroke="#BFE0CC" stroke-width="4"/><circle cx="150" cy="75" r="7" fill="#0B4A30"/><path d="M150 75 v-18 l7 -4 z" fill="#0B4A30"/></svg>`;
+    const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(resortDestination(r))}&output=embed`;
+    return `<iframe src="${mapUrl}" title="Google Maps for ${escapeHTML(r.name)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
   }
 
   function bigMap(r) {
-    return `<svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg"><rect width="500" height="260" fill="#DCF2E4"/><path d="M0 60 H500 M0 130 H500 M0 200 H500" stroke="#BFE0CC" stroke-width="6"/><path d="M90 0 V260 M260 0 V260 M410 0 V260" stroke="#BFE0CC" stroke-width="6"/><path d="M0 40 C150 100,320 20,500 100" stroke="#E0A233" stroke-width="5" fill="none" opacity="0.7"/><circle cx="250" cy="130" r="9" fill="#0B4A30"/><circle cx="250" cy="130" r="16" fill="none" stroke="#0B4A30" stroke-width="2" opacity="0.4"/><path d="M250 130 v-26 l10 -6 z" fill="#0B4A30"/><text x="264" y="108" font-family="Manrope" font-size="12" font-weight="700" fill="#0B4A30">${r.name}</text></svg>`;
+    return miniMap(r);
   }
 
   function showTab(tab) {

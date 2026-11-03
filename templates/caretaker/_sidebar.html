@@ -1,10 +1,6 @@
 <aside class="sidebar">
   <div class="sidebar-brand">
-    <span class="leaf"><i class="fa-solid fa-leaf"></i></span>
-    <div class="sidebar-brand-text">
-      <div class="name">PANSOL RESORTS</div>
-      <div class="tagline">Centralized Reservation Hub</div>
-    </div>
+    <img class="sidebar-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts — Centralized Reservation Hub">
   </div>
   <ul class="sidebar-nav" aria-label="Caretaker navigation">
     <li><a href="{{ url_for('caretaker_dashboard') }}" class="{{ 'active' if request.endpoint == 'caretaker_dashboard' else '' }}"><span class="icon"><i class="fa-solid fa-grip"></i></span> Dashboard</a></li>

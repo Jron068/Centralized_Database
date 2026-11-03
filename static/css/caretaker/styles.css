@@ -76,6 +76,16 @@ a {
   color: #7fd39a;
 }
 
+.sidebar-brand .sidebar-logo {
+  display: block;
+  width: 100%;
+  max-width: 192px;
+  height: auto;
+  padding: 6px;
+  border-radius: 8px;
+  background: #fff;
+}
+
 .sidebar-brand-text .name {
   font-weight: 700;
   font-size: 15px;
@@ -166,6 +176,13 @@ a {
 .topbar-brand .leaf {
   color: #7fd39a;
   font-size: 18px;
+}
+
+.topbar-brand img {
+  display: block;
+  width: 170px;
+  max-width: 32vw;
+  height: auto;
 }
 
 .topbar-nav {

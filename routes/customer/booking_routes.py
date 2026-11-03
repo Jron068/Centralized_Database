@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from flask import render_template, request, session, redirect, url_for, jsonify
+from flask import render_template, request, session, redirect, url_for, jsonify, flash
 from werkzeug.utils import secure_filename
 from app import app
 from config import get_connection
@@ -49,6 +49,7 @@ def resort_availability(resort_id):
             WHERE resort_id = %s
               AND check_in IS NOT NULL AND check_out IS NOT NULL
               AND check_out > check_in
+              -- Pending bookings remain available until an administrator or caretaker approves them.
               AND reservation_status = 'Confirmed'
         """, (resort_id,))
         rows = cursor.fetchall()
@@ -60,7 +61,9 @@ def resort_availability(resort_id):
                 booked_dates.append(d.strftime('%Y-%m-%d'))
                 d += timedelta(days=1)
 
-        return jsonify({"booked_dates": booked_dates})
+        response = jsonify({"booked_dates": booked_dates})
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         cursor.close()
         conn.close()
@@ -208,6 +211,83 @@ def book_resort():
         conn.close()
 
 
+@app.route("/customer/reservations/<int:reservation_id>/decision", methods=["POST"])
+def customer_reservation_decision(reservation_id):
+    if session.get("role") != "customer" or "account_id" not in session:
+        return redirect(url_for("login"))
+
+    decision = request.form.get("decision")
+    if decision not in {"continue", "cancel"}:
+        flash("Choose whether you want to continue or cancel this reservation.", "warning")
+        return redirect(url_for("customer_reservation"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT r.reservation_id, r.resort_id, r.reservation_status
+            FROM reservations r
+            JOIN customers c ON c.customer_id = r.customer_id
+            WHERE r.reservation_id = %s AND c.account_id = %s
+            FOR UPDATE
+            """,
+            (reservation_id, session["account_id"]),
+        )
+        reservation = cursor.fetchone()
+        if not reservation:
+            flash("Reservation not found.", "warning")
+            return redirect(url_for("customer_reservation"))
+        if reservation["reservation_status"] != "Pending":
+            flash("Only pending reservations can be changed here.", "warning")
+            return redirect(url_for("customer_reservation"))
+
+        if decision == "cancel":
+            cursor.execute(
+                """
+                UPDATE reservations
+                SET customer_decision = 'Cancelled', reservation_status = 'Cancelled'
+                WHERE reservation_id = %s
+                """,
+                (reservation_id,),
+            )
+            notice_title = "Customer cancelled a reservation"
+            notice_message = f"Reservation #RSV-{reservation_id} was cancelled by the customer."
+            flash("Your reservation was cancelled. Its dates remain available to other customers.", "success")
+        else:
+            cursor.execute(
+                "UPDATE reservations SET customer_decision = 'Continue' WHERE reservation_id = %s",
+                (reservation_id,),
+            )
+            notice_title = "Customer confirmed a reservation"
+            notice_message = f"The customer confirmed they want to continue with reservation #RSV-{reservation_id}."
+            flash("Thanks for confirming. The resort can now review your reservation.", "success")
+
+        notify_resort_caretakers(
+            cursor, reservation["resort_id"], notice_title, notice_message, "reservation_customer_decision"
+        )
+        cursor.execute(
+            """
+            INSERT INTO notifications (account_id, title, message, type)
+            SELECT o.account_id, %s, %s, 'reservation_customer_decision'
+            FROM resorts res
+            JOIN owners o ON o.owner_id = res.owner_id
+            WHERE res.resort_id = %s AND o.account_id IS NOT NULL
+            """,
+            (notice_title, notice_message, reservation["resort_id"]),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        app.logger.exception("Customer reservation decision could not be saved")
+        flash("We couldn't save your reservation decision. Please try again.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for("customer_reservation"))
+
+
 # ---------- PAYMENT PROOF ----------
 @app.route('/submit_payment', methods=['POST'])
 def submit_payment():
@@ -228,7 +308,7 @@ def submit_payment():
     if (not payer_name or len(payer_name) > 150
             or not payer_phone or len(payer_phone) > 30
             or not reference_number or len(reference_number) > 100
-            or payment_method not in {'GCash', 'Maya'}
+            or payment_method not in {'GCash', 'Maya', 'MariBank'}
             or not proof or not proof.filename or not allowed_file(proof.filename)
             or not amount_paid.is_finite() or amount_paid <= 0):
         return jsonify({

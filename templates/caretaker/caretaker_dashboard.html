@@ -50,8 +50,7 @@
     <header class="topbar">
 
       <div class="topbar-logo">
-        <i class="fa-solid fa-leaf brand-icon small"></i>
-        <span>PANSOL RESORTS</span>
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts">
       </div>
 
       <nav class="topbar-links">
@@ -153,7 +152,7 @@
         <div class="bk-head">
           <div>
             <h3>Customer Booking Requests</h3>
-            <p class="bk-sub">Online bookings for {{ resort.resort_name }}. Check the payment proof, then approve or reject.</p>
+            <p class="bk-sub">Online bookings for {{ resort.resort_name }}. Verify the receipt and transaction details; approval is available after the customer confirms they will continue.</p>
           </div>
           <div class="bk-chips">
             <span class="bk-chip pending">{{ pending_count }} Pending</span>
@@ -162,7 +161,7 @@
         </div>
         <div class="bk-wrap">
           <table class="bk-table">
-            <thead><tr><th>Customer</th><th>Stay</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Stay</th><th>Payment</th><th>Sender details</th><th>Reference</th><th>Customer decision</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               {% for b in reservations %}
               <tr>
@@ -170,6 +169,9 @@
                   <div>{{ b.guest_name or 'Guest' }}<small>{{ b.guests }} guest{{ '' if b.guests == 1 else 's' }}</small></div></div></td>
                 <td>{{ b.check_in.strftime('%b %d, %Y') }} &rarr; {{ b.check_out.strftime('%b %d, %Y') }}<small>{{ b.nights }} night{{ '' if b.nights == 1 else 's' }}</small></td>
                 <td>{{ b.payment_status or 'No payment' }}{% if b.amount_paid %}<small>&#8369;{{ "{:,.2f}".format(b.amount_paid) }}</small>{% endif %}</td>
+                <td>{{ b.payer_name or '—' }}<small>{{ b.payer_phone or 'Phone not provided' }}</small></td>
+                <td>{{ b.reference_number or '—' }}</td>
+                <td>{{ b.customer_decision or 'Pending' }}</td>
                 <td>{% if b.proof_url %}<a href="{{ b.proof_url }}" target="_blank"><img class="bk-proof" src="{{ b.proof_url }}" alt="Payment proof"></a>{% else %}<small>No proof</small>{% endif %}</td>
                 <td><span class="bk-pill {{ b.reservation_status|lower }}">{{ b.reservation_status }}</span></td>
                 <td>
@@ -178,11 +180,12 @@
                     <button class="bk-btn approve" name="action" value="approve" type="submit">Approve</button>
                     <button class="bk-btn reject" name="action" value="reject" type="submit" onclick="return confirm('Reject this booking?')">Reject</button>
                   </form>
+                  {% elif b.reservation_status == 'Pending' and b.payment_status == 'Pending' %}<small>Waiting for customer confirmation</small>
                   {% else %}<small>&mdash;</small>{% endif %}
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="6" class="bk-empty">No customer booking requests yet.</td></tr>
+              <tr><td colspan="9" class="bk-empty">No customer booking requests yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>

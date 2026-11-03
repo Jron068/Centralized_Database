@@ -386,9 +386,11 @@ def _guest_overview(cursor, account_id):
     cursor.execute(
         f"""
         SELECT r.reservation_id, r.guest_name, a.email AS customer_email, {contact_expr} AS guest_contact,
-               r.check_in, r.check_out, r.guests, r.reservation_status,
+               r.check_in, r.check_out, r.guests, r.reservation_status, r.customer_decision,
                CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source,
-               p.amount_paid, p.payment_status, p.payment_id, {schema['proof_expr']} AS proof_of_payment
+               p.amount_paid, p.payment_status, p.payment_id,
+               p.payer_name, p.payer_phone, p.reference_number,
+               {schema['proof_expr']} AS proof_of_payment
         FROM reservations r
         JOIN caretakers c ON c.resort_id = r.resort_id
         LEFT JOIN customers cu ON cu.customer_id = r.customer_id
@@ -433,7 +435,13 @@ def _guest_overview(cursor, account_id):
                 "proof": file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None,
                 "status": status,
                 "payment_status": r["payment_status"],
-                "can_review": r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
+                "customer_decision": r["customer_decision"] or "Pending",
+                "payer_name": r["payer_name"] or "",
+                "payer_phone": r["payer_phone"] or "",
+                "reference_number": r["reference_number"] or "",
+                "can_review": r["reservation_status"] == "Pending"
+                    and r["customer_decision"] == "Continue"
+                    and r["payment_status"] == "Pending"
                     and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
             }
         )
@@ -542,8 +550,10 @@ def caretaker_visible_reservations(cursor, account_id, limit=None):
     schema = _walkin_schema(cursor)
     cursor.execute(
         f"""
-        SELECT r.reservation_id, r.guest_name, r.check_in, r.check_out, r.guests, r.reservation_status,
-               p.payment_status, p.amount_paid, {schema['proof_expr']} AS proof_of_payment
+        SELECT r.reservation_id, r.guest_name, r.check_in, r.check_out, r.guests,
+               r.reservation_status, r.customer_decision,
+               p.payment_id, p.payment_status, p.amount_paid, p.payer_name, p.payer_phone,
+               p.reference_number, {schema['proof_expr']} AS proof_of_payment
         FROM reservations r
         JOIN caretakers c ON c.resort_id = r.resort_id
         LEFT JOIN payments p ON p.payment_id = (
@@ -624,7 +634,11 @@ def caretaker_dashboard():
         for r in rows:
             r["nights"] = max((_as_date(r["check_out"]) - _as_date(r["check_in"])).days, 1)
             r["proof_url"] = file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None
-            r["can_review"] = r["reservation_status"] == "Pending" and r["payment_status"] == "Pending"
+            r["can_review"] = (
+                r["reservation_status"] == "Pending"
+                and r["customer_decision"] == "Continue"
+                and r["payment_status"] == "Pending"
+            )
         upcoming = sorted(
             [r for r in rows if r["reservation_status"] in ("Pending", "Confirmed")
              and _as_date(r["check_out"]) >= today],
@@ -661,9 +675,11 @@ def _reservation_overview(cursor, account_id):
     cursor.execute(
         f"""
         SELECT r.reservation_id, COALESCE(NULLIF(r.guest_name, ''), a.fullname) AS customer_name,
-               a.email, {contact_expr} AS contact, r.check_in, r.check_out, r.guests, r.reservation_status,
+               a.email, {contact_expr} AS contact, r.check_in, r.check_out, r.guests,
+               r.reservation_status, r.customer_decision,
                CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source,
-               p.amount_paid, p.payment_status, p.payment_id, {schema['proof_expr']} AS proof_of_payment
+               p.amount_paid, p.payment_status, p.payment_id, p.payer_name, p.payer_phone,
+               p.reference_number, {schema['proof_expr']} AS proof_of_payment
         FROM reservations r
         JOIN caretakers c ON c.resort_id = r.resort_id
         LEFT JOIN customers cu ON cu.customer_id = r.customer_id
@@ -703,9 +719,16 @@ def _reservation_overview(cursor, account_id):
                 "guests": r["guests"],
                 "amount": float(r["amount_paid"]) if r["amount_paid"] is not None else None,
                 "payment_status": r["payment_status"],
+                "customer_decision": r["customer_decision"] or "Pending",
+                "payer_name": r["payer_name"] or "",
+                "payer_phone": r["payer_phone"] or "",
+                "reference_number": r["reference_number"] or "",
                 "proof": file_url(r["proof_of_payment"]) if r["proof_of_payment"] else None,
                 "status": status,
-                "can_review": r["reservation_status"] == "Pending" and r["payment_status"] == "Pending" and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
+                "can_review": r["reservation_status"] == "Pending"
+                    and r["customer_decision"] == "Continue"
+                    and r["payment_status"] == "Pending"
+                    and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
             }
         )
     return {"stats": stats, "reservations": rows}
@@ -992,7 +1015,7 @@ def caretaker_review_reservation(reservation_id):
         cursor.execute(
             f"""
                  SELECT r.reservation_id, r.resort_id, r.check_in, r.check_out, cu.account_id AS customer_account_id,
-                     r.reservation_status,
+                     r.reservation_status, r.customer_decision,
                    p.payment_id, p.payment_status
             FROM reservations r
             JOIN caretakers c ON c.resort_id = r.resort_id
@@ -1016,15 +1039,21 @@ def caretaker_review_reservation(reservation_id):
         if not reservation:
             flash("Reservation not found for your assigned resort.", "danger")
             return _review_redirect()
-        if reservation["reservation_status"] in {"Cancelled", "Rejected", "Completed"}:
+        if reservation["reservation_status"] != "Pending":
             flash("This reservation can no longer be reviewed.", "warning")
             return _review_redirect()
         if not reservation["payment_id"]:
             flash("The customer has not submitted payment proof yet.", "warning")
             return _review_redirect()
+        if reservation["payment_status"] != "Pending":
+            flash("This payment is no longer pending review.", "warning")
+            return _review_redirect()
 
         approved = action == "approve"
         if approved:
+            if reservation["customer_decision"] != "Continue":
+                flash("The customer must confirm they want to continue before approval.", "warning")
+                return _review_redirect()
             clash = _dates_conflict(cursor, reservation["resort_id"], reservation["check_in"], reservation["check_out"], reservation_id)
             if clash:
                 conn.rollback()
@@ -1059,6 +1088,7 @@ def caretaker_review_reservation(reservation_id):
         )
     except Exception:
         conn.rollback()
+        app.logger.exception("Caretaker reservation review could not be saved")
         flash("The reservation review could not be saved.", "danger")
     finally:
         cursor.close()

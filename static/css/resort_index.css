@@ -22,6 +22,7 @@
   /* ---------- HEADER ---------- */
   header{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;}
   .logo{display:flex;align-items:center;gap:12px;}
+  .logo .brand-image{display:block;width:min(220px,32vw);height:auto;object-fit:contain;}
   .logo-icon{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,#eaf6ee,#dff0e6);
     display:flex;align-items:center;justify-content:center;font-size:22px;}
   .logo-text h1{font-size:18px;letter-spacing:.5px;color:var(--green-dark);font-family:'Trebuchet MS',sans-serif;}

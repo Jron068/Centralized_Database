@@ -1,5 +1,7 @@
 import unittest
+from datetime import date
 from decimal import Decimal
+from io import BytesIO
 from unittest.mock import Mock, patch
 
 from app import app
@@ -22,6 +24,25 @@ class _Cursor:
 
     def fetchone(self):
         return self.rows.pop(0)
+
+    def close(self):
+        pass
+
+
+class _SequenceCursor:
+    def __init__(self, rows=None):
+        self.rows = list(rows or [])
+        self.calls = []
+        self.lastrowid = 321
+
+    def execute(self, statement, params=None):
+        self.calls.append((statement, params))
+
+    def fetchone(self):
+        return self.rows.pop(0)
+
+    def fetchall(self):
+        return self.rows
 
     def close(self):
         pass
@@ -64,6 +85,107 @@ class CustomerBookingTests(unittest.TestCase):
         self.assertIn("gas_stove", insert_sql)
         self.assertEqual(insert_params[-1], 1)
         self.assertIs(type(insert_params[-1]), int)
+        connection.commit.assert_called_once()
+
+    def test_only_confirmed_reservations_mark_availability_as_booked(self):
+        cursor = _SequenceCursor([{
+            "check_in": date(2099, 12, 1),
+            "check_out": date(2099, 12, 2),
+        }])
+        connection = Mock()
+        connection.cursor.return_value = cursor
+
+        with patch.object(booking_routes, "get_connection", return_value=connection):
+            response = app.test_client().get("/resort_availability/1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["booked_dates"], ["2099-12-01"])
+        self.assertIn("reservation_status = 'Confirmed'", cursor.calls[0][0])
+
+    def test_payment_submission_saves_sender_and_reference_details(self):
+        cursor = _SequenceCursor([{"reservation_id": 321, "reservation_status": "Pending"}])
+        connection = Mock()
+        connection.cursor.return_value = cursor
+        client = app.test_client()
+        with client.session_transaction() as session:
+            session["role"] = "customer"
+            session["account_id"] = 44
+
+        payment_data = {
+            "reservation_id": "321",
+            "amount_paid": "1500.00",
+            "payment_method": "GCash",
+            "payer_name": "Test Sender",
+            "payer_phone": "09123456789",
+            "reference_number": "TXN-12345",
+            "proof": (BytesIO(b"receipt"), "receipt.png", "image/png"),
+        }
+        with patch.object(booking_routes, "get_connection", return_value=connection):
+            with patch.object(booking_routes, "upload_file", return_value="payments/receipt.png"):
+                response = client.post("/submit_payment", data=payment_data)
+
+        self.assertEqual(response.status_code, 201)
+        insert_sql, insert_params = next(
+            (statement, params)
+            for statement, params in cursor.calls
+            if "INSERT INTO payments" in statement
+        )
+        self.assertIn("payer_name", insert_sql)
+        self.assertIn("reference_number", insert_sql)
+        self.assertEqual(insert_params[3:6], ("Test Sender", "09123456789", "TXN-12345"))
+        connection.commit.assert_called_once()
+
+    def test_customer_can_cancel_a_pending_reservation(self):
+        cursor = _SequenceCursor([{
+            "reservation_id": 123,
+            "resort_id": 5,
+            "reservation_status": "Pending",
+        }])
+        connection = Mock()
+        connection.cursor.return_value = cursor
+        client = app.test_client()
+        with client.session_transaction() as session:
+            session["role"] = "customer"
+            session["account_id"] = 44
+
+        with patch.object(booking_routes, "get_connection", return_value=connection):
+            with patch.object(booking_routes, "notify_resort_caretakers"):
+                response = client.post(
+                    "/customer/reservations/123/decision",
+                    data={"decision": "cancel"},
+                )
+
+        self.assertEqual(response.status_code, 302)
+        updates = [statement for statement, _ in cursor.calls if "UPDATE reservations" in statement]
+        self.assertTrue(any("customer_decision = 'Cancelled'" in statement for statement in updates))
+        self.assertTrue(any("reservation_status = 'Cancelled'" in statement for statement in updates))
+        connection.commit.assert_called_once()
+
+    def test_customer_can_confirm_they_want_to_continue(self):
+        cursor = _SequenceCursor([{
+            "reservation_id": 123,
+            "resort_id": 5,
+            "reservation_status": "Pending",
+        }])
+        connection = Mock()
+        connection.cursor.return_value = cursor
+        client = app.test_client()
+        with client.session_transaction() as session:
+            session["role"] = "customer"
+            session["account_id"] = 44
+
+        with patch.object(booking_routes, "get_connection", return_value=connection):
+            with patch.object(booking_routes, "notify_resort_caretakers"):
+                response = client.post(
+                    "/customer/reservations/123/decision",
+                    data={"decision": "continue"},
+                )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any(
+            "SET customer_decision = 'Continue'" in statement
+            for statement, _ in cursor.calls
+        ))
         connection.commit.assert_called_once()
 
 

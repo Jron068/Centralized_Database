@@ -95,6 +95,7 @@
                 <th>Guests</th>
                 <th>Total Amount</th>
                 <th>Status</th>
+                <th>Continue?</th>
               </tr>
             </thead>
             <tbody>
@@ -106,9 +107,30 @@
                 <td>{{ r.guests }}</td>
                 <td>₱{{ '%.2f'|format(r.total_amount) if r.total_amount else '0.00' }}</td>
                 <td><span class="badge {{ r.reservation_status|lower }}">{{ r.reservation_status }}</span></td>
+                <td>
+                  {% if r.reservation_status == 'Pending' and r.customer_decision == 'Pending' %}
+                    <form class="customer-decision-actions" method="post" action="{{ url_for('customer_reservation_decision', reservation_id=r.reservation_id) }}">
+                      <button class="continue" type="submit" name="decision" value="continue">Yes, continue</button>
+                      <button class="cancel" type="submit" name="decision" value="cancel" onclick="return confirm('Cancel this reservation? The dates will be available to other customers.')">No, cancel</button>
+                    </form>
+                  {% elif r.reservation_status == 'Pending' and r.customer_decision == 'Continue' %}
+                    <span class="badge confirmed">Waiting for resort approval</span>
+                    <form class="customer-decision-actions" method="post" action="{{ url_for('customer_reservation_decision', reservation_id=r.reservation_id) }}">
+                      <button class="cancel" type="submit" name="decision" value="cancel" onclick="return confirm('Cancel this reservation? The dates will be available to other customers.')">Cancel reservation</button>
+                    </form>
+                  {% elif r.reservation_status == 'Confirmed' %}
+                    <span class="badge confirmed">Confirmed</span>
+                  {% elif r.reservation_status == 'Rejected' %}
+                    <span class="badge rejected">Not approved</span>
+                  {% elif r.reservation_status == 'Cancelled' or r.customer_decision == 'Cancelled' %}
+                    <span class="badge cancelled">Cancelled</span>
+                  {% else %}
+                    <span>{{ r.customer_decision or 'Pending' }}</span>
+                  {% endif %}
+                </td>
               </tr>
               {% else %}
-              <tr><td colspan="6"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
+              <tr><td colspan="7"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
               {% endfor %}
             </tbody>
           </table>

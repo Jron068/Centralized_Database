@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from flask import render_template, request, redirect, url_for, session
+from flask import render_template, request, redirect, url_for, session, flash
 from app import app
 from config import get_connection
 from models.decorators import role_required
@@ -32,9 +32,9 @@ def admin_payments():
         cursor.execute("""
             SELECT
                 p.payment_id, p.proof_of_payment, p.reference_number, p.amount_paid,
-                p.payment_status, p.payment_date,
+                p.payment_status, p.payment_date, p.payment_method, p.payer_name, p.payer_phone,
                 r.reservation_id, COALESCE(r.guest_name, a.fullname) AS guest_name,
-                r.guest_phone, r.check_in, r.check_out,
+                COALESCE(NULLIF(r.guest_phone, ''), c.phone) AS guest_phone, r.check_in, r.check_out,
                 res.resort_name
             FROM payments p
             JOIN reservations r ON p.reservation_id = r.reservation_id
@@ -82,13 +82,17 @@ def admin_payments():
 @role_required("owner")
 def verify_payment(payment_id):
     action = request.form.get('action')
+    if action not in {'verify', 'reject'}:
+        flash("Invalid payment review action.", "warning")
+        return redirect(url_for('admin_payments'))
     new_status = 'Verified' if action == 'verify' else 'Rejected'
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT r.resort_id, r.reservation_id, r.check_in, r.check_out
+            SELECT r.resort_id, r.reservation_id, r.check_in, r.check_out,
+                   r.reservation_status, r.customer_decision, p.payment_status
             FROM payments p JOIN reservations r ON r.reservation_id = p.reservation_id
             WHERE p.payment_id = %s
             FOR UPDATE
@@ -96,6 +100,26 @@ def verify_payment(payment_id):
         booking = cursor.fetchone()
         if not booking:
             return redirect(url_for('admin_payments'))
+        if booking["reservation_status"] != "Pending" or booking["payment_status"] != "Pending":
+            flash("This reservation or payment is no longer pending review.", "warning")
+            return redirect(url_for('admin_payments'))
+        if action == "verify" and booking["customer_decision"] != "Continue":
+            flash("The customer must confirm they want to continue before approval.", "warning")
+            return redirect(url_for('admin_payments'))
+        if action == "verify":
+            cursor.execute(
+                """
+                SELECT reservation_id FROM reservations
+                WHERE resort_id = %s AND reservation_status = 'Confirmed'
+                  AND check_in < %s AND check_out > %s
+                LIMIT 1 FOR UPDATE
+                """,
+                (booking["resort_id"], booking["check_out"], booking["check_in"]),
+            )
+            if cursor.fetchone():
+                conn.rollback()
+                flash("Cannot approve: these dates have already been approved for another customer.", "warning")
+                return redirect(url_for('admin_payments'))
         cursor.execute(
             """
             UPDATE payments p

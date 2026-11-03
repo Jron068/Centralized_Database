@@ -7,7 +7,7 @@ from config import get_connection
 from models.decorators import role_required
 from models.notifications import notify_resort_caretakers
 from models.reservation_reminders import create_upcoming_reservation_reminders
-from routes.caretaker import _walkin_schema
+from routes.caretaker import _dates_conflict, _walkin_schema, _clash_text
 from models.file_storage import file_url
 
 
@@ -20,7 +20,8 @@ def _reservation_rows(cursor, selected_resort=None):
         SELECT r.reservation_id,
                COALESCE(NULLIF(r.guest_name, ''), a.fullname, 'Walk-in Guest') AS guest_name,
                res.resort_name, res.resort_id, r.check_in, r.check_out, r.guests,
-               r.total_amount, r.reservation_status, p.payment_status, r.created_at,
+               r.total_amount, r.reservation_status, r.customer_decision,
+               p.payment_status, r.created_at,
                CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source
         FROM reservations r
         LEFT JOIN customers c ON r.customer_id = c.customer_id
@@ -76,6 +77,7 @@ def reservation():
         cursor.execute(
             f"""
             SELECT r.reservation_id, r.check_in, r.check_out, r.reservation_status,
+                   r.customer_decision,
                    res.resort_id, res.resort_name,
                    COALESCE(NULLIF(r.guest_name, ''), a.fullname, 'Walk-in Guest') AS guest_name,
                    CASE WHEN {_walkin_schema(cursor)['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source
@@ -157,6 +159,7 @@ def reservation_data():
                 "check_out": row["check_out"].isoformat() if row["check_out"] else "",
                 "source": row["booking_source"],
                 "status": row["reservation_status"] or "Pending",
+                "customer_decision": row["customer_decision"] or "Pending",
                 "payment_status": row["payment_status"] or "Pending",
             } for row in rows],
         })
@@ -175,11 +178,14 @@ def reservation_detail(reservation_id):
         cursor.execute(f"""
             SELECT r.reservation_id, r.check_in, r.check_out, r.guests,
                    r.total_amount, r.reservation_status, r.created_at,
+                   r.customer_decision,
                    COALESCE(NULLIF(r.guest_name, ''), a.fullname, 'Walk-in Guest') AS guest_name,
-                   a.email AS guest_email, c.phone AS guest_phone, res.resort_name, res.resort_id,
+                   a.email AS guest_email, COALESCE(NULLIF(r.guest_phone, ''), c.phone) AS guest_phone,
+                   res.resort_name, res.resort_id,
                    CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source,
                    {schema['proof_expr']} AS proof_of_payment, p.payment_id, p.amount_paid,
-                   p.payment_status, p.payment_date
+                   p.payment_status, p.payment_date, p.payer_name, p.payer_phone,
+                   p.reference_number, p.payment_method
             FROM reservations r
             LEFT JOIN customers c ON c.customer_id = r.customer_id
             LEFT JOIN accounts a ON a.account_id = c.account_id
@@ -215,7 +221,9 @@ def review_reservation(reservation_id):
     try:
         schema = _walkin_schema(cursor)
         cursor.execute(f"""
-            SELECT r.reservation_id, r.resort_id, c.account_id, p.payment_id, p.payment_status,
+            SELECT r.reservation_id, r.resort_id, r.check_in, r.check_out,
+                   r.reservation_status, r.customer_decision, c.account_id,
+                   p.payment_id, p.payment_status,
                    res.owner_id, CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source
             FROM reservations r
             JOIN customers c ON c.customer_id = r.customer_id
@@ -235,11 +243,25 @@ def review_reservation(reservation_id):
         if reservation["booking_source"] == "Walk-in":
             flash("Walk-in bookings are reviewed from Walk-in Approvals.", "info")
             return redirect(url_for("admin_walkins"))
-        if not reservation["payment_id"] or reservation["payment_status"] != "Pending":
+        if (reservation["reservation_status"] != "Pending"
+                or not reservation["payment_id"] or reservation["payment_status"] != "Pending"):
             flash("Only reservations with a pending payment can be reviewed.", "warning")
             return redirect(url_for("reservation_detail", reservation_id=reservation_id))
 
         approved = action == "approve"
+        if approved and reservation["customer_decision"] != "Continue":
+            flash("The customer must confirm they want to continue before approval.", "warning")
+            return redirect(url_for("reservation_detail", reservation_id=reservation_id))
+        if approved:
+            clash = _dates_conflict(
+                cursor, reservation["resort_id"], reservation["check_in"],
+                reservation["check_out"], reservation_id,
+            )
+            if clash:
+                conn.rollback()
+                flash("Cannot approve: those dates are " + _clash_text(clash) + ".", "warning")
+                return redirect(url_for("reservation_detail", reservation_id=reservation_id))
+
         payment_status = "Verified" if approved else "Rejected"
         reservation_status = "Confirmed" if approved else "Rejected"
         cursor.execute("UPDATE payments SET payment_status = %s WHERE payment_id = %s",
@@ -267,6 +289,7 @@ def review_reservation(reservation_id):
               "Reservation rejected and customer notified.", "success")
     except Exception:
         conn.rollback()
+        app.logger.exception("Reservation review could not be saved")
         flash("The reservation review could not be saved.", "danger")
     finally:
         cursor.close()

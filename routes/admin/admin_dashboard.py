@@ -472,10 +472,12 @@ def reports():
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            "SELECT resort_id, resort_name FROM resorts WHERE owner_id = %s ORDER BY resort_name",
-            (session.get("owner_id"),),
+            "SELECT resort_id, resort_name, status FROM resorts ORDER BY resort_name",
         )
         report_resorts = cursor.fetchall()
+        resort_ids = {resort["resort_id"] for resort in report_resorts}
+        if selected_resort not in resort_ids:
+            selected_resort = None
         resort_filter = " AND r.resort_id = %s" if selected_resort else ""
         resort_params = [selected_resort] if selected_resort else []
 
@@ -501,14 +503,11 @@ def reports():
         )
         revenue = float(cursor.fetchone()["total"] or 0)
 
-        if selected_resort:
-            cursor.execute(
-                "SELECT COUNT(*) AS total FROM resorts WHERE status = 'Active' AND resort_id = %s",
-                (selected_resort,),
-            )
-        else:
-            cursor.execute("SELECT COUNT(*) AS total FROM resorts WHERE status = 'Active'")
-        total_resorts = cursor.fetchone()["total"] or 0
+        total_resorts = sum(
+            1 for resort in report_resorts
+            if resort["status"] == "Active"
+            and (selected_resort is None or resort["resort_id"] == selected_resort)
+        )
 
         cursor.execute(
             f"""
@@ -545,9 +544,14 @@ def reports():
         rating_summary = cursor.fetchone()
 
         resort_summary_filter = " AND res.resort_id = %s" if selected_resort else ""
+        report_resort_ids = sorted(resort_ids)
+        report_scope_filter = (
+            f"res.resort_id IN ({','.join(['%s'] * len(report_resort_ids))})"
+            if report_resort_ids else "1 = 0"
+        )
         cursor.execute(
             f"""
-            SELECT res.resort_name,
+            SELECT res.resort_id, res.resort_name,
                    COUNT(DISTINCT r.reservation_id) AS bookings,
                    COALESCE(SUM(
                        CASE WHEN p.payment_status = 'Verified' THEN p.amount_paid ELSE 0 END
@@ -559,13 +563,15 @@ def reports():
                         LEFT JOIN payments p
                 ON p.reservation_id = r.reservation_id
                AND p.payment_date >= %s AND p.payment_date < %s
-            WHERE 1 = 1{resort_summary_filter}
+            WHERE {report_scope_filter}{resort_summary_filter}
             GROUP BY res.resort_id, res.resort_name
             ORDER BY revenue DESC, bookings DESC, res.resort_name ASC
             """,
-            (month_start, next_month, month_start, next_month, selected_resort)
-            if selected_resort else
-            (month_start, next_month, month_start, next_month),
+            (
+                month_start, next_month, month_start, next_month,
+                *report_resort_ids,
+                *((selected_resort,) if selected_resort else ()),
+            ),
         )
         revenue_by_resort = cursor.fetchall()
 

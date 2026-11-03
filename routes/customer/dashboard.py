@@ -75,6 +75,7 @@ def customer_reservation():
                 r.guests,
                 r.total_amount,
                 r.reservation_status,
+                r.customer_decision,
                 r.created_at
             FROM reservations r
             JOIN customers c ON r.customer_id = c.customer_id

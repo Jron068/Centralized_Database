@@ -17,7 +17,7 @@
 
 <div class="main">
   <header class="topbar">
-    <div class="topbar-brand"><span class="leaf">🌿</span> PANSOL RESORTS</div>
+    <div class="topbar-brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts"></div>
     <nav class="topbar-nav">
       <a href="{{ url_for('caretaker_dashboard') }}">Dashboard</a>
       <a href="{{ url_for('caretaker_updates') }}">Updates</a>
@@ -64,8 +64,8 @@
       <div class="card-header"><h2>Customer Reservations</h2></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Booking</th><th>Customer</th><th>Stay</th><th>Guests</th><th>Payment</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="rows"><tr><td colspan="8" class="empty-state">Loading...</td></tr></tbody>
+          <thead><tr><th>Booking</th><th>Customer</th><th>Stay</th><th>Guests</th><th>Payment</th><th>Sender details / reference</th><th>Customer decision</th><th>Proof</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="10" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -94,6 +94,8 @@ function render() {
       <td>${esc(r.check_in)} to ${esc(r.check_out)}</td>
       <td>${esc(r.guests)}</td>
       <td>${esc(r.payment_status || 'No payment')}${r.amount != null ? '<br>&#8369;' + r.amount.toLocaleString(undefined,{minimumFractionDigits:2}) : ''}</td>
+      <td>${esc(r.payer_name || 'Sender not provided')}<br><small>${esc(r.payer_phone || 'Phone not provided')} · Ref: ${esc(r.reference_number || 'Not provided')}</small></td>
+      <td>${esc(r.customer_decision || 'Pending')}</td>
       <td>${r.proof ? `<a href="${esc(r.proof)}" target="_blank"><img src="${esc(r.proof)}" alt="Proof" style="width:56px;height:40px;object-fit:cover;border-radius:6px;"></a>` : 'No proof'}</td>
       <td>${esc(r.status)}</td>
       <td>${r.can_review ? `
@@ -101,8 +103,8 @@ function render() {
           <input type="hidden" name="next" value="${NEXT}">
           <button class="btn btn-primary btn-sm" name="action" value="approve" type="submit">Approve</button>
           <button class="btn btn-outline btn-sm" name="action" value="reject" type="submit" onclick="return confirm('Reject this reservation?')">Reject</button>
-        </form>` : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="8" class="empty-state">No customer reservations found.</td></tr>';
+        </form>` : (r.status === 'Pending Verification' ? 'Waiting for customer confirmation' : '—')}</td>
+    </tr>`).join('') : '<tr><td colspan="10" class="empty-state">No customer reservations found.</td></tr>';
 }
 q.addEventListener('input', render);
 statusFilter.addEventListener('change', render);

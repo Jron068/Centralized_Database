@@ -19,11 +19,7 @@
 
 <header class="site-header">
   <div class="logo">
-    <div class="logo-icon">🌴</div>
-    <div class="logo-text">
-      <h1>PANSOL RESORTS</h1>
-      <span>Centralized Reservation Hub</span>
-    </div>
+    <img class="brand-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts — Centralized Reservation Hub">
   </div>
   <nav id="site-navigation">
     <a href="{{ url_for('index') }}" class="{{ 'active' if active_page == 'home' }}">Home</a>

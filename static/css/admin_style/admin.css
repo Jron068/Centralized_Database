@@ -51,18 +51,18 @@ body{
 .brand{
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:22px 20px;
-  font-weight:700;
-  letter-spacing:.3px;
-  color:#fff;
-  font-size:15px;
+  justify-content:center;
+  padding:16px 14px;
 }
-.brand-mark{
-  width:28px;height:28px;border-radius:50%;
-  background:#fff;color:var(--forest);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:14px;
+.brand-logo{
+  display:block;
+  width:188px;
+  max-width:100%;
+  height:auto;
+  max-height:58px;
+  padding:4px;
+  border-radius:8px;
+  background:#fff;
 }
 .side-nav{flex:1; display:flex; flex-direction:column; margin-top:6px;}
 .side-link{

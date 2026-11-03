@@ -13,7 +13,8 @@
 .cal-cell{min-height:110px;padding:8px;border:1px solid #e7ece8;border-radius:8px;background:#fff;overflow:hidden}
 .cal-cell.muted{opacity:.45;background:#f7f8f7}.cal-cell.today{border:2px solid #2d8059}
 .cal-date{font-size:12px;font-weight:700;margin-bottom:6px}
-.cal-event{display:block;margin:4px 0;padding:4px 6px;border-radius:5px;background:#e4f2e9;color:#205c3a;font-size:10px;line-height:1.3;text-decoration:none;overflow-wrap:anywhere}
+.cal-event{display:block;margin:4px 0;padding:4px 6px;border-radius:5px;background:#fff2d9;color:#80520d;font-size:10px;line-height:1.3;text-decoration:none;overflow-wrap:anywhere}
+.cal-event.confirmed{background:#fde8e7;color:#9b2c2c}
 .cal-event.walkin{background:#eee9fb;color:#594398}
 .table-wrap{overflow-x:auto}.source-cell{white-space:nowrap}
 @media(max-width:700px){.cal-cell{min-height:74px;padding:4px}.cal-event{font-size:9px}.cal-head{font-size:10px}}
@@ -24,7 +25,7 @@
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+    <div class="brand"><img class="brand-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts — Centralized Reservation Hub"></div>
     <div class="side-nav">
       <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
       <a class="side-link active" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations & Calendar</a>
@@ -84,7 +85,7 @@
         </div>
         <div class="table-wrap" style="padding:0 18px 18px;">
           <table>
-            <thead><tr><th>Booking ID</th><th>Guest</th><th>Source</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Payment</th><th>Action</th></tr></thead>
+            <thead><tr><th>Booking ID</th><th>Guest</th><th>Source</th><th>Resort</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Customer decision</th><th>Payment</th><th>Action</th></tr></thead>
             <tbody id="reservation-rows">
               {% for r in reservations %}
               <tr id="reservation-{{ r.reservation_id }}" data-search="{{ (r.guest_name ~ ' ' ~ r.resort_name ~ ' ' ~ r.reservation_id)|lower }}" data-status="{{ r.reservation_status }}">
@@ -94,10 +95,11 @@
                 <td><a href="{{ url_for('reservation', resort_id=r.resort_id) }}">{{ r.resort_name }}</a></td>
                 <td>{{ r.check_in }}</td><td>{{ r.check_out }}</td>
                 <td><span class="pill pill-{{ (r.reservation_status or 'pending')|lower }}">{{ r.reservation_status or 'Pending' }}</span></td>
+                <td>{{ r.customer_decision or 'Pending' }}</td>
                 <td>{{ r.payment_status or 'Pending' }}</td>
                 <td><a class="btn btn-outline btn-sm" href="{{ url_for('reservation_detail', reservation_id=r.reservation_id) }}">View</a></td>
               </tr>
-              {% else %}<tr><td colspan="9" id="empty-reservations">No bookings found for this resort.</td></tr>{% endfor %}
+              {% else %}<tr><td colspan="10" id="empty-reservations">No bookings found for this resort.</td></tr>{% endfor %}
             </tbody>
           </table>
         </div>
@@ -105,7 +107,7 @@
 
       <section class="card" id="calendar" style="margin-top:22px;padding:18px;">
         <div class="card-row">
-          <div><h3 style="margin:0;">{{ calendar_month }}</h3><p class="page-sub" style="margin:4px 0 0;">Pending and confirmed stays; checkout day is not counted as an occupied night.</p></div>
+          <div><h3 style="margin:0;">{{ calendar_month }}</h3><p class="page-sub" style="margin:4px 0 0;">Pending requests are amber; confirmed bookings are red. Checkout day is not counted as an occupied night.</p></div>
           <div class="action-group">
             <a class="btn btn-outline btn-sm" href="{{ url_for('reservation', year=previous_month.year, month=previous_month.month, resort_id=selected_resort, _anchor='calendar') }}">&larr; Prev</a>
             <a class="btn btn-outline btn-sm" href="{{ url_for('reservation', year=next_month.year, month=next_month.month, resort_id=selected_resort, _anchor='calendar') }}">Next &rarr;</a>
@@ -118,7 +120,7 @@
           <div class="cal-cell {{ '' if cell.in_month else 'muted' }} {{ 'today' if cell.day == today else '' }} {{ 'reserved-day' if day_events else '' }}">
             <div class="cal-date">{{ cell.day.day }}</div>
             {% for event in day_events %}
-            <a class="cal-event {{ 'walkin' if event.booking_source == 'Walk-in' else '' }}" href="#reservation-{{ event.reservation_id }}" title="{{ event.resort_name }} - {{ event.guest_name }} ({{ event.booking_source }}, {{ event.reservation_status }})">
+            <a class="cal-event {{ 'confirmed' if event.reservation_status == 'Confirmed' else '' }} {{ 'walkin' if event.booking_source == 'Walk-in' else '' }}" href="#reservation-{{ event.reservation_id }}" title="{{ event.resort_name }} - {{ event.guest_name }} ({{ event.booking_source }}, {{ event.reservation_status }})">
               {{ event.resort_name }} · {{ event.guest_name }}{% if event.booking_source == 'Walk-in' %} (Walk-in){% endif %}
             </a>
             {% endfor %}
@@ -158,7 +160,7 @@
 
   function renderRows(items) {
     if (!items.length) {
-      rows.innerHTML = '<tr><td colspan="9">No bookings found for this resort.</td></tr>';
+      rows.innerHTML = '<tr><td colspan="10">No bookings found for this resort.</td></tr>';
       document.getElementById('booking-count').textContent = '(0)';
       return;
     }
@@ -171,6 +173,7 @@
         <td><a href="/reservation?resort_id=${encodeURIComponent(r.resort_id)}">${esc(r.resort)}</a></td>
         <td>${esc(r.check_in)}</td><td>${esc(r.check_out)}</td>
         <td><span class="pill pill-${esc(statusClass)}">${esc(r.status)}</span></td>
+        <td>${esc(r.customer_decision || 'Pending')}</td>
         <td>${esc(r.payment_status)}</td>
         <td><a class="btn btn-outline btn-sm" href="/admin/reservations/${r.id}">View</a></td></tr>`;
     }).join('');

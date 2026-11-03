@@ -40,7 +40,7 @@
 <body>
   <div class="app">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">P</span> PANSOL RESORTS</div>
+      <div class="brand"><img class="brand-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Pansol Resorts — Centralized Reservation Hub"></div>
       <nav class="side-nav" aria-label="Owner navigation">
         <a class="side-link" href="{{ url_for('dashboard') }}"><span class="icon">&#9635;</span> Dashboard</a>
         <a class="side-link" href="{{ url_for('reservation') }}"><span class="icon">&#128197;</span> Reservations &amp; Calendar</a>
