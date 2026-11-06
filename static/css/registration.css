@@ -253,6 +253,57 @@ form{
     border-color:#3E9722;
 }
 
+.password-input-wrap{
+    position:relative;
+}
+
+.form-group .password-input-wrap input[type="password"],
+.form-group .password-input-wrap input[type="text"]{
+    box-sizing:border-box;
+    display:block;
+    width:100%;
+    height:58px;
+    border:1.8px solid #ddd;
+    border-radius:14px;
+    padding-right:54px;
+    font-size:15px;
+    outline:none;
+    transition:.3s;
+}
+
+.form-group .password-input-wrap input:focus{
+    border-color:#3E9722;
+}
+
+.password-toggle{
+    position:absolute;
+    top:50%;
+    right:10px;
+    display:grid;
+    width:38px;
+    height:38px;
+    place-items:center;
+    transform:translateY(-50%);
+    border:0;
+    border-radius:8px;
+    background:transparent;
+    color:#59665d;
+    cursor:pointer;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible{
+    transform:translateY(-50%);
+    background:#f1f5ef;
+    color:#327d1b;
+    box-shadow:none;
+}
+
+.password-toggle:focus-visible{
+    outline:2px solid #3E9722;
+    outline-offset:2px;
+}
+
 /* ===========================
    PHONE
 =========================== */

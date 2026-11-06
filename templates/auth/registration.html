@@ -199,11 +199,18 @@
 
                     <label>Password</label>
 
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Enter Password"
-                        required>
+                    <div class="password-input-wrap">
+                        <input
+                            id="registration-password"
+                            type="password"
+                            name="password"
+                            placeholder="Enter Password"
+                            autocomplete="new-password"
+                            required>
+                        <button class="password-toggle" type="button" data-password-toggle="registration-password" aria-label="Show password" aria-pressed="false">
+                            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
 
                 </div>
 
@@ -212,11 +219,18 @@
 
                     <label>Confirm Password</label>
 
-                    <input
-                        type="password"
-                        name="confirm_password"
-                        placeholder="Re-enter Password"
-                        required>
+                    <div class="password-input-wrap">
+                        <input
+                            id="registration-confirm-password"
+                            type="password"
+                            name="confirm_password"
+                            placeholder="Re-enter Password"
+                            autocomplete="new-password"
+                            required>
+                        <button class="password-toggle" type="button" data-password-toggle="registration-confirm-password" aria-label="Show confirm password" aria-pressed="false">
+                            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
 
                 </div>
 
@@ -275,6 +289,19 @@
 
 
 <script>
+
+document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+        const passwordInput = document.getElementById(toggle.dataset.passwordToggle);
+        const isVisible = passwordInput.type === "password";
+        passwordInput.type = isVisible ? "text" : "password";
+        const fieldName = passwordInput.name === "confirm_password" ? "confirm password" : "password";
+        toggle.setAttribute("aria-label", `${isVisible ? "Hide" : "Show"} ${fieldName}`);
+        toggle.setAttribute("aria-pressed", String(isVisible));
+        toggle.querySelector("i").className = isVisible ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+        passwordInput.focus();
+    });
+});
 
 const registrationForm = document.querySelector("form");
 const passwordInput = document.querySelector('input[name="password"]');

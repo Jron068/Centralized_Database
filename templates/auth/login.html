@@ -79,7 +79,12 @@
 
             
             <label>Password</label>
-            <input type="password" name="password" placeholder="Enter your password" required>
+            <div class="password-input-wrap">
+                <input id="login-password" type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                <button class="password-toggle" type="button" data-password-toggle="login-password" aria-label="Show password" aria-pressed="false">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+            </div>
 
             
                 <div class="forgot">
@@ -106,7 +111,19 @@
 
 </div>
 
-
+<script>
+document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+        const passwordInput = document.getElementById(toggle.dataset.passwordToggle);
+        const isVisible = passwordInput.type === "password";
+        passwordInput.type = isVisible ? "text" : "password";
+        toggle.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
+        toggle.setAttribute("aria-pressed", String(isVisible));
+        toggle.querySelector("i").className = isVisible ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+        passwordInput.focus();
+    });
+});
+</script>
 
 </body>
 </html>
