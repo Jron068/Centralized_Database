@@ -222,17 +222,32 @@
       } else cell(tr, '—');
       cell(tr, pill(g.status));
       const action = document.createElement('td');
-      if (g.can_review) {
+      if (g.can_review || g.can_reject) {
         const form = document.createElement('form');
         form.method = 'post';
         form.action = REVIEW_URL.replace('/0/', '/' + g.id + '/');
         form.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
         const next = document.createElement('input'); next.type = 'hidden'; next.name = 'next'; next.value = NEXT_URL;
-        const approve = document.createElement('button'); approve.className = 'btn btn-primary btn-sm'; approve.type = 'submit'; approve.name = 'action'; approve.value = 'approve'; approve.textContent = 'Approve';
-        const reject = document.createElement('button'); reject.className = 'btn btn-outline btn-sm'; reject.type = 'submit'; reject.name = 'action'; reject.value = 'reject'; reject.textContent = 'Reject';
-        reject.addEventListener('click', event => { if (!confirm('Reject this reservation?')) event.preventDefault(); });
-        form.append(next, approve, reject); action.appendChild(form);
-      } else action.textContent = g.status === 'Pending Verification' ? 'Waiting for customer confirmation' : '—';
+        form.append(next);
+        if (g.can_review) {
+          const approve = document.createElement('button'); approve.className = 'btn btn-primary btn-sm'; approve.type = 'submit'; approve.name = 'action'; approve.value = 'approve'; approve.textContent = 'Approve';
+          form.append(approve);
+        }
+        if (g.can_reject) {
+          const reject = document.createElement('button'); reject.className = 'btn btn-outline btn-sm'; reject.type = 'submit'; reject.name = 'action'; reject.value = 'reject'; reject.textContent = 'Reject';
+          reject.addEventListener('click', event => { if (!confirm('Reject this reservation?')) event.preventDefault(); });
+          form.append(reject);
+        }
+        action.appendChild(form);
+        if (!g.can_review) {
+          const reason = document.createElement('small');
+          reason.style.display = 'block';
+          reason.textContent = g.customer_decision !== 'Continue'
+            ? 'Waiting for customer confirmation'
+            : 'Waiting for payment proof';
+          action.appendChild(reason);
+        }
+      } else action.textContent = g.status === 'Pending Verification' ? 'Waiting for customer confirmation or payment' : '—';
       tr.appendChild(action);
       body.appendChild(tr);
     });

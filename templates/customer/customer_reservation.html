@@ -92,6 +92,7 @@
                 <th>Resort</th>
                 <th>Check-in</th>
                 <th>Check-out</th>
+                <th>Booked at</th>
                 <th>Guests</th>
                 <th>Total Amount</th>
                 <th>Status</th>
@@ -102,8 +103,9 @@
               {% for r in reservations %}
               <tr>
                 <td><strong>{{ r.resort_name }}</strong></td>
-                <td>{{ r.check_in.strftime('%b %d, %Y') if r.check_in else '—' }}</td>
-                <td>{{ r.check_out.strftime('%b %d, %Y') if r.check_out else '—' }}</td>
+                <td>{{ r.start_at.strftime('%b %d, %Y at %I:%M %p') if r.start_at else (r.check_in.strftime('%b %d, %Y') if r.check_in else '—') }}</td>
+                <td>{{ r.end_at.strftime('%b %d, %Y at %I:%M %p') if r.end_at else (r.check_out.strftime('%b %d, %Y') if r.check_out else '—') }}</td>
+                <td>{{ r.created_at.strftime('%b %d, %Y at %I:%M %p') if r.created_at else '—' }}</td>
                 <td>{{ r.guests }}</td>
                 <td>₱{{ '%.2f'|format(r.total_amount) if r.total_amount else '0.00' }}</td>
                 <td><span class="badge {{ r.reservation_status|lower }}">{{ r.reservation_status }}</span></td>
@@ -130,7 +132,7 @@
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="7"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
+              <tr><td colspan="8"><div class="empty-state">You don't have any reservations yet.</div></td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -143,8 +145,5 @@
 
 
 
-{% if session.get('role') == 'customer' %}
-<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
-{% endif %}
 </body>
 </html>

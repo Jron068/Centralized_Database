@@ -4,6 +4,9 @@
 _BOOKING_COLUMNS = {
     "reservations": {
         "customer_decision": "VARCHAR(20) NOT NULL DEFAULT 'Pending'",
+        "tour_type": "VARCHAR(20) NULL",
+        "start_at": "DATETIME NULL",
+        "end_at": "DATETIME NULL",
     },
     "payments": {
         "payer_name": "VARCHAR(150) NULL",

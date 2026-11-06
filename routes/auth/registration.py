@@ -213,6 +213,35 @@ def customer_dashboard():
         )
         customer = cursor.fetchone()
 
+        cursor.execute(
+            """
+            SELECT r.resort_id, r.resort_name, r.address, r.logo, r.price, r.max_pax,
+                   COALESCE(rv.average_rating, 0) AS average_rating,
+                   COALESCE(rv.review_count, 0) AS review_count,
+                   COALESCE(st.completed_stays, 0) AS completed_stays
+            FROM resorts r
+            LEFT JOIN (
+                SELECT resort_id, AVG(rating) AS average_rating, COUNT(rating) AS review_count
+                FROM reviews
+                WHERE rating IS NOT NULL
+                GROUP BY resort_id
+            ) rv ON rv.resort_id = r.resort_id
+            LEFT JOIN (
+                SELECT resort_id, COUNT(*) AS completed_stays
+                FROM reservations
+                WHERE reservation_status IN ('Completed', 'Confirmed')
+                  AND check_out <= CURRENT_DATE
+                GROUP BY resort_id
+            ) st ON st.resort_id = r.resort_id
+            WHERE r.status = 'Active'
+            ORDER BY CASE WHEN COALESCE(rv.review_count, 0) > 0 THEN 0 ELSE 1 END,
+                     rv.average_rating DESC, rv.review_count DESC,
+                     st.completed_stays DESC, r.resort_name
+            LIMIT 3
+            """
+        )
+        top_performing_resorts = cursor.fetchall()
+
         if not customer:
             return render_template(
                 "customer/customer_landingpage.html",
@@ -223,6 +252,7 @@ def customer_dashboard():
                 pending_payment=0,
                 upcoming_reservations=[],
                 recent_reservations=[],
+                top_performing_resorts=top_performing_resorts,
             )
 
         customer_id = customer["customer_id"]
@@ -276,6 +306,7 @@ def customer_dashboard():
         cursor.execute(
             """
             SELECT r.reservation_id, res.resort_name, r.check_in, r.check_out,
+                   r.start_at, r.end_at, r.tour_type,
                    r.guests, r.total_amount, r.reservation_status, r.created_at,
                    (SELECT p.payment_status FROM payments p
                     WHERE p.reservation_id = r.reservation_id
@@ -314,6 +345,7 @@ def customer_dashboard():
             pending_payment=pending_payment,
             upcoming_reservations=upcoming_reservations,
             recent_reservations=recent_reservations,
+            top_performing_resorts=top_performing_resorts,
         )
     finally:
         cursor.close()

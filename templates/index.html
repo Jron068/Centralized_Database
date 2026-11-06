@@ -41,16 +41,112 @@
     color: #00a86b;
     margin-right: 6px;
   }
+  .partner-carousel { width: min(92%, 1200px); margin: 36px auto 50px; }
+  .partner-carousel-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .partner-carousel-controls p { margin: 0; color: #607068; font-size: 14px; }
+  .partner-carousel-controls button { display: inline-grid; place-items: center; width: 42px; height: 42px; margin-left: 6px; border: 1px solid #d5e2d9; border-radius: 50%; color: #176b46; background: white; cursor: pointer; transition: background .2s ease, color .2s ease; }
+  .partner-carousel-controls button:hover, .partner-carousel-controls button:focus-visible { background: #176b46; color: white; outline: none; }
+  .partner-resorts { box-sizing: border-box; display: flex; width: 100%; margin: 16px 0 0; gap: 20px; overflow-x: auto; padding: 8px 4px 22px; scroll-padding-inline: 4px; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; }
+  .partner-resorts::-webkit-scrollbar { display: none; }
+  .partner-resorts .resort-card { box-sizing: border-box; flex: 0 0 calc((100% - 40px) / 3); min-width: 0; scroll-snap-align: start; text-align: left; }
+  .partner-resorts .resort-card:hover { transform: translateY(-2px); }
+  .partner-resorts .resort-card > img { flex: 0 0 190px; height: 190px; }
+  .partner-resorts .resort-card .card-content { display: flex; flex: 1; flex-direction: column; align-items: stretch; padding: 18px; }
+  .partner-resorts .resort-card .card-content h3 { margin: 0 0 10px; line-height: 1.35; overflow-wrap: anywhere; }
+  .partner-resorts .resort-card .location, .partner-resorts .resort-card .resort-contact { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0; line-height: 1.55; }
+  .partner-resorts .resort-card .location i, .partner-resorts .resort-card .resort-contact i { flex: 0 0 16px; margin: 3px 0 0; text-align: center; }
+  .partner-resorts .resort-card .resort-description { margin: 8px 0 2px; text-align: left; line-height: 1.6; overflow-wrap: anywhere; }
+  .partner-resorts .resort-card-cta { display: inline-flex; min-height: 42px; margin-top: auto; align-items: center; justify-content: center; padding: 10px 14px; border-radius: 8px; background: #176b46; color: #fff !important; text-decoration: none; font-weight: 700; }
+  .partner-resorts .resort-card-cta:hover, .partner-resorts .resort-card-cta:focus-visible { background: #105437; }
+  @media (max-width: 900px) { .partner-resorts .resort-card { flex-basis: calc((100% - 20px) / 2); } }
+  @media (max-width: 600px) {
+    .partner-carousel { width: min(92%, 480px); }
+    .partner-carousel-controls { align-items: flex-start; }
+    .partner-resorts .resort-card { flex-basis: 100%; }
+    .partner-resorts .resort-card > img { height: 210px; flex-basis: 210px; }
+  }
+  .legal-section { margin-top: 42px; padding: clamp(22px, 4vw, 48px); border-radius: 18px; background: #f5f8f6; }
+  .legal-section > .page-header { margin-bottom: 24px; }
+  .legal-section > .page-header p { color: #637168; }
+  .legal-updated { margin-top: 8px; font-size: 13px; color: #738078; }
+  .legal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .legal-card { min-width: 0; padding: 20px; border: 1px solid #e1e9e3; border-radius: 12px; background: #fff; }
+  .legal-card h3 { margin: 0 0 10px; color: #1f6b52; font-size: 17px; }
+  .legal-card p, .legal-card li { color: #4c5a51; font-size: 14px; line-height: 1.7; text-align: justify; text-justify: inter-word; }
+  .legal-card p { margin: 0 0 10px; }
+  .legal-card p:last-child { margin-bottom: 0; }
+  .legal-card ul { margin: 8px 0 0; padding-left: 20px; }
+  .legal-card-wide { grid-column: 1 / -1; }
+  @media (max-width: 700px) { .legal-grid { grid-template-columns: 1fr; } .legal-card-wide { grid-column: auto; } }
+  .hero.resort-carousel { height: clamp(280px, 42vw, 520px); min-height: 280px; overflow: hidden; background: #153c2d; }
+  .resort-carousel-track, .resort-hero-slide { position: absolute; inset: 0; }
+  .resort-hero-slide { opacity: 0; visibility: hidden; transition: opacity .55s ease, visibility .55s ease; }
+  .resort-hero-slide.is-active { opacity: 1; visibility: visible; z-index: 1; }
+  .resort-hero-slide > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .resort-hero-slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,31,23,.72), rgba(7,31,23,.28) 60%, rgba(7,31,23,.12)); }
+  .resort-hero-copy { position: absolute; z-index: 2; top: 50%; left: max(5.5%, calc((100% - 1200px)/2)); transform: translateY(-50%); width: min(620px, 78%); color: #fff; }
+  .resort-hero-copy .resort-kicker { margin-bottom: 8px; font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .resort-hero-copy h1 { margin: 0 0 10px; font-size: clamp(32px, 5vw, 58px); line-height: 1.12; text-shadow: 0 2px 14px rgba(0,0,0,.28); }
+  .resort-hero-copy p { margin: 0; max-width: 580px; font-size: clamp(15px, 1.8vw, 20px); line-height: 1.55; }
+  .resort-hero-cta { display: inline-flex; margin-top: 20px; padding: 11px 18px; border-radius: 8px; background: #fff; color: #176b46; text-decoration: none; font-weight: 700; }
+  .resort-hero-unavailable { display: inline-block; margin-top: 18px; font-weight: 600; }
+  .resort-hero-controls { position: absolute; z-index: 3; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; pointer-events: none; }
+  .resort-hero-controls button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.75); border-radius: 50%; background: rgba(15,35,27,.42); color: #fff; cursor: pointer; pointer-events: auto; }
+  .resort-hero-controls button:hover { background: rgba(15,35,27,.75); }
+  .resort-hero-dots { position: absolute; z-index: 3; bottom: 18px; left: 50%; display: flex; gap: 8px; transform: translateX(-50%); }
+  .resort-hero-dots button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; background: rgba(255,255,255,.62); cursor: pointer; }
+  .resort-hero-dots button[aria-current="true"] { width: 26px; background: #fff; }
+  .hero.resort-carousel-empty { background: linear-gradient(120deg, #124734, #23835b); }
+  @media (max-width: 600px) {
+    .hero.resort-carousel { height: 360px; }
+    .resort-hero-copy { left: 8%; width: 76%; }
+    .resort-hero-controls { padding: 0 10px; }
+    .resort-hero-controls button { width: 38px; height: 38px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .resort-hero-slide { transition: none; } }
 </style>
 
 <!-- ===================== HOME / HERO ===================== -->
-<section class="hero" id="home">
+<section class="hero resort-carousel {{ 'resort-carousel-empty' if not resorts }}" id="home" aria-label="Registered resort highlights">
+    {% if resorts %}
+    <div class="resort-carousel-track" aria-live="polite">
+        {% for resort in resorts %}
+        {% set hero_photo = resort.photos[0].url if resort.photos else resort.logo %}
+        <article class="resort-hero-slide{{ ' is-active' if loop.first else '' }}" data-resort-slide aria-hidden="{{ 'false' if loop.first else 'true' }}">
+            <img src="{{ hero_photo or url_for('static', filename='images/default-resort.svg') }}"
+                 alt="{{ resort.resort_name }} resort" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+            <div class="resort-hero-copy">
+                <p class="resort-kicker">Registered resort · {{ resort.address or 'Pansol, Laguna' }}</p>
+                <h1>{{ resort.resort_name }}</h1>
+                <p>{{ resort.description or 'Discover this resort and plan your next stay in Pansol, Laguna.' }}</p>
+                {% if resort.status == 'Active' %}
+                <a class="resort-hero-cta" href="{{ url_for('customer_booking_entry', resort_id=resort.resort_id) }}">Explore &amp; book</a>
+                {% else %}
+                <span class="resort-hero-unavailable">Currently unavailable for booking</span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% if resorts|length > 1 %}
+    <div class="resort-hero-controls" aria-label="Resort carousel controls">
+        <button type="button" data-resort-previous aria-label="Previous resort"><i class="fa-solid fa-arrow-left"></i></button>
+        <button type="button" data-resort-next aria-label="Next resort"><i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+    <div class="resort-hero-dots" aria-label="Choose a resort">
+        {% for resort in resorts %}
+        <button type="button" data-resort-dot="{{ loop.index0 }}" aria-label="Show {{ resort.resort_name }}" aria-current="{{ 'true' if loop.first else 'false' }}"></button>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
     <div class="overlay">
         <div class="hero-text">
             <h1>Find. Book. Relax</h1>
-            <p>Your one-stop reservation hub for the best resorts in Pansol, Laguna.</p>
+            <p>Your one-stop reservation hub for resorts in Pansol, Laguna.</p>
         </div>
     </div>
+    {% endif %}
 </section>
 
 <section class="partner">
@@ -58,7 +154,13 @@
     <div class="divider"><span></span><i class="fa-solid fa-spa"></i><span></span></div>
 </section>
 
-<section class="partner-resorts">
+<div class="partner-carousel">
+  <div class="partner-carousel-controls">
+    <p>Browse every resort registered by the owner</p>
+    <div><button type="button" id="resortCarouselPrev" aria-label="Previous resort profiles"><i class="fa-solid fa-arrow-left"></i></button>
+    <button type="button" id="resortCarouselNext" aria-label="Next resort profiles"><i class="fa-solid fa-arrow-right"></i></button></div>
+  </div>
+<section class="partner-resorts" id="partnerResorts" aria-label="Partner resort profiles">
     {% for resort in resorts %}
     <div class="resort-card">
         <img
@@ -68,6 +170,9 @@
         >
         <div class="card-content">
             <h3>{{ resort.resort_name }}</h3>
+            {% if resort.status != 'Active' %}
+            <p class="resort-contact"><strong>Currently unavailable for booking</strong></p>
+            {% endif %}
             <p class="location">
                 <i class="fa-solid fa-location-dot"></i>
                 {{ resort.address or 'Location not provided' }}
@@ -105,12 +210,16 @@
                 {{ resort.amenities }}
             </p>
             {% endif %}
+            {% if resort.status == 'Active' %}
+            <a class="resort-card-cta" href="{{ url_for('customer_booking_entry', resort_id=resort.resort_id) }}">Explore &amp; book</a>
+            {% endif %}
         </div>
     </div>
     {% else %}
-    <p>No active resorts are available right now.</p>
+    <p>No resorts have been registered yet.</p>
     {% endfor %}
 </section>
+</div>
 
 
 <!-- ===================== ABOUT ===================== -->
@@ -164,7 +273,6 @@
     <i class="bi bi-tree" style="color:#2b8a82;font-size:48px;"></i>
   </div>
 </section>
-
 
 <!-- ===================== HOW IT WORKS ===================== -->
 <section id="howitworks" class="page-wrap">
@@ -290,6 +398,60 @@
   </div>
 </section>
 
+<section class="page-wrap legal-section" id="terms">
+  <div class="page-header">
+    <h1>Terms, Conditions &amp; Privacy</h1>
+    <p>Please review these terms before using Pansol Resorts Centralized Reservation Hub.</p>
+    <p class="legal-updated">Last updated: November 6, 2026</p>
+  </div>
+
+  <div class="legal-grid">
+    <article class="legal-card legal-card-wide">
+      <h3>Privacy Policy</h3>
+      <p>We collect information you provide when you register, contact support, submit a booking, upload payment proof, or post a review. This may include your name, email address, phone number, reservation details, payment reference, and files you choose to upload.</p>
+      <p>We use this information to operate your account, send reservation and payment updates, help resorts manage bookings, provide support, prevent misuse, and maintain the service. Booking and contact details are shared with the resort responsible for your reservation and with service providers that help us host and operate the platform. We do not display payment proof publicly.</p>
+      <p>We retain information for as long as needed for these purposes, legitimate business records, and applicable legal obligations. We use reasonable safeguards, but no online service can guarantee absolute security. You may request access to or correction/deletion of your personal information, subject to identity checks, required records, and applicable law, by contacting the platform support team.</p>
+      <p>We handle personal information in accordance with applicable Philippine privacy laws, including the Data Privacy Act of 2012 (Republic Act No. 10173). Do not upload sensitive information that is not needed to process your booking or support request.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Introduction &amp; Acceptance</h3>
+      <p>These terms apply when you access or use this booking platform. By browsing, creating an account, or submitting a reservation, you confirm that you have read and agree to these terms. If you do not agree, do not use the platform. Resort-specific policies shown during booking also apply to your stay.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Intellectual Property</h3>
+      <p>The platform’s software, branding, design, and original content are owned by or licensed to the platform operator and may not be copied, republished, or used commercially without permission. Resort names, logos, and photos remain the property of their respective owners. You may submit content only if you have the right to share it.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>User Accounts &amp; Responsibilities</h3>
+      <p>Provide accurate registration and booking information, keep your password confidential, and promptly report suspected unauthorized access. You are responsible for activity under your account. Do not impersonate others, submit false payment evidence or reviews, interfere with the service, or use it unlawfully. Contact details can be updated in your profile settings.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Purchases &amp; Refunds</h3>
+      <p>Displayed resort prices and schedules are subject to confirmation by the resort. A reservation is not confirmed until the resort approves it and the payment status is updated. The booking flow identifies the required 10% downpayment or full-payment option before submission. Pay only to the recipient shown in the booking flow and submit accurate payment proof.</p>
+      <p>Refunds, changes, cancellations, and any downpayment refundability are governed by the specific resort policy disclosed for the booking and applicable law. Contact the resort through the platform for a decision; the platform facilitates the reservation and does not guarantee a refund or the resort’s services.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Limitation of Liability</h3>
+      <p>The platform provides a way to discover resorts and submit reservation requests. Resorts are responsible for their facilities, descriptions, prices, availability, safety, and delivery of booked services. To the extent allowed by law, the platform is not responsible for indirect losses or issues arising from a resort’s services, inaccurate user-submitted information, payment-provider outages, or interruptions outside its reasonable control. Nothing in these terms removes liability that cannot legally be excluded.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Termination Clause</h3>
+      <p>We may suspend or close an account or restrict access if necessary to protect users or the service, comply with law, or address suspected fraud, abuse, or material breach of these terms. Where reasonable, we will provide notice and an opportunity to resolve the issue. Existing confirmed bookings and payment obligations remain subject to the applicable resort policy and law.</p>
+    </article>
+
+    <article class="legal-card">
+      <h3>Governing Law</h3>
+      <p>These terms are governed by the laws of the Republic of the Philippines. Disputes are subject to the jurisdiction of the competent courts in the Philippines, without limiting any consumer rights or remedies provided by applicable law.</p>
+    </article>
+  </div>
+</section>
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -300,6 +462,56 @@ document.querySelectorAll(".stay-type button").forEach(btn => {
         btn.classList.add("active-btn");
     });
 });
+
+const resortTrack = document.getElementById("partnerResorts");
+const scrollResortCards = direction => {
+    const firstCard = resortTrack?.querySelector(".resort-card");
+    const gap = Number.parseFloat(window.getComputedStyle(resortTrack).columnGap) || 0;
+    const distance = firstCard ? firstCard.getBoundingClientRect().width + gap : resortTrack.clientWidth;
+    resortTrack.scrollBy({ left: direction * distance, behavior: "smooth" });
+};
+document.getElementById("resortCarouselPrev")?.addEventListener("click", () => scrollResortCards(-1));
+document.getElementById("resortCarouselNext")?.addEventListener("click", () => scrollResortCards(1));
+
+const resortSlides = [...document.querySelectorAll("[data-resort-slide]")];
+const resortDots = [...document.querySelectorAll("[data-resort-dot]")];
+if (resortSlides.length > 1) {
+    let activeResortSlide = 0;
+    let resortCarouselTimer;
+    const showResortSlide = index => {
+        activeResortSlide = (index + resortSlides.length) % resortSlides.length;
+        resortSlides.forEach((slide, slideIndex) => {
+            const active = slideIndex === activeResortSlide;
+            slide.classList.toggle("is-active", active);
+            slide.setAttribute("aria-hidden", String(!active));
+        });
+        resortDots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === activeResortSlide)));
+    };
+    const startResortCarousel = () => {
+        window.clearInterval(resortCarouselTimer);
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            resortCarouselTimer = window.setInterval(() => showResortSlide(activeResortSlide + 1), 6000);
+        }
+    };
+    document.querySelector("[data-resort-previous]")?.addEventListener("click", () => {
+        showResortSlide(activeResortSlide - 1);
+        startResortCarousel();
+    });
+    document.querySelector("[data-resort-next]")?.addEventListener("click", () => {
+        showResortSlide(activeResortSlide + 1);
+        startResortCarousel();
+    });
+    resortDots.forEach(dot => dot.addEventListener("click", () => {
+        showResortSlide(Number(dot.dataset.resortDot));
+        startResortCarousel();
+    }));
+    const resortHero = document.getElementById("home");
+    resortHero.addEventListener("mouseenter", () => window.clearInterval(resortCarouselTimer));
+    resortHero.addEventListener("mouseleave", startResortCarousel);
+    resortHero.addEventListener("focusin", () => window.clearInterval(resortCarouselTimer));
+    resortHero.addEventListener("focusout", startResortCarousel);
+    startResortCarousel();
+}
 
 // Highlight the matching nav link while its section is in view.
 const sections = document.querySelectorAll("section[id]");

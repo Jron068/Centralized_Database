@@ -1,9 +1,18 @@
 from config import get_connection
-from flask import jsonify, render_template, request, session
+from flask import jsonify, redirect, render_template, request, session, url_for
 from app import app
 from models.resort import enrich_resorts, gallery_photos
 from models.resort_photos import get_resort_photos
 from models.customer_favorites import ensure_customer_favorites_table
+
+@app.route("/book/resort/<int:resort_id>")
+def customer_booking_entry(resort_id):
+    """Require a customer session before opening a resort selected for booking."""
+    destination = url_for("resorts", resort_id=resort_id)
+    if session.get("role") != "customer" or not session.get("account_id"):
+        return redirect(url_for("login", next=destination))
+    return redirect(destination)
+
 
 @app.route("/resorts")
 def resorts():
@@ -21,7 +30,7 @@ def resorts():
                 email,
                 phone,
                 logo,
-                amenities,status
+                amenities, status, price, max_pax
                      FROM resorts
                      WHERE status = 'Active'
                      ORDER BY resort_name
@@ -37,7 +46,15 @@ def resorts():
             )
         ]
     favorite_resort_ids = []
+    booking_profile = {"name": fullname, "phone": ""}
     if session.get("role") == "customer" and session.get("account_id"):
+        cursor.execute(
+            "SELECT phone FROM customers WHERE account_id = %s LIMIT 1",
+            (session["account_id"],),
+        )
+        customer = cursor.fetchone()
+        if customer:
+            booking_profile["phone"] = customer.get("phone") or ""
         ensure_customer_favorites_table(cursor)
         cursor.execute(
             "SELECT resort_id FROM customer_favorites WHERE account_id = %s",
@@ -50,7 +67,9 @@ def resorts():
     return render_template(
         "customer/resorts.html", username=fullname, resort_rows=resort_rows,
         favorite_resort_ids=favorite_resort_ids,
-        search_query=request.args.get("q", "").strip()
+        booking_profile=booking_profile,
+        search_query=request.args.get("q", "").strip(),
+        selected_resort_id=request.args.get("resort_id", type=int),
     )
 
 
@@ -148,26 +167,43 @@ def resort_reviews(resort_id):
         cursor.close()
         connection.close()
 
+def _legacy_resort_profile(resort_name):
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT resort_id FROM resorts WHERE LOWER(resort_name) LIKE %s AND status = 'Active' ORDER BY resort_id LIMIT 1",
+            (f"%{resort_name.lower()}%",),
+        )
+        resort = cursor.fetchone()
+        if not resort:
+            return redirect(url_for("resorts"))
+        return redirect(url_for("resorts", resort_id=resort["resort_id"]))
+    finally:
+        cursor.close()
+        connection.close()
+
+
 @app.route('/LuckyMielsResort')
 def LuckyMielsResort():
-    return render_template('resorts/LuckyMielsResort.html')
+    return _legacy_resort_profile("Lucky Miels")
 
 @app.route('/SunscapeResort')
 def SunscapeResort():
-    return render_template('resorts/SunscapeResort.html')
+    return _legacy_resort_profile("Sunscape")
 
 @app.route('/TripleZResort')
 def TripleZResort():
-    return render_template('resorts/TripleZ_Resort.html')
+    return _legacy_resort_profile("Triple Z")
 
 @app.route('/MagicKingdomResort')
 def MagicKingdomResort():
-    return render_template('resorts/MagicKingdomResort.html')
+    return _legacy_resort_profile("Magic Kingdom")
 
 @app.route('/RenalynsResort')
 def RenalynsResort():
-    return render_template('resorts/RenalynResort.html')
+    return _legacy_resort_profile("Renalyn")
 
 @app.route('/GallelysResort')
 def GallelysResort():
-    return render_template('resorts/GallelyResort.html')
+    return _legacy_resort_profile("Gallely")

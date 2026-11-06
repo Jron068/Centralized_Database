@@ -176,12 +176,12 @@
                 <td>{% if b.proof_url %}<a href="{{ b.proof_url }}" target="_blank"><img class="bk-proof" src="{{ b.proof_url }}" alt="Payment proof"></a>{% else %}<small>No proof</small>{% endif %}</td>
                 <td><span class="bk-pill {{ b.reservation_status|lower }}">{{ b.reservation_status }}</span></td>
                 <td>
-                  {% if b.can_review %}
+                  {% if b.can_review or b.can_reject %}
                   <form class="bk-actions" method="post" action="{{ url_for('caretaker_review_reservation', reservation_id=b.reservation_id) }}">
-                    <button class="bk-btn approve" name="action" value="approve" type="submit">Approve</button>
-                    <button class="bk-btn reject" name="action" value="reject" type="submit" onclick="return confirm('Reject this booking?')">Reject</button>
+                    {% if b.can_review %}<button class="bk-btn approve" name="action" value="approve" type="submit">Approve</button>{% endif %}
+                    {% if b.can_reject %}<button class="bk-btn reject" name="action" value="reject" type="submit" onclick="return confirm('Reject this booking?')">Reject</button>{% endif %}
                   </form>
-                  {% elif b.reservation_status == 'Pending' and b.payment_status == 'Pending' %}<small>Waiting for customer confirmation</small>
+                  {% if not b.can_review %}<small>{% if b.customer_decision != 'Continue' %}Waiting for customer confirmation{% else %}Waiting for payment proof{% endif %}</small>{% endif %}
                   {% else %}<small>&mdash;</small>{% endif %}
                 </td>
               </tr>

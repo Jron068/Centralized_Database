@@ -443,6 +443,9 @@ def _guest_overview(cursor, account_id):
                     and r["customer_decision"] == "Continue"
                     and r["payment_status"] == "Pending"
                     and bool(r["payment_id"]) and r["booking_source"] != "Walk-in",
+                "can_reject": r["reservation_status"] == "Pending"
+                    and r["booking_source"] != "Walk-in"
+                    and (not r["payment_id"] or r["payment_status"] in (None, "Pending")),
             }
         )
     return {"stats": stats, "guests": guests}
@@ -501,19 +504,30 @@ def _owner_account_id(cursor, owner_id):
     return row["account_id"] if row else None
 
 
-def _dates_conflict(cursor, resort_id, check_in, check_out, exclude_id=None):
-    """Return a CONFIRMED reservation that already occupies any of these dates at this resort (or None).
-    Once the admin/caretaker approves a booking, its dates are occupied and nobody else can book them.
-    Call this from every place that creates or approves a booking (customer booking route too)."""
+def _dates_conflict(
+    cursor, resort_id, check_in, check_out, exclude_id=None, start_at=None, end_at=None
+):
+    """Return a confirmed booking that overlaps this schedule or legacy date range."""
     ci, co = _as_date(check_in), _as_date(check_out)
     if co <= ci:
         co = ci + timedelta(days=1)
-    sql = (
-        "SELECT reservation_id, check_in, check_out FROM reservations "
-        "WHERE resort_id = %s AND reservation_status = 'Confirmed' "
-        "AND check_in < %s AND GREATEST(check_out, DATE_ADD(check_in, INTERVAL 1 DAY)) > %s"
-    )
-    params = [resort_id, co, ci]
+    if start_at is not None and end_at is not None:
+        sql = (
+            "SELECT reservation_id, check_in, check_out FROM reservations "
+            "WHERE resort_id = %s AND reservation_status = 'Confirmed' AND ("
+            "(start_at IS NOT NULL AND end_at IS NOT NULL "
+            "AND start_at < %s AND end_at > %s) OR "
+            "((start_at IS NULL OR end_at IS NULL) AND check_in < %s "
+            "AND GREATEST(check_out, DATE_ADD(check_in, INTERVAL 1 DAY)) > %s))"
+        )
+        params = [resort_id, end_at, start_at, co, ci]
+    else:
+        sql = (
+            "SELECT reservation_id, check_in, check_out FROM reservations "
+            "WHERE resort_id = %s AND reservation_status = 'Confirmed' "
+            "AND check_in < %s AND GREATEST(check_out, DATE_ADD(check_in, INTERVAL 1 DAY)) > %s"
+        )
+        params = [resort_id, co, ci]
     if exclude_id:
         sql += " AND reservation_id <> %s"
         params.append(exclude_id)
@@ -638,6 +652,10 @@ def caretaker_dashboard():
                 r["reservation_status"] == "Pending"
                 and r["customer_decision"] == "Continue"
                 and r["payment_status"] == "Pending"
+            )
+            r["can_reject"] = (
+                r["reservation_status"] == "Pending"
+                and (not r["payment_id"] or r["payment_status"] in (None, "Pending"))
             )
         upcoming = sorted(
             [r for r in rows if r["reservation_status"] in ("Pending", "Confirmed")
@@ -1014,7 +1032,8 @@ def caretaker_review_reservation(reservation_id):
         schema = _walkin_schema(cursor)
         cursor.execute(
             f"""
-                 SELECT r.reservation_id, r.resort_id, r.check_in, r.check_out, cu.account_id AS customer_account_id,
+                 SELECT r.reservation_id, r.resort_id, r.check_in, r.check_out,
+                     r.start_at, r.end_at, cu.account_id AS customer_account_id,
                      r.reservation_status, r.customer_decision,
                    p.payment_id, p.payment_status
             FROM reservations r
@@ -1031,7 +1050,7 @@ def caretaker_review_reservation(reservation_id):
               AND c.account_id = %s
               AND c.status = 'Active'
               AND {_customer_visible_clause(schema)}
-            FOR UPDATE
+            FOR UPDATE OF r
             """,
             (reservation_id, session.get("account_id")),
         )
@@ -1042,29 +1061,32 @@ def caretaker_review_reservation(reservation_id):
         if reservation["reservation_status"] != "Pending":
             flash("This reservation can no longer be reviewed.", "warning")
             return _review_redirect()
-        if not reservation["payment_id"]:
-            flash("The customer has not submitted payment proof yet.", "warning")
-            return _review_redirect()
-        if reservation["payment_status"] != "Pending":
-            flash("This payment is no longer pending review.", "warning")
-            return _review_redirect()
-
         approved = action == "approve"
         if approved:
             if reservation["customer_decision"] != "Continue":
                 flash("The customer must confirm they want to continue before approval.", "warning")
                 return _review_redirect()
-            clash = _dates_conflict(cursor, reservation["resort_id"], reservation["check_in"], reservation["check_out"], reservation_id)
+            if not reservation["payment_id"] or reservation["payment_status"] != "Pending":
+                flash("A pending payment proof is required before approval.", "warning")
+                return _review_redirect()
+            clash = _dates_conflict(
+                cursor, reservation["resort_id"], reservation["check_in"],
+                reservation["check_out"], reservation_id,
+                reservation.get("start_at"), reservation.get("end_at"),
+            )
             if clash:
                 conn.rollback()
                 flash("Cannot approve: those dates are " + _clash_text(clash) + ".", "warning")
                 return _review_redirect()
-        payment_status = "Verified" if approved else "Rejected"
+        elif reservation["payment_id"] and reservation["payment_status"] not in (None, "Pending"):
+            flash("This reservation has a payment that is no longer pending review.", "warning")
+            return _review_redirect()
         reservation_status = "Confirmed" if approved else "Rejected"
-        cursor.execute(
-            "UPDATE payments SET payment_status = %s WHERE payment_id = %s",
-            (payment_status, reservation["payment_id"]),
-        )
+        if reservation["payment_id"] and reservation["payment_status"] == "Pending":
+            cursor.execute(
+                "UPDATE payments SET payment_status = %s WHERE payment_id = %s",
+                ("Verified" if approved else "Rejected", reservation["payment_id"]),
+            )
         cursor.execute(
             "UPDATE reservations SET reservation_status = %s WHERE reservation_id = %s",
             (reservation_status, reservation_id),

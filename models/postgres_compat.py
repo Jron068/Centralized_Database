@@ -119,6 +119,7 @@ def translate_mysql_sql(sql):
     statement = statement.replace("`", "")
     statement = re.sub(r"\bCURDATE\(\)", "CURRENT_DATE", statement, flags=re.IGNORECASE)
     statement = re.sub(r"\bNOW\(\)", "CURRENT_TIMESTAMP", statement, flags=re.IGNORECASE)
+    statement = re.sub(r"\bDATETIME\b", "TIMESTAMP", statement, flags=re.IGNORECASE)
     statement = re.sub(
         r"INTERVAL\s+(\d+)\s+DAY\b", r"INTERVAL '\1 days'", statement, flags=re.IGNORECASE
     )

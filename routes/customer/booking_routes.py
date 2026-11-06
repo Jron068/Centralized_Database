@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from datetime import datetime, time, timedelta
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from flask import render_template, request, session, redirect, url_for, jsonify, flash
 from werkzeug.utils import secure_filename
 from app import app
@@ -31,6 +31,11 @@ RESORT_RATES = {
 
 # Tour packages do not change the fixed price.
 TOUR_TYPES = {'day', 'night', '22_hour'}
+TOUR_WINDOWS = {
+    'day': (time(8), time(17)),
+    'night': (time(19), time(6)),
+    '22_hour': (time(14), time(12)),
+}
 
 
 def allowed_file(filename):
@@ -43,25 +48,47 @@ def resort_availability(resort_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        cursor.execute(
+            "SELECT resort_id FROM resorts WHERE resort_id = %s AND status = 'Active'",
+            (resort_id,),
+        )
+        if not cursor.fetchone():
+            return jsonify({"message": "Resort not found or unavailable."}), 404
+
         cursor.execute("""
-            SELECT check_in, check_out
+            SELECT check_in, check_out, tour_type, start_at, end_at
             FROM reservations
             WHERE resort_id = %s
               AND check_in IS NOT NULL AND check_out IS NOT NULL
               AND check_out > check_in
-              -- Pending bookings remain available until an administrator or caretaker approves them.
-              AND reservation_status = 'Confirmed'
+              AND reservation_status IN ('Pending', 'Confirmed')
         """, (resort_id,))
         rows = cursor.fetchall()
 
         booked_dates = []
+        bookings = []
         for r in rows:
-            d = r['check_in']
-            while d < r['check_out']:
-                booked_dates.append(d.strftime('%Y-%m-%d'))
-                d += timedelta(days=1)
+            start_at, end_at = r.get('start_at'), r.get('end_at')
+            if start_at and end_at:
+                booked_day = start_at.date()
+                while booked_day <= end_at.date():
+                    booked_dates.append(booked_day.strftime('%Y-%m-%d'))
+                    booked_day += timedelta(days=1)
+            else:
+                # Legacy date-only bookings reserve the whole date range.
+                d = r['check_in']
+                while d < r['check_out']:
+                    booked_dates.append(d.strftime('%Y-%m-%d'))
+                    d += timedelta(days=1)
+            bookings.append({
+                "start_at": start_at.strftime('%Y-%m-%dT%H:%M:%S') if start_at else None,
+                "end_at": end_at.strftime('%Y-%m-%dT%H:%M:%S') if end_at else None,
+                "tour_type": r.get('tour_type'),
+                "check_in": r['check_in'].strftime('%Y-%m-%d'),
+                "check_out": r['check_out'].strftime('%Y-%m-%d'),
+            })
 
-        response = jsonify({"booked_dates": booked_dates})
+        response = jsonify({"booked_dates": booked_dates, "bookings": bookings})
         response.headers["Cache-Control"] = "no-store"
         return response
     finally:
@@ -91,7 +118,7 @@ def book_resort():
     # The page sends this field as "package"; "tour_type" is also accepted.
     tour_type = (request.form.get('tour_type') or request.form.get('package') or '').strip()
 
-    if not guest_name or not guest_phone or not (1 <= guests <= MAX_GUESTS):
+    if not guest_name or not guest_phone or guests < 1:
         return jsonify({"success": False, "message": "Please complete all booking details."}), 400
     if water_qty < 0 or water_qty > 500:
         return jsonify({"success": False, "message": "Invalid mineral water quantity."}), 400
@@ -105,6 +132,15 @@ def book_resort():
             "success": False,
             "message": f"Reservations must be made at least 3 days in advance. Earliest check-in: {minimum_check_in:%B %d, %Y}."
         }), 400
+    start_time, end_time = TOUR_WINDOWS[tour_type]
+    start_at = datetime.combine(check_in, start_time)
+    expected_check_out = check_in + timedelta(days=1)
+    if check_out != expected_check_out:
+        return jsonify({"success": False, "message": "Check-out must match the selected tour schedule."}), 400
+    end_date = check_in if tour_type == 'day' else check_out
+    end_at = datetime.combine(end_date, end_time)
+    if end_at <= start_at:
+        return jsonify({"success": False, "message": "The selected tour schedule is invalid."}), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -148,6 +184,13 @@ def book_resort():
             "price": Decimal(str(saved_price if saved_price is not None else fallback_rate["price"])),
             "max_pax": int(saved_max_pax if saved_max_pax is not None else (fallback_rate["max_pax"] if fallback_rate else 15)),
         }
+        max_guests = max(MAX_GUESTS, rate["max_pax"])
+        if guests > max_guests:
+            conn.rollback()
+            return jsonify({
+                "success": False,
+                "message": f"This resort accepts up to {max_guests} guests per reservation."
+            }), 400
 
         cursor.execute(
             "SELECT role, is_verified, account_status FROM accounts WHERE account_id = %s",
@@ -162,12 +205,18 @@ def book_resort():
             SELECT reservation_id
             FROM reservations
             WHERE resort_id = %s
-              AND reservation_status = 'Confirmed'
+              AND reservation_status IN ('Pending', 'Confirmed')
               AND check_in IS NOT NULL AND check_out IS NOT NULL
-              AND check_in < %s AND check_out > %s
+              AND (
+                    (start_at IS NOT NULL AND end_at IS NOT NULL
+                     AND start_at < %s AND end_at > %s)
+                    OR
+                    ((start_at IS NULL OR end_at IS NULL)
+                     AND check_in < %s AND check_out > %s)
+              )
             LIMIT 1
             FOR UPDATE
-        """, (resort_id, check_out, check_in))
+        """, (resort_id, end_at, start_at, check_out, check_in))
         if cursor.fetchone():
             conn.rollback()
             return jsonify({"success": False, "message": "Those dates are no longer available. Please choose another stay."}), 409
@@ -182,10 +231,10 @@ def book_resort():
 
         cursor.execute("""
             INSERT INTO reservations
-                (customer_id, resort_id, check_in, check_out, guests, total_amount,
+                (customer_id, resort_id, check_in, check_out, start_at, end_at, tour_type, guests, total_amount,
                  reservation_status, guest_name, guest_phone, pax, gas_stove, customer_decision)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s, %s, 'Pending')
-        """, (customer_id, resort_id, check_in, check_out, guests, total_amount,
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s, %s, 'Pending')
+        """, (customer_id, resort_id, check_in, check_out, start_at, end_at, tour_type, guests, total_amount,
               guest_name, guest_phone, guests, int(gas_stove)))
         reservation_id = cursor.lastrowid
         notify_resort_caretakers(
@@ -200,7 +249,8 @@ def book_resort():
             "success": True,
             "message": "Reservation submitted successfully!",
             "reservation_id": reservation_id,
-            "total_amount": str(total_amount)
+            "total_amount": str(total_amount),
+            "downpayment_amount": str((total_amount * Decimal('0.10')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
         }), 201
     except Exception:
         conn.rollback()
@@ -321,7 +371,7 @@ def submit_payment():
     proof_path = None
     try:
         cursor.execute("""
-            SELECT r.reservation_id, r.reservation_status
+            SELECT r.reservation_id, r.reservation_status, r.total_amount
             FROM reservations AS r
             JOIN customers AS c ON c.customer_id = r.customer_id
             WHERE r.reservation_id = %s AND c.account_id = %s
@@ -332,6 +382,29 @@ def submit_payment():
             return jsonify({"success": False, "message": "Reservation not found."}), 404
         if reservation["reservation_status"] != "Pending":
             return jsonify({"success": False, "message": "This reservation is no longer accepting payment proofs."}), 409
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(CASE WHEN payment_status = 'Verified' THEN amount_paid ELSE 0 END), 0) AS verified_total,
+                   SUM(CASE WHEN payment_status = 'Pending' THEN 1 ELSE 0 END) AS pending_count
+            FROM payments
+            WHERE reservation_id = %s
+        """, (reservation_id,))
+        payment_summary = cursor.fetchone()
+        if payment_summary["pending_count"]:
+            return jsonify({"success": False, "message": "A payment for this reservation is already awaiting review."}), 409
+
+        total_amount = Decimal(str(reservation["total_amount"] or 0)).quantize(Decimal("0.01"))
+        verified_total = Decimal(str(payment_summary["verified_total"] or 0)).quantize(Decimal("0.01"))
+        downpayment = (total_amount * Decimal("0.10")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        balance_due = total_amount - verified_total
+        allowed_amounts = {balance_due}
+        if verified_total == 0:
+            allowed_amounts.add(downpayment)
+        if amount_paid != amount_paid.quantize(Decimal("0.01")) or amount_paid.quantize(Decimal("0.01")) not in allowed_amounts:
+            return jsonify({
+                "success": False,
+                "message": "Payment must be the 10% downpayment or the remaining balance."
+            }), 400
 
         image_data = proof.stream.read(5 * 1024 * 1024 + 1)
         if len(image_data) > 5 * 1024 * 1024:

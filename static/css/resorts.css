@@ -42,9 +42,13 @@
   .sfield svg{width:15px;height:15px;color:var(--slate);flex-shrink:0;}
   .sfield input,.sfield select{border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink);width:100%;}
   .sfield input[type=date]{min-width:0;}
+  .sfield.date-field{box-sizing:border-box;min-width:180px;flex-direction:column;align-items:stretch;gap:4px;padding:7px 12px;}
+  .date-field-label{color:var(--slate);font-size:11px;font-weight:700;line-height:1.2;}
+  .sfield.date-field input{min-height:20px;padding:0;}
   .sfield.grow{flex:1.6;}
   .searchbtn{background:var(--leaf);color:#fff;border:none;border-radius:10px;padding:0 22px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:7px;}
   .searchbtn:hover{background:var(--forest);}
+  .search-help{margin:-12px 0 16px;color:var(--slate);font-size:12.5px;line-height:1.5;}
 
   /* resort card row */
   .cardrow-wrap{position:relative;margin-bottom:22px;}
@@ -57,10 +61,10 @@
   }
   .rcard[hidden]{display:none;}
   .search-results-message{padding:12px 4px;color:var(--slate);font-size:13px;}
-  .cardrow-wrap.no-results{height:24px;margin-bottom:22px;}
+  .cardrow-wrap.no-results{height:auto;min-height:24px;margin-bottom:22px;}
   .cardrow-wrap.no-results .cardrow,
-  .cardrow-wrap.no-results .search-results-message,
   .cardrow-wrap.no-results .scrollbtn{display:none!important;}
+  .cardrow-wrap.no-results .search-results-message{display:block!important;margin:0;}
   .rcard:hover{box-shadow:0 14px 28px -20px rgba(11,74,48,.45);transform:translateY(-2px);}
   .rcard.selected{border-color:var(--leaf);box-shadow:0 0 0 2px var(--leaf-light);}
   .rcard .thumb{height:130px;position:relative;background:var(--leaf-light);overflow:hidden;}

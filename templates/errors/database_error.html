@@ -17,10 +17,12 @@
     <main>
         <h1>Database connection problem</h1>
         <p>The website could not connect to its database, so this page cannot load right now.</p>
-        <p>Check that MySQL is running and that <code>DB_HOST</code>, <code>DB_PORT</code>,
-           <code>DB_USER</code>, <code>DB_PASSWORD</code>, and <code>DB_NAME</code> in your local
-           <code>.env</code> match your MySQL setup. Then restart Flask.</p>
-        <p><a href="/">Try the home page agani</a></p>
+        <p>Check the active database settings in your local <code>.env</code>. If
+           <code>DATABASE_URL</code> is set, verify your PostgreSQL/Supabase connection string and
+           that the database is reachable. Otherwise, make sure MySQL is running and that
+           <code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>,
+           and <code>DB_NAME</code> match your MySQL setup. Then restart Flask.</p>
+        <p><a href="/">Try the home page again</a></p>
     </main>
 
 

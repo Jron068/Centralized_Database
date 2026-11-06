@@ -15,9 +15,8 @@ def index():
         try:
             cursor.execute("""
                 SELECT resort_id, resort_name, address, description, email, phone,
-                       logo, amenities, price, max_pax
+                       logo, amenities, price, max_pax, status
                 FROM resorts
-                WHERE status = 'Active'
                 ORDER BY resort_name
             """)
             resorts = enrich_resorts(cursor.fetchall())

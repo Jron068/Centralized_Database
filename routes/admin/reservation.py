@@ -222,6 +222,7 @@ def review_reservation(reservation_id):
         schema = _walkin_schema(cursor)
         cursor.execute(f"""
             SELECT r.reservation_id, r.resort_id, r.check_in, r.check_out,
+                   r.start_at, r.end_at,
                    r.reservation_status, r.customer_decision, c.account_id,
                    p.payment_id, p.payment_status,
                    res.owner_id, CASE WHEN {schema['walkin_expr']} THEN 'Walk-in' ELSE 'Online' END AS booking_source
@@ -234,7 +235,7 @@ def review_reservation(reservation_id):
                 ORDER BY p2.payment_id DESC LIMIT 1
             )
             WHERE r.reservation_id = %s
-            FOR UPDATE
+            FOR UPDATE OF r
         """, (reservation_id,))
         reservation = cursor.fetchone()
         if not reservation:
@@ -243,29 +244,39 @@ def review_reservation(reservation_id):
         if reservation["booking_source"] == "Walk-in":
             flash("Walk-in bookings are reviewed from Walk-in Approvals.", "info")
             return redirect(url_for("admin_walkins"))
-        if (reservation["reservation_status"] != "Pending"
-                or not reservation["payment_id"] or reservation["payment_status"] != "Pending"):
-            flash("Only reservations with a pending payment can be reviewed.", "warning")
+        if reservation["reservation_status"] != "Pending":
+            flash("Only pending reservations can be reviewed.", "warning")
             return redirect(url_for("reservation_detail", reservation_id=reservation_id))
 
         approved = action == "approve"
         if approved and reservation["customer_decision"] != "Continue":
             flash("The customer must confirm they want to continue before approval.", "warning")
             return redirect(url_for("reservation_detail", reservation_id=reservation_id))
+        if approved and (
+            not reservation["payment_id"] or reservation["payment_status"] != "Pending"
+        ):
+            flash("A pending payment proof is required before approval.", "warning")
+            return redirect(url_for("reservation_detail", reservation_id=reservation_id))
+        if not approved and reservation["payment_id"] and reservation["payment_status"] not in (None, "Pending"):
+            flash("This reservation has a payment that is no longer pending review.", "warning")
+            return redirect(url_for("reservation_detail", reservation_id=reservation_id))
         if approved:
             clash = _dates_conflict(
                 cursor, reservation["resort_id"], reservation["check_in"],
                 reservation["check_out"], reservation_id,
+                reservation.get("start_at"), reservation.get("end_at"),
             )
             if clash:
                 conn.rollback()
                 flash("Cannot approve: those dates are " + _clash_text(clash) + ".", "warning")
                 return redirect(url_for("reservation_detail", reservation_id=reservation_id))
 
-        payment_status = "Verified" if approved else "Rejected"
         reservation_status = "Confirmed" if approved else "Rejected"
-        cursor.execute("UPDATE payments SET payment_status = %s WHERE payment_id = %s",
-                       (payment_status, reservation["payment_id"]))
+        if reservation["payment_id"] and reservation["payment_status"] == "Pending":
+            cursor.execute(
+                "UPDATE payments SET payment_status = %s WHERE payment_id = %s",
+                ("Verified" if approved else "Rejected", reservation["payment_id"]),
+            )
         cursor.execute("UPDATE reservations SET reservation_status = %s WHERE reservation_id = %s",
                        (reservation_status, reservation_id))
         title = "Reservation approved" if approved else "Reservation declined"

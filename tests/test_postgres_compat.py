@@ -5,6 +5,15 @@ from models.postgres_compat import translate_mysql_sql
 
 
 class PostgresCreateTableTranslationTests(unittest.TestCase):
+    def test_datetime_in_alter_table_is_translated_to_timestamp(self):
+        translated, table, indexes = translate_mysql_sql(
+            "ALTER TABLE reservations ADD COLUMN start_at DATETIME NULL"
+        )
+
+        self.assertIn("start_at TIMESTAMP NULL", translated)
+        self.assertIsNone(table)
+        self.assertEqual(indexes, [])
+
     def test_inline_index_removal_preserves_foreign_key_separator(self):
         statement = """
             CREATE TABLE IF NOT EXISTS resort_photos (

@@ -79,6 +79,7 @@
                 <th>Payment Date</th>
                 <th>Status</th>
                 <th>Proof</th>
+                <th>Receipt</th>
               </tr>
             </thead>
             <tbody>
@@ -94,9 +95,10 @@
                     <a href="{{ p.proof_url }}" target="_blank" rel="noopener" class="view-all">View</a>
                   {% else %}—{% endif %}
                 </td>
+                <td>{% if p.payment_status == 'Verified' %}<a href="{{ url_for('customer_payment_receipt', payment_id=p.payment_id) }}" class="view-all">Download receipt</a>{% else %}Available after verification{% endif %}</td>
               </tr>
               {% else %}
-              <tr><td colspan="6"><div class="empty-state">No payment records found.</div></td></tr>
+              <tr><td colspan="7"><div class="empty-state">No payment records found.</div></td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -109,8 +111,5 @@
 
 
 
-{% if session.get('role') == 'customer' %}
-<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
-{% endif %}
 </body>
 </html>

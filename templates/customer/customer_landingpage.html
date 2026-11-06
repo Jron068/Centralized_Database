@@ -83,6 +83,35 @@
         <div class="search-benefits"><span><i class="fa-solid fa-check"></i> All partner resorts in one place</span><span><i class="fa-solid fa-check"></i> Check availability</span><span><i class="fa-solid fa-check"></i> Book in a few steps</span></div>
       </section>
 
+      <section class="panel" style="margin:22px 0;">
+        <div class="panel-heading">
+          <div><p class="eyebrow">CUSTOMER FAVORITES</p><h2>Top-performing resorts</h2></div>
+          <a href="{{ url_for('resorts') }}" class="text-action">View all resorts <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <p class="subtitle">Ranked by verified guest ratings, with completed stays as a tie-breaker.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;">
+          {% for resort in top_performing_resorts %}
+          <article style="border:1px solid #e1ebe4;border-radius:12px;overflow:hidden;background:#fff;">
+            <img src="{{ resort.logo or url_for('static', filename='images/default-resort.svg') }}"
+                 alt="{{ resort.resort_name }} resort" loading="lazy"
+                 style="display:block;width:100%;height:160px;object-fit:cover;background:#edf3ef;">
+            <div style="padding:16px;">
+              <h3 style="margin:0 0 8px;">{{ resort.resort_name }}</h3>
+              <p style="margin:0 0 8px;color:#68776d;">{{ resort.address or 'Pansol, Laguna' }}</p>
+              <p style="margin:0 0 14px;color:#176b46;font-weight:700;">
+                {% if resort.review_count %}★ {{ '%.1f'|format(resort.average_rating) }} · {{ resort.review_count }} review{{ '' if resort.review_count == 1 else 's' }}{% else %}New resort · Be the first to review{% endif %}
+                {% if resort.completed_stays %}<span style="display:block;color:#68776d;font-size:13px;font-weight:400;">{{ resort.completed_stays }} completed stay{{ '' if resort.completed_stays == 1 else 's' }}</span>{% endif %}
+              </p>
+              {% if resort.price is not none %}<p style="margin:0 0 12px;">From ₱{{ '{:,.2f}'|format(resort.price) }}{% if resort.max_pax %} · Up to {{ resort.max_pax }} guests{% endif %}</p>{% endif %}
+              <a class="secondary-action" href="{{ url_for('resorts', resort_id=resort.resort_id) }}">Explore &amp; book</a>
+            </div>
+          </article>
+          {% else %}
+          <p>There are no active resorts to show right now.</p>
+          {% endfor %}
+        </div>
+      </section>
+
       <!-- BOTTOM PANELS -->
       <section class="panels">
 
@@ -104,9 +133,9 @@
                         <span class="badge status-{{ reservation.reservation_status|lower }}">{{ reservation.reservation_status }}</span>
                       </div>
 
-                      <p class="stay-dates"><i class="fa-regular fa-calendar"></i> {{ reservation.check_in.strftime('%b %d, %Y') if reservation.check_in else 'Date pending' }} <span>→</span> {{ reservation.check_out.strftime('%b %d, %Y') if reservation.check_out else '' }}</p>
+                      <p class="stay-dates"><i class="fa-regular fa-calendar"></i> {% if reservation.start_at and reservation.end_at %}{{ reservation.start_at.strftime('%b %d, %Y at %I:%M %p') }} <span>→</span> {{ reservation.end_at.strftime('%b %d, %Y at %I:%M %p') }}{% else %}{{ reservation.check_in.strftime('%b %d, %Y') if reservation.check_in else 'Date pending' }} <span>→</span> {{ reservation.check_out.strftime('%b %d, %Y') if reservation.check_out else '' }}{% endif %}</p>
 
-                      <p class="stay-meta">{{ reservation.guests }} guests <span>·</span> Booking #{{ reservation.reservation_id }}</p>
+                      <p class="stay-meta">{{ reservation.guests }} guests <span>·</span> Booking #{{ reservation.reservation_id }}{% if reservation.created_at %}<span>·</span> Booked {{ reservation.created_at.strftime('%b %d, %Y at %I:%M %p') }}{% endif %}</p>
 
                       <p>
                           ₱{{ "{:,.2f}".format(reservation.total_amount) }}
@@ -138,7 +167,7 @@
 
                 <article class="activity-item">
                   <span class="activity-icon"><i class="fa-solid fa-receipt"></i></span>
-                  <div class="activity-copy"><strong>{{ reservation.resort_name }}</strong><p>Reservation {{ reservation.reservation_status|lower }}</p><small>{{ reservation.created_at.strftime('%b %d, %Y') if reservation.created_at else '' }}</small></div>
+                  <div class="activity-copy"><strong>{{ reservation.resort_name }}</strong><p>Reservation {{ reservation.reservation_status|lower }}</p><small>{{ reservation.created_at.strftime('%b %d, %Y at %I:%M %p') if reservation.created_at else '' }}</small></div>
                   <span class="badge status-{{ reservation.reservation_status|lower }}">{{ reservation.reservation_status }}</span>
                 </article>
 
@@ -166,8 +195,5 @@
 
 
 
-{% if session.get('role') == 'customer' %}
-<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
-{% endif %}
 </body>
 </html>

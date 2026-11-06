@@ -1,4 +1,5 @@
-from flask import render_template, request, session, redirect, url_for, flash
+from html import escape
+from flask import make_response, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import app
 from config import get_connection
@@ -72,6 +73,9 @@ def customer_reservation():
                 res.resort_name,
                 r.check_in,
                 r.check_out,
+                r.start_at,
+                r.end_at,
+                r.tour_type,
                 r.guests,
                 r.total_amount,
                 r.reservation_status,
@@ -139,6 +143,60 @@ def customer_paymentHistory():
             username=session.get("fullname", "Guest"),
             payments=payments
         )
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/customer/payments/<int:payment_id>/receipt")
+def customer_payment_receipt(payment_id):
+    if session.get("role") != "customer" or "account_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT p.payment_id, p.reference_number, p.payment_method, p.amount_paid, p.payment_date,
+                   r.reservation_id, r.check_in, r.check_out, r.guests, r.total_amount,
+                   res.resort_name, a.fullname
+            FROM payments p
+            JOIN reservations r ON r.reservation_id = p.reservation_id
+            JOIN customers c ON c.customer_id = r.customer_id
+            JOIN accounts a ON a.account_id = c.account_id
+            JOIN resorts res ON res.resort_id = r.resort_id
+            WHERE p.payment_id = %s AND c.account_id = %s AND p.payment_status = 'Verified'
+        """, (payment_id, session["account_id"]))
+        payment = cursor.fetchone()
+        if not payment:
+            flash("A downloadable receipt is available after a payment is verified.", "warning")
+            return redirect(url_for("customer_paymentHistory"))
+
+        amount = float(payment["amount_paid"] or 0)
+        document = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Payment Receipt RSV-{payment['reservation_id']}</title>
+<style>body{{font:16px Arial,sans-serif;color:#21382c;margin:40px auto;max-width:680px;padding:24px}}
+h1{{color:#176b46}}.receipt{{border:1px solid #dce8df;border-radius:12px;padding:24px}}
+dt{{color:#65756b}}dd{{margin:4px 0 18px;font-weight:600}}.amount{{font-size:24px}}
+@media print{{button{{display:none}}body{{margin:0 auto}}}}</style></head>
+<body><main class="receipt"><h1>Pansol Resorts</h1><h2>Official Payment Receipt</h2>
+<dl>
+<dt>Receipt</dt><dd>PAY-{payment['payment_id']:06d}</dd>
+<dt>Reservation</dt><dd>RSV-{payment['reservation_id']}</dd>
+<dt>Customer</dt><dd>{escape(str(payment['fullname'] or 'Guest'))}</dd>
+<dt>Resort</dt><dd>{escape(str(payment['resort_name'] or ''))}</dd>
+<dt>Stay</dt><dd>{escape(str(payment['check_in'] or ''))} – {escape(str(payment['check_out'] or ''))} · {int(payment['guests'] or 0)} guests</dd>
+<dt>Payment date</dt><dd>{payment['payment_date'].strftime('%b %d, %Y %I:%M %p') if payment['payment_date'] else '—'}</dd>
+<dt>Method / reference</dt><dd>{escape(str(payment['payment_method'] or ''))} · {escape(str(payment['reference_number'] or ''))}</dd>
+<dt>Verified amount</dt><dd class="amount">PHP {amount:,.2f}</dd>
+</dl><button onclick="window.print()">Print receipt</button></main></body></html>"""
+        response = make_response(document)
+        response.headers["Content-Type"] = "text/html; charset=utf-8"
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=receipt-RSV-{payment['reservation_id']}-PAY-{payment_id}.html"
+        )
+        return response
     finally:
         cursor.close()
         conn.close()

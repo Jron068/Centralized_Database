@@ -44,36 +44,21 @@
             <p> Find the perfect resort for your next getaway </p>
           </div>
           <div class="searchrow">
-            <div class="sfield grow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-              <input type="search" id="resortQuery" placeholder="Search resort name or location..." value="{{ search_query }}" aria-label="Search resort name or location">
-            </div>
+            <label class="sfield date-field" for="ci-date">
+              <span class="date-field-label">Start date</span>
+              <input type="date" id="ci-date" aria-label="Start date">
+            </label>
+            <label class="sfield date-field" for="co-date">
+              <span class="date-field-label">End date</span>
+              <input type="date" id="co-date" aria-label="End date">
+            </label>
             <div class="sfield">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M8 3v4M16 3v4M3 10h18" />
-              </svg>
-              <input type="date" id="ci-date" aria-label="Check-in date">
-            </div>
-            <div class="sfield">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M8 3v4M16 3v4M3 10h18" />
-              </svg>
-              <input type="date" id="co-date" aria-label="Check-out date">
-            </div>
-            <div class="sfield">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-              </svg>
-              <select id="guest-count" aria-label="Number of guests">
-                <option value="2">2 Guests</option>
-                <option value="4">4 Guests</option>
-                <option value="6">6+ Guests</option>
+              <i class="fa-regular fa-clock" aria-hidden="true"></i>
+              <select id="tour-package-filter" aria-label="Tour package">
+                <option value="">Any tour package</option>
+                <option value="day">Day Tour · 8 AM–5 PM</option>
+                <option value="night">Night Tour · 7 PM–6 AM</option>
+                <option value="22_hour">22-Hour Tour</option>
               </select>
             </div>
             <button class="searchbtn" id="searchResortsBtn" type="button">
@@ -82,6 +67,7 @@
                 <path d="M21 21l-4.3-4.3" />
               </svg> Search </button>
           </div>
+          <p class="search-help">Select a start date, end date, and tour package to find resorts available for your stay.</p>
           <div class="cardrow-wrap">
             <button class="scrollbtn left" id="scrollLeftBtn" type="button" aria-label="Previous resorts">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -240,7 +226,6 @@
               <div class="terms-box" style="max-height:none;">
                 <h4 style="margin-top:0;">Terms and Conditions</h4>
                 <ol>
-                  <li>Pay your balance as you enter.</li>
                   <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
                   <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
                     <ol>
@@ -295,7 +280,7 @@
 
   const TOUR_PACKAGES = [
     { id: 'day', label: 'Day Tour', hours: '8:00 AM – 5:00 PM' },
-    { id: 'night', label: 'Night Tour', hours: '6:00 PM – 6:00 AM' },
+    { id: 'night', label: 'Night Tour', hours: '7:00 PM – 6:00 AM' },
     { id: '22_hour', label: '22-Hour Tour', hours: '2:00 PM – 12:00 NN (next day)' }
   ];
 
@@ -385,7 +370,9 @@
       checkButton.disabled = true;
       try {
           bookingState = { resort: r, package: null, agreedPackage: false, agreedTerms: false };
-          bookingState.bookedDates = await bookedDatesFor(r);
+          const availability = await availabilityFor(r, true);
+          bookingState.bookedDates = availability.dates;
+          bookingState.bookings = availability.bookings;
           openBookingModal();
       } catch (err) {
           window.alert('We could not check this resort’s availability. Please try again in a moment.');
@@ -454,7 +441,9 @@
           const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
           const cellDate = new Date(y, m, d);
           const isTooSoon = cellDate < minimumDate;
-          const isBooked = bookingState.bookedDates.has(dateStr);
+          const isBooked = bookingState.package
+              ? hasPackageConflict(dateStr, bookingState.package)
+              : bookingState.bookedDates.has(dateStr);
           const unavailable = isTooSoon || isBooked || !pkgReady;
           cells += `<div class="cal-cell ${isTooSoon ? 'too-soon' : (isBooked ? 'booked' : 'avail')}" data-date="${dateStr}" style="text-align:center;padding:8px 0;border-radius:6px;font-size:13px;cursor:${unavailable ? 'not-allowed' : 'pointer'};opacity:${pkgReady ? 1 : 0.45};background:${isTooSoon ? '#eeeeee' : (isBooked ? '#fbe4e4' : '#e4f5e9')};color:${isTooSoon ? '#999999' : (isBooked ? '#9a2f2f' : '#1e7a45')};">${d}</div>`;
       }
@@ -486,7 +475,7 @@
               <div><span style="display:inline-block;width:10px;height:10px;background:#e4f5e9;border-radius:2px;margin-right:4px;"></span>Available</div>
               <div><span style="display:inline-block;width:10px;height:10px;background:#fbe4e4;border-radius:2px;margin-right:4px;"></span>Booked</div>
           </div>
-          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice.${pkgReady ? '' : ' <strong>Select a package and check the box above to pick a date.</strong>'}</p>
+          <p style="margin:10px 0 0;font-size:12px;color:#666;">Reservations require at least 3 days' advance notice. A 10% non-refundable downpayment is required to secure a booking; full payment is also accepted.${pkgReady ? '' : ' <strong>Select a package and check the box above to pick a date.</strong>'}</p>
           <div id="calMsg" style="display:none;margin-top:12px;padding:10px;background:#fbe4e4;color:#9a2f2f;border-radius:8px;font-size:13px;"></div>
           <button onclick="requestCloseBookingModal()" style="margin-top:16px;width:100%;">Cancel</button>
       `;
@@ -542,7 +531,6 @@
         <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 2 of 4 — Please review our policy before continuing</p>
         <div class="terms-box">
           <ol>
-            <li>Pay your balance as you enter.</li>
             <li>Down payment are <strong>NON-REFUNDABLE</strong>.</li>
             <li>Rebooking/ Rescheduling is allowed 10 days before the confirmed booking date. However, in the event of natural disasters, pandemics, or any acts of nature, <strong>REBOOKING IS NEGOTIABLE</strong>.
               <ol>
@@ -582,6 +570,7 @@
       const body = document.getElementById('bookingModalBody');
       const maxPax = bookingState.resort.maxPax || 15;
       const pkg = TOUR_PACKAGES.find(p => p.id === bookingState.package);
+      const departureDate = bookingState.package === 'day' ? bookingState.checkIn : bookingState.checkOut;
       body.innerHTML = `
         <div class="receipt-container">
           <h3 style="margin:0 0 4px;">Reservation Details</h3>
@@ -594,8 +583,8 @@
           <div class="receipt-space"></div>
 
           <div class="receipt-row"><label class="receipt-label" for="bfPhone">Contact No.</label><input class="receipt-input" type="tel" id="bfPhone" autocomplete="tel"></div>
-          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn}" readonly></div>
-          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${bookingState.checkOut}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Arrival</span><input class="receipt-input" type="text" value="${bookingState.checkIn} · ${pkg ? pkg.hours.split(' – ')[0] : ''}" readonly></div>
+          <div class="receipt-row"><span class="receipt-label">Date &amp; Time of Departure</span><input class="receipt-input" type="text" value="${departureDate} · ${pkg ? pkg.hours.split(' – ')[1] : ''}" readonly></div>
           <div class="receipt-row"><span class="receipt-label">Resort Price (fixed, includes ${maxPax} pax)</span><span class="receipt-dots">${peso(bookingState.resort.price)}</span></div>
           <div class="receipt-row"><label class="receipt-label" for="bfExtraPax">Additional Pax (+₱${EXTRA_PAX_PRICE}/head)</label><input class="receipt-input" type="number" id="bfExtraPax" min="0" step="1" value="0"></div>
           <div class="receipt-row"><span class="receipt-label">Total No. of Person</span><input class="receipt-input" type="text" id="bfPax" value="${maxPax}" readonly></div>
@@ -605,7 +594,7 @@
           <div class="receipt-space"></div>
 
           <div class="receipt-row"><span class="receipt-label">Total Contract Amount (PHP)</span><input class="receipt-input" type="text" id="bfTotal" readonly></div>
-          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Down payment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" min="0"></div>
+          <div class="receipt-row"><label class="receipt-label" for="bfDownPayment">Required 10% downpayment (PHP)</label><input class="receipt-input" type="number" id="bfDownPayment" readonly></div>
           <div class="receipt-row"><span class="receipt-label">Balance Amount (PHP)</span><input class="receipt-input" type="text" id="bfBalance" readonly></div>
 
           <div class="receipt-space"></div>
@@ -633,6 +622,13 @@
         const extraPaxField = document.getElementById('bfExtraPax');
 
         const waterQty = () => Math.max(0, Math.floor(Number(waterField.value) || 0));
+          extraPaxField.max = String(Math.max(100, maxPax) - maxPax);
+          document.getElementById('bfName').value = bookingProfile.name || '';
+          document.getElementById('bfPhone').value = bookingProfile.phone || '';
+          document.getElementById('receiptClientName').textContent = bookingProfile.name || '';
+          document.getElementById('bfName').addEventListener('input', event => {
+            document.getElementById('receiptClientName').textContent = event.target.value;
+          });
 
         const updateAmounts = () => {
           const extraPax = Math.max(0, Math.floor(Number(extraPaxField.value) || 0));
@@ -642,7 +638,8 @@
             waterQty: waterQty(),
             extraPax: extraPax
           });
-          const downPayment = Number(downPaymentField.value) || 0;
+          const downPayment = Math.round(total * 10) / 100;
+          downPaymentField.value = downPayment.toFixed(2);
           totalField.value = total.toFixed(2);
           balanceField.value = Math.max(0, total - downPayment).toFixed(2);
         };
@@ -651,10 +648,6 @@
         waterField.addEventListener('input', updateAmounts);
         extraPaxField.addEventListener('input', updateAmounts);
         updateAmounts();
-
-        document.getElementById('bfName').addEventListener('input', event => {
-          document.getElementById('receiptClientName').textContent = event.target.value;
-        });
 
       document.getElementById('bfNext').onclick = () => {
           const name = document.getElementById('bfName').value.trim();
@@ -704,7 +697,7 @@
 
           if (data.success) {
               bookingState.reservationId = data.reservation_id;
-              renderPaymentStep(Number(data.total_amount) || total);
+              renderPaymentStep(Number(data.total_amount) || total, Number(data.downpayment_amount));
           } else if (res.status === 401) {
               window.location.href = '/login';
           } else {
@@ -715,11 +708,18 @@
       }
   }
 
-  function renderPaymentStep(total) {
+  function renderPaymentStep(total, downpayment) {
       const body = document.getElementById('bookingModalBody');
+      const downpaymentAmount = Number.isFinite(downpayment) ? downpayment : Math.round(total * 10) / 100;
+      let selectedPaymentAmount = downpaymentAmount;
       body.innerHTML = `
           <h3 style="margin:0 0 4px;">Payment — ₱${total.toLocaleString()}</h3>
           <p style="margin:0 0 12px;font-size:13px;color:#888;">Step 4 of 4 — Choose how you'd like to pay</p>
+          <p class="payment-help">Pay the required 10% non-refundable downpayment (${peso(downpaymentAmount)}) or choose full payment (${peso(total)}). You can download your official receipt after the payment is verified.</p>
+          <div class="pkg-grid" id="paymentAmountOptions">
+            <button type="button" class="pkg-card selected" data-amount="${downpaymentAmount}" aria-pressed="true"><b>10% downpayment</b>${peso(downpaymentAmount)}</button>
+            <button type="button" class="pkg-card" data-amount="${total}" aria-pressed="false"><b>Full payment</b>${peso(total)}</button>
+          </div>
           <p class="payment-help">Choose GCash or MariBank and verify the recipient details before transferring. If a payment QR code is unavailable, contact the resort for payment instructions.</p>
           <div class="ewallet-grid" id="ewalletGrid">
             ${EWALLETS.map(w => `
@@ -751,6 +751,16 @@
       `;
       document.getElementById('payerName').value = bookingState.guestName || '';
       document.getElementById('payerPhone').value = bookingState.guestPhone || '';
+      body.querySelectorAll('#paymentAmountOptions .pkg-card').forEach(option => {
+          option.addEventListener('click', () => {
+              selectedPaymentAmount = Number(option.dataset.amount);
+              body.querySelectorAll('#paymentAmountOptions .pkg-card').forEach(item => {
+                  const selected = item === option;
+                  item.classList.toggle('selected', selected);
+                  item.setAttribute('aria-pressed', String(selected));
+              });
+          });
+      });
       let ewallet = null;
       body.querySelectorAll('.ewallet-card').forEach(card => {
           const image = card.querySelector('[data-qr-image]');
@@ -802,7 +812,7 @@
           const fd = new FormData();
           fd.append('reservation_id', bookingState.reservationId);
           fd.append('payment_method', wallet.label);
-          fd.append('amount_paid', total);
+          fd.append('amount_paid', selectedPaymentAmount);
           fd.append('payer_name', payerName);
           fd.append('payer_phone', payerPhone);
           fd.append('reference_number', referenceNumber);
@@ -814,7 +824,7 @@
               if (data.success) {
                   document.getElementById('bookingModalBody').innerHTML = `
                       <h3>Booking sent for review</h3>
-                      <p style="font-size:13px;color:#555;">Your receipt and transaction details were saved. Visit My Reservations and confirm that you still want to continue so the resort can review your booking.</p>
+                      <p style="font-size:13px;color:#555;">Your payment proof and transaction details were saved for verification. After approval, your official receipt will be available from Payment History. Visit My Reservations to follow your booking.</p>
                       <button onclick="closeBookingModal(); window.location.href='/customer_reservation'" style="width:100%;margin-top:10px;">Go to my reservations</button>
                   `;
               } else {
@@ -884,6 +894,7 @@
   }
 
   const dbResorts = {{ resort_rows | tojson }};
+  const bookingProfile = {{ booking_profile | tojson }};
 
   const resortDefaults = {
     "GALLELY RESORT": {
@@ -958,7 +969,10 @@
       nearby: []
     };
   });
-  let currentId = resorts.length ? resorts[0].id : null;
+  const requestedResortId = {{ selected_resort_id | tojson }};
+  let currentId = resorts.some(resort => resort.id === String(requestedResortId))
+    ? String(requestedResortId)
+    : (resorts.length ? resorts[0].id : null);
   let favs = new Set(({{ favorite_resort_ids | tojson }} || []).map(id => String(id)));
 
   function renderCards() {
@@ -985,7 +999,7 @@
           <div class="rc-loc">${ic.pin} ${r.location}</div>
           <div class="rc-hours">
             <div>${ic.clock} Day Tour <b>8:00 AM - 5:00 PM</b></div>
-            <div>${ic.moon} Overnight <b>2:00 PM - 11:00 AM</b></div>
+            <div>${ic.moon} Night Tour <b>7:00 PM - 6:00 AM</b></div>
           </div>
           <div class="rc-price">${r.price ? peso(r.price) : 'Price not set'} <span>/ fixed · up to ${r.maxPax} pax</span></div>
           <button class="rc-btn" onclick="event.stopPropagation(); selectResort('${r.id}')">View Details</button>
@@ -993,7 +1007,7 @@
       </div>
     `).join('');
     updateCarouselButtons();
-    if (queryInput.value || checkInInput.value || checkOutInput.value || Number(guestCountInput.value) !== 2) {
+    if (checkInInput.value || checkOutInput.value) {
       applyResortFilters();
     }
   }
@@ -1057,7 +1071,8 @@
     document.getElementById('ov-desc').textContent = r.desc;
     document.getElementById('ov-hours').innerHTML = `
       <div>${ic.clock} Day Tour &nbsp; <b>8:00 AM - 5:00 PM</b></div>
-      <div>${ic.moon} Overnight &nbsp; <b>2:00 PM - 11:00 AM</b></div>
+      <div>${ic.moon} Night Tour &nbsp; <b>7:00 PM - 6:00 AM</b></div>
+      <div>${ic.clock} 22-Hour Tour &nbsp; <b>2:00 PM - 12:00 NN</b></div>
     `;
     document.getElementById('ov-gallery').innerHTML = r.photos.length
       ? r.photos.slice(0, 6).map(src => `<div><img src="${src}" alt="${r.name} photo"></div>`).join('')
@@ -1341,10 +1356,9 @@
     }
   }, { passive: false });
 
-  const queryInput = document.getElementById('resortQuery');
   const checkInInput = document.getElementById('ci-date');
   const checkOutInput = document.getElementById('co-date');
-  const guestCountInput = document.getElementById('guest-count');
+  const packageFilterInput = document.getElementById('tour-package-filter');
   const searchMessage = document.getElementById('searchResultsMessage');
   const carouselWrap = document.querySelector('.cardrow-wrap');
   const availabilityCache = new Map();
@@ -1355,39 +1369,58 @@
   checkInInput.min = todayText;
   checkOutInput.min = todayText;
   checkInInput.addEventListener('change', () => {
-    checkOutInput.min = checkInInput.value || todayText;
-    if (checkOutInput.value && checkOutInput.value <= checkInInput.value) checkOutInput.value = '';
+    const earliestCheckout = new Date(`${checkInInput.value || todayText}T00:00:00`);
+    earliestCheckout.setDate(earliestCheckout.getDate() + 1);
+    checkOutInput.min = `${earliestCheckout.getFullYear()}-${String(earliestCheckout.getMonth() + 1).padStart(2, '0')}-${String(earliestCheckout.getDate()).padStart(2, '0')}`;
+    if (checkOutInput.value && checkOutInput.value < checkOutInput.min) checkOutInput.value = '';
+    applyResortFilters();
   });
   let searchRequestId = 0;
-  async function bookedDatesFor(resort) {
+  async function availabilityFor(resort, refresh = false) {
     const cached = availabilityCache.get(resort.id);
-    if (cached && Date.now() - cached.fetchedAt < 15000) return cached.dates;
+    if (!refresh && cached && Date.now() - cached.fetchedAt < 15000) return cached;
     const response = await fetch(`/resort_availability/${resort.id}`, { headers: { 'Accept': 'application/json' } });
     const data = await response.json();
     if (!response.ok || !Array.isArray(data.booked_dates)) throw new Error('Availability could not be checked.');
-    const dates = new Set(data.booked_dates);
-    availabilityCache.set(resort.id, { dates, fetchedAt: Date.now() });
-    return dates;
+    const availability = {
+      dates: new Set(data.booked_dates),
+      bookings: Array.isArray(data.bookings) ? data.bookings : [],
+      fetchedAt: Date.now()
+    };
+    availabilityCache.set(resort.id, availability);
+    return availability;
+  }
+  async function bookedDatesFor(resort) {
+    return (await availabilityFor(resort)).dates;
+  }
+  function hasPackageConflict(dateText, packageId, bookings = bookingState.bookings || []) {
+    const pkg = TOUR_PACKAGES.find(item => item.id === packageId);
+    if (!pkg) return true;
+    const [year, month, day] = dateText.split('-').map(Number);
+    const startParts = pkg.id === 'day' ? [8, 0] : pkg.id === 'night' ? [19, 0] : [14, 0];
+    const endParts = pkg.id === 'day' ? [17, 0] : pkg.id === 'night' ? [6, 0] : [12, 0];
+    const start = new Date(year, month - 1, day, startParts[0], startParts[1]);
+    const end = new Date(year, month - 1, day + (pkg.id === 'day' ? 0 : 1), endParts[0], endParts[1]);
+    return bookings.some(booking => {
+      if (!booking.start_at || !booking.end_at) {
+        return dateText >= booking.check_in && dateText < booking.check_out;
+      }
+      return start < new Date(booking.end_at) && end > new Date(booking.start_at);
+    });
   }
   async function applyResortFilters() {
     const requestId = ++searchRequestId;
-    const query = queryInput.value.trim().toLocaleLowerCase();
     const checkIn = checkInInput.value;
     const checkOut = checkOutInput.value;
-    const guestCount = Number(guestCountInput.value || 1);
-    if ((checkIn && !checkOut) || (!checkIn && checkOut) || (checkIn && checkOut <= checkIn)) {
-      resorts.forEach(resort => {
-        const card = [...document.querySelectorAll('.rcard')].find(item => item.getAttribute('onclick')?.includes(`'${resort.id}'`));
-        if (card) {
-          const matchesText = !query || `${resort.name} ${resort.location} ${resort.desc} ${resort.tags.join(' ')}`.toLocaleLowerCase().includes(query);
-          card.hidden = !(matchesText && Number(resort.maxPax || 0) >= guestCount);
-        }
-      });
-      const hasVisibleResorts = [...document.querySelectorAll('.rcard')].some(card => !card.hidden);
-      carouselWrap.classList.toggle('no-results', !hasVisibleResorts);
+    const selectedPackage = packageFilterInput.value;
+    if (!checkIn || !checkOut || checkOut <= checkIn) {
+      document.querySelectorAll('.rcard').forEach(card => { card.hidden = false; });
+      carouselWrap.classList.toggle('no-results', resorts.length === 0);
       updateCarouselButtons();
-      searchMessage.hidden = !hasVisibleResorts;
-      if (hasVisibleResorts) searchMessage.textContent = 'Choose a valid check-in and check-out date range to check availability.';
+      searchMessage.hidden = false;
+      searchMessage.textContent = checkIn && checkOut
+        ? 'End date must be after the start date.'
+        : 'Select both a start date and an end date to check availability.';
       return;
     }
 
@@ -1398,8 +1431,10 @@
     if (checkIn && checkOut) {
       const results = await Promise.all(resorts.map(async resort => {
         try {
-          const bookedDates = await bookedDatesFor(resort);
-          const hasConflict = [...bookedDates].some(day => day >= checkIn && day < checkOut);
+          const availability = await availabilityFor(resort);
+          const hasConflict = selectedPackage
+            ? hasPackageConflict(checkIn, selectedPackage, availability.bookings)
+            : [...availability.dates].some(day => day >= checkIn && day < checkOut);
           return { id: resort.id, available: !hasConflict };
         } catch (error) {
           availabilityFailed = true;
@@ -1414,39 +1449,47 @@
     resorts.forEach(resort => {
       const card = [...document.querySelectorAll('.rcard')].find(item => item.getAttribute('onclick')?.includes(`'${resort.id}'`));
       if (!card) return;
-      const matchesText = !query || `${resort.name} ${resort.location} ${resort.desc} ${resort.tags.join(' ')}`.toLocaleLowerCase().includes(query);
-      const matchesCapacity = Number(resort.maxPax || 0) >= guestCount;
       const matchesDates = !(checkIn && checkOut) || available.has(resort.id);
-      card.hidden = !(matchesText && matchesCapacity && matchesDates);
+      card.hidden = !matchesDates;
       if (!card.hidden) visibleCount++;
     });
     carouselWrap.classList.toggle('no-results', visibleCount === 0);
-    searchMessage.hidden = visibleCount === 0 || !(checkIn && checkOut);
-    if (visibleCount > 0 && availabilityFailed) {
-      searchMessage.hidden = false;
+    searchMessage.hidden = false;
+    if (availabilityFailed) {
       searchMessage.textContent = 'Some resort availability could not be confirmed, so those resorts are hidden. Please try again.';
     } else if (visibleCount > 0 && checkIn && checkOut) {
       searchMessage.hidden = false;
-      searchMessage.textContent = `${visibleCount} resort${visibleCount === 1 ? '' : 's'} available for your selected dates.`;
+      const packageLabel = selectedPackage
+        ? ` for the selected ${TOUR_PACKAGES.find(item => item.id === selectedPackage)?.label.toLowerCase()}`
+        : '';
+      const dateLabel = selectedPackage ? ` on ${checkIn}` : ' for your selected dates';
+      searchMessage.textContent = `${visibleCount} resort${visibleCount === 1 ? '' : 's'} available${dateLabel}${packageLabel}.`;
+    } else if (checkIn && checkOut) {
+      const packageLabel = selectedPackage
+        ? ` and ${TOUR_PACKAGES.find(item => item.id === selectedPackage)?.label.toLowerCase()}`
+        : '';
+      const dateLabel = selectedPackage ? ` on ${checkIn}` : ' for the selected dates';
+      searchMessage.textContent = `No resorts are available${dateLabel}${packageLabel}.`;
+    } else if (visibleCount === 0) {
+      searchMessage.textContent = 'No active resorts are currently available.';
+    } else {
+      searchMessage.hidden = true;
     }
     updateCarouselButtons();
   }
   document.getElementById('searchResortsBtn').addEventListener('click', applyResortFilters);
-  queryInput.addEventListener('input', applyResortFilters);
-  guestCountInput.addEventListener('change', applyResortFilters);
-  checkInInput.addEventListener('change', () => { if (checkOutInput.value) applyResortFilters(); });
-  checkOutInput.addEventListener('change', () => { if (checkInInput.value) applyResortFilters(); });
+  packageFilterInput.addEventListener('change', applyResortFilters);
+  checkOutInput.addEventListener('change', applyResortFilters);
 
   renderCards();
-  if (queryInput && queryInput.value.trim()) applyResortFilters();
   renderDetail();
+  if (requestedResortId !== null && currentId === String(requestedResortId)) {
+    document.getElementById('detailPanel').scrollIntoView({ block: 'start' });
+  }
   updateCarouselButtons();
   window.addEventListener('resize', () => updateCarouselButtons());
 </script>
 
 
-{% if session.get('role') == 'customer' %}
-<script src="{{ url_for('static', filename='js/welcome_music.js') }}"></script>
-{% endif %}
 </body>
 </html>

@@ -49,14 +49,22 @@
           {% endif %}
           {% if reservation.booking_source == 'Walk-in' and reservation.reservation_status == 'Pending' %}
             <a class="btn btn-primary" href="{{ url_for('admin_walkins') }}" style="margin-top:20px;">Review in Walk-in Approvals</a>
-          {% elif reservation.booking_source == 'Online' and reservation.payment_status == 'Pending' %}
+          {% elif reservation.booking_source == 'Online' and reservation.reservation_status == 'Pending' %}
             <form action="{{ url_for('review_reservation', reservation_id=reservation.reservation_id) }}" method="post" style="display:inline-block; margin-top:20px;">
-              {% if reservation.customer_decision == 'Continue' %}
-                <button class="btn btn-primary" name="action" value="approve" type="submit">Approve</button>
+              {% if reservation.customer_decision == 'Continue' and reservation.payment_status == 'Pending' %}
+                <button class="btn btn-primary" name="action" value="approve" type="submit">Approve &amp; verify payment</button>
               {% else %}
-                <p class="page-sub">Waiting for the customer to confirm they want to continue.</p>
+                <p class="page-sub">
+                  {% if reservation.customer_decision != 'Continue' %}Waiting for the customer to confirm they want to continue.
+                  {% elif not reservation.payment_status %}Waiting for payment proof.
+                  {% else %}The payment is not awaiting review.{% endif %}
+                </p>
               {% endif %}
-              <button class="btn btn-outline" name="action" value="reject" type="submit" style="margin-left:8px;">Reject</button>
+              {% if not reservation.payment_status or reservation.payment_status == 'Pending' %}
+                <button class="btn btn-outline" name="action" value="reject" type="submit" style="margin-left:8px;">Reject</button>
+              {% else %}
+                <p class="page-sub">This payment is already finalized and cannot be changed here.</p>
+              {% endif %}
             </form>
           {% endif %}
         </div>
